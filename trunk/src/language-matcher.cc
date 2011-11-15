@@ -187,11 +187,11 @@ static bool BCP47ToICUFormat(const char* locale_id, char* result) {
   // uloc_forLanguageTag has a bug where long extension can crash the code.
   // We need to check if extension part of language id conforms to the length.
   // ICU bug: http://bugs.icu-project.org/trac/ticket/8519
-  const char* extension = strstr(locale_id, "-u-");
+  const char* extension = strstr(locale, "-u-");
   if (extension != NULL &&
       strlen(extension) > ULOC_KEYWORD_AND_VALUES_CAPACITY) {
     // Truncate to get non-crashing string, but still preserve base language.
-    int base_length = strlen(locale_id) - strlen(extension);
+    int base_length = strlen(locale) - strlen(extension);
     locale[base_length] = '\0';
   }
 
