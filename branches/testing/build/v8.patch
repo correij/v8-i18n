@@ -1,0 +1,96 @@
+Index: src/bootstrapper.cc
+===================================================================
+--- src/bootstrapper.cc	(revision 10275)
++++ src/bootstrapper.cc	(working copy)
+@@ -43,6 +43,10 @@
+ #include "extensions/externalize-string-extension.h"
+ #include "extensions/gc-extension.h"
+ 
++#ifdef ENABLE_I18N
++#include "v8-i18n/include/extension.h"
++#endif
++
+ namespace v8 {
+ namespace internal {
+ 
+@@ -102,6 +106,9 @@
+   extensions_cache_.Initialize(create_heap_objects);
+   GCExtension::Register();
+   ExternalizeStringExtension::Register();
++#ifdef ENABLE_I18N
++  v8_i18n::Extension::Register();
++#endif
+ }
+ 
+ 
+@@ -2003,6 +2010,11 @@
+   if (FLAG_expose_externalize_string) {
+     InstallExtension("v8/externalize", &extension_states);
+   }
++#ifdef ENABLE_I18N
++  if (FLAG_expose_i18n) {
++    InstallExtension("v8/i18n", &extension_states);
++  }
++#endif
+ 
+   if (extensions == NULL) return true;
+   // Install required extensions
+Index: src/flag-definitions.h
+===================================================================
+--- src/flag-definitions.h	(revision 10275)
++++ src/flag-definitions.h	(working copy)
+@@ -199,6 +199,10 @@
+ DEFINE_bool(expose_gc, false, "expose gc extension")
+ DEFINE_bool(expose_externalize_string, false,
+             "expose externalize string extension")
++#ifdef ENABLE_I18N
++DEFINE_bool(expose_i18n, false,
++            "expose internationalization extension")
++#endif
+ DEFINE_int(stack_trace_limit, 10, "number of stack frames to capture")
+ DEFINE_bool(builtins_in_stack_traces, false,
+             "show built-in functions in stack traces")
+Index: build/common.gypi
+===================================================================
+--- build/common.gypi	(revision 10275)
++++ build/common.gypi	(working copy)
+@@ -70,6 +70,8 @@
+ 
+     'v8_enable_gdbjit%': 0,
+ 
++    'v8_enable_i18n%': 0,
++
+     # Enable profiling support. Only required on Windows.
+     'v8_enable_prof%': 0,
+ 
+Index: tools/gyp/v8.gyp
+===================================================================
+--- tools/gyp/v8.gyp	(revision 10275)
++++ tools/gyp/v8.gyp	(working copy)
+@@ -711,6 +711,11 @@
+                 'V8_SHARED',
+               ],
+             }],
++            ['v8_enable_i18n==1', {
++              'dependencies': ['../../../v8-i18n/build/all.gyp:v8-i18n'],
++              'include_dirs': ['../../../..'],
++              'defines': ['ENABLE_I18N'],
++           }],
+           ],
+         },
+         {
+Index: Makefile
+===================================================================
+--- Makefile	(revision 10275)
++++ Makefile	(working copy)
+@@ -73,6 +73,10 @@
+ else
+   GYPFLAGS += -Dv8_can_use_vfp_instructions=true
+ endif
++# i18n=off
++ifeq ($(i18n), on)
++  GYPFLAGS += -Dv8_enable_i18n=1
++endif
+ # soname_version=1.2.3
+ ifdef soname_version
+   GYPFLAGS += -Dsoname_version=$(soname_version)

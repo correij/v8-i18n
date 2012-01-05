@@ -13,13 +13,15 @@
 # limitations under the License.
 
 {
+  # Unfortunately, gyp pulls includes in before variables are expanded,
+  # so we can't use '<(v8_path)>'.
+  'includes': ['../../v8/build/common.gypi'],
+
   'variables': {
-    # Use build/gyp_chromium -D"icu_path=path" to override paths.
-    # gyp_chromium script can be found in chromium project.
     # TODO(cira): We may need to add another ICU variable for include path
     # since chromium version of ICU differs from original ICU checkout.
     'icu_path%': '../../icu',
-    'v8_path%': '../../..',
+    'v8_path%': '../..',
   },
   'targets': [
     {
@@ -49,9 +51,9 @@
         '..',
         '<(v8_path)',
         '<(icu_path)/public/common',
+        '<(icu_path)/public/i18n',
       ],
       'dependencies': [
-        '<(v8_path)/v8/tools/gyp/v8.gyp:v8',
         '<(icu_path)/icu.gyp:*',
         'api2c#host',
       ],

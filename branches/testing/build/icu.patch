@@ -1,0 +1,33 @@
+Index: icu.gyp
+===================================================================
+--- icu.gyp	(revision 113543)
++++ icu.gyp	(working copy)
+@@ -3,9 +3,19 @@
+ # found in the LICENSE file.
+ 
+ {
++  'includes': ['../v8/build/common.gypi'],
+   'variables': {
+     'use_system_icu%': 0,
+     'icu_use_data_file_flag%': 0,
++
++    # Get ICU buildable without Chromium's common.gypi
++    'conditions': [
++      ['OS=="win"', {
++        'os_posix%': 0,
++      }, {
++        'os_posix%': 1,
++      }],
++    ],
+   },
+   'target_defaults': {
+     'direct_dependent_settings': {
+@@ -15,6 +25,8 @@
+         'U_USING_ICU_NAMESPACE=0',
+       ],
+     },
++    # Remove -Werror from compiler flags that's been introduced by v8
++    'cflags!': ['-Werror'],
+   },
+   'conditions': [
+     ['use_system_icu==0', {
