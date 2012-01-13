@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO(cira): Rename v8Locale into LocaleInfo once we have stable API.
+//
+// WARNING: This API is deprecated and will soon be replaced by ECMAScript
+// Globalization API as soon as that specification becomes stable.
+//
+
 /**
  * LocaleInfo class is an aggregate class of all i18n API calls.
  * @param {Object} settings - localeID and regionID to create LocaleInfo from.
