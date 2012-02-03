@@ -67,7 +67,8 @@
       'toolsets': ['host'],
       'variables': {
         'js_files': [
-          '../src/api.js'
+          '../src/api.js',
+          '../src/globalization.js'
         ],
       },
       'actions': [
