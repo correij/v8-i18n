@@ -38,6 +38,8 @@
         '../src/language-matcher.h',
         '../src/locale.cc',
         '../src/locale.h',
+        '../src/locale-list.cc',
+        '../src/locale-list.h',
         '../src/natives.h',
         '../src/number-format.cc',
         '../src/number-format.h',
@@ -48,7 +50,6 @@
       'include_dirs': [
         '..',
         '<(v8_path)',
-        '<(icu_path)/public/common',
       ],
       'dependencies': [
         '<(v8_path)/v8/tools/gyp/v8.gyp:v8',

@@ -15,27 +15,69 @@
 /**
  * Globalization object is a single object that has some named properties,
  * all of which are constructors.
- * ECMA402, Section 7.
+ *
+ * ECMA402, 7.
  */
-Globalization = Object.create(null);
+var Globalization = (function() {
 
+var Globalization = {};
 
 /**
+ * Internal property used for locale resolution fallback.
+ *
  * ECMA402, 7.2
  */
-Globalization.__currentHostLocale = 'und';
+var currentHostLocale = 'root';
 
 
 /**
+ * Constructs Globalization.LocaleList object given optional locales
+ * parameter.
+ * Validates the elements as well-formed language tags and omits duplicates.
+ *
  * ECMA402, 8.1, 8.2
  * @constructor
  */
 Globalization.LocaleList = function(locales) {
+  native function NativeJSCanonicalizeLanguageTag();
+
+  if (!this || this.constructor !== Globalization.LocaleList) {
+    // Constructor is called as a function
+    return new Globalization.LocaleList(locales);
+  }
+
+  if (locales === undefined) {
+    // Constructor is called without arguments
+    locales = [currentHostLocale];
+  }
+
+  var obj = this;
+  var index = 0;
+  var seen = {};
+
+  locales.forEach(function (value) {
+      var tag = String(value);
+      var canonicalizedTag = NativeJSCanonicalizeLanguageTag(tag);
+      if (canonicalizedTag === 'invalid-tag') {
+        throw new RangeError('Invalid language tag: ' + tag);
+      }
+      var duplicate = seen.hasOwnProperty(canonicalizedTag);
+      if (duplicate) {
+        return;
+      }
+      seen[canonicalizedTag] = true;
+      Object.defineProperty(
+          obj, index, {value: canonicalizedTag, enumerable: true});
+      index++;
+    });
+
+  Object.defineProperty(this, 'length', {value: index});
 };
 
 
 /**
  * LocaleList prototype object.
+ *
  * ECMA402, 8.3.1, 8.4
  */
 Object.defineProperty(Globalization.LocaleList,
@@ -44,7 +86,10 @@ Object.defineProperty(Globalization.LocaleList,
 
 
 /**
- * ECMA402, 10.1, 10.2
+ * Constructs Globalization.Collator object given optional locales and options
+ * parameters.
+ *
+ * Ecma402, 10.1, 10.2
  * @constructor
  */
 Globalization.Collator = function(locales, options) {
@@ -53,6 +98,7 @@ Globalization.Collator = function(locales, options) {
 
 /**
  * Collator prototype object.
+ *
  * ECMA402, 10.3.1, 10.4
  */
 Object.defineProperty(Globalization.Collator,
@@ -68,6 +114,22 @@ Object.defineProperty(Globalization.Collator,
  * ECMA402, 10.3.2
  */
 Globalization.Collator.supportedLocalesOf = function(requestedLocales) {
+};
+
+
+/**
+ * When the compare method is called with two arguments x and y, it returns a
+ * Number other than NaN that represents the result of a locale-sensitive
+ * String comparison of x with y.
+ * The result is intended to order String values in the sort order specified
+ * by the effective locale and collation options computed during construction
+ * of this Collator object, and will be negative, zero, or positive, depending
+ * on whether x comes before y in the sort order, the Strings are equal under
+ * the sort order, or x comes after y in the sort order, respectively.
+ *
+ * ECMA402, 10.4.2
+ */
+Globalization.Collator.prototype.compare = function(x, y) {
 };
 
 
@@ -119,6 +181,7 @@ Globalization.DateTimeFormat = function(locales, options) {
 
 /**
  * DateTimeFormat prototype object.
+ *
  * ECMA402, 12.3.1, 12.4
  */
 Object.defineProperty(Globalization.DateTimeFormat,
@@ -152,3 +215,6 @@ Globalization.DateTimeFormat.prototype.format = function (date) {
  * ECMA402, 7
  */
 Object.preventExtensions(Globalization);
+
+return Globalization;
+}());

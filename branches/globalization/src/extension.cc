@@ -18,6 +18,7 @@
 #include "src/collator.h"
 #include "src/datetime-format.h"
 #include "src/locale.h"
+#include "src/locale-list.h"
 #include "src/natives.h"
 #include "src/number-format.h"
 
@@ -41,6 +42,8 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(DateTimeFormat::JSDateTimeFormat);
   } else if (name->Equals(v8::String::New("NativeJSNumberFormat"))) {
     return v8::FunctionTemplate::New(NumberFormat::JSNumberFormat);
+  } else if (name->Equals(v8::String::New("NativeJSCanonicalizeLanguageTag"))) {
+    return v8::FunctionTemplate::New(JSCanonicalizeLanguageTag);
   }
 
   return v8::Handle<v8::FunctionTemplate>();

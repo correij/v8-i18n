@@ -92,8 +92,8 @@ def JS2C(source_files, target_file):
     filename = str(source)
     lines = ReadFile(filename)
     Validate(lines, filename)
-    all_lines.append(lines)
-  data = ToCArray(lines)
+    all_lines.extend(lines)
+  data = ToCArray(all_lines)
 
   # Emit result
   output = open(target_file, "w")
