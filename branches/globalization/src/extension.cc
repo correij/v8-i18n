@@ -44,6 +44,8 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(NumberFormat::JSNumberFormat);
   } else if (name->Equals(v8::String::New("NativeJSCanonicalizeLanguageTag"))) {
     return v8::FunctionTemplate::New(JSCanonicalizeLanguageTag);
+  } else if (name->Equals(v8::String::New("NativeJSAvailableLocalesOf"))) {
+    return v8::FunctionTemplate::New(JSAvailableLocalesOf);
   }
 
   return v8::Handle<v8::FunctionTemplate>();

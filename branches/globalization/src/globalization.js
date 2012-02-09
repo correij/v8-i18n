@@ -27,7 +27,16 @@ var Globalization = {};
  *
  * ECMA402, 7.2
  */
-var currentHostLocale = 'root';
+var CURRENT_HOST_LOCALE = 'root';
+
+/**
+ * Caches available locales for each service.
+ */
+var AVAILABLE_LOCALES = {
+  'collator': undefined,
+  'numberformat': undefined,
+  'dateformat': undefined
+}
 
 
 /**
@@ -48,7 +57,7 @@ Globalization.LocaleList = function(locales) {
 
   if (locales === undefined) {
     // Constructor is called without arguments
-    locales = [currentHostLocale];
+    locales = [CURRENT_HOST_LOCALE];
   }
 
   var obj = this;
@@ -113,7 +122,8 @@ Object.defineProperty(Globalization.Collator,
  *
  * ECMA402, 10.3.2
  */
-Globalization.Collator.supportedLocalesOf = function(requestedLocales) {
+Globalization.Collator.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('collator', locales, options);
 };
 
 
@@ -157,7 +167,8 @@ Object.defineProperty(Globalization.NumberFormat,
  *
  * ECMA402, 11.3.2
  */
-Globalization.NumberFormat.supportedLocalesOf = function(requestedLocales) {
+Globalization.NumberFormat.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('numberformat', locales, options);
 };
 
 /**
@@ -196,7 +207,8 @@ Object.defineProperty(Globalization.DateTimeFormat,
  *
  * ECMA402, 12.3.2
  */
-Globalization.DateTimeFormat.supportedLocalesOf = function(requestedLocales) {
+Globalization.DateTimeFormat.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('dateformat', locales, options);
 };
 
 
@@ -209,6 +221,113 @@ Globalization.DateTimeFormat.supportedLocalesOf = function(requestedLocales) {
  */
 Globalization.DateTimeFormat.prototype.format = function (date) {
 };
+
+
+/**
+ * Internal functions.
+ */
+
+
+/**
+ * Returns the subset of the provided BCP 47 language priority list
+ * for which this LocaleList object has a match.
+ *
+ * ECMA402, 8.4.7
+ */
+function supportedLocalesOf(service, locales, options) {
+  native function NativeJSAvailableLocalesOf();
+
+  if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
+    throw new Error('Internal error, wrong service type: ' + service);
+  }
+
+  // Provide defaults if matcher was not specified.
+  if (options === undefined) {
+    options = { 'localeMatcher': 'best fit' };
+  }
+
+  var matcher = undefined;
+  if (options.hasOwnProperty('localeMatcher')) {
+    matcher = options['localeMatcher'];
+    if (matcher !== undefined &&
+        matcher !== 'best fit' &&
+        matcher !== 'lookup') {
+      throw new RangeError('Invalid localeMatcher value: ' + matcher);
+    }
+  }
+
+  // Fall back to CURRENT_HOST_LOCALE if necessary.
+  var requestedLocales = locales;
+  if (requestedLocales === undefined) {
+    requestedLocales = new Globalization.LocaleList();
+  }
+
+  // Force it to be of LocaleList type (eliminating duplicates and make it
+  // well-formed).
+  if (requestedLocales.constructor !== Globalization.LocaleList) {
+    requestedLocales = new Globalization.LocaleList(requestedLocales);
+  }
+
+  // Cache these, they don't ever change per service.
+  if (AVAILABLE_LOCALES[service] === undefined) {
+    AVAILABLE_LOCALES[service] = NativeJSAvailableLocalesOf(service);
+  }
+
+  // Use either best fit or lookup algorithm to match locales.
+  if (matcher === undefined || matcher === 'best fit') {
+    return new Globalization.LocaleList(bestFitSupportedLocalesOf(
+        requestedLocales, AVAILABLE_LOCALES[service]));
+  }
+
+  return new Globalization.LocaleList(
+      lookupSupportedLocalesOf(requestedLocales, AVAILABLE_LOCALES[service]));
+}
+
+
+/**
+ * Returns the subset of the provided BCP 47 language priority list for which
+ * this LocaleList object has a matching locale when using the BCP 47 Lookup
+ * algorithm.
+ * Locales appear in the same order in the returned list as in the input list.
+ *
+ * ECMA402, 8.4.5
+ */
+function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
+  var matchedLocales = [];
+  for (var i = 0; i < requestedLocales.length; ++i) {
+    // Remove -u- and -x- extensions.
+    var locale = requestedLocales[i].replace(/-(u|x)(-([a-z0-9]{2,8}))+/, '');
+    do {
+      if (availableLocales.hasOwnProperty(locale)) {
+        // We could push either requested or supported locale here.
+        // Spec says the former for now.
+        matchedLocales.push(requestedLocales[i]);
+        break;
+      }
+      // Truncate locale if possible, if not break.
+      var pos = locale.lastIndexOf('-');
+      if (pos === -1) {
+        break;
+      }
+      locale = locale.substring(0, pos);
+    } while (true);
+  }
+
+  return matchedLocales;
+}
+
+
+/**
+ * Returns the subset of the provided BCP 47 language priority list for which
+ * this LocaleList object has a matching locale when using the implementation
+ * dependent algorithm.
+ * Locales appear in the same order in the returned list as in the input list.
+ *
+ * ECMA402, 8.4.6
+ */
+function bestFitSupportedLocalesOf(requestedLocales, availableLocales) {
+  return availableLocales;
+}
 
 
 /**
