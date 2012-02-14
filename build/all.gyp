@@ -48,7 +48,6 @@
       'include_dirs': [
         '..',
         '<(v8_path)',
-        '<(icu_path)/public/common',
       ],
       'dependencies': [
         '<(v8_path)/v8/tools/gyp/v8.gyp:v8',
