@@ -50,38 +50,47 @@ Intl.LocaleList = function(locales) {
     return new Intl.LocaleList(locales);
   }
 
+  var seen = [];
   if (locales === undefined) {
     // Constructor is called without arguments.
-    locales = [CURRENT_HOST_LOCALE];
+    seen = [CURRENT_HOST_LOCALE];
+  } else {
+    var o = toObject(locales);
+    // Converts it to UInt32 (>>> is shr on 32bit integers).
+    var len = o.length >>> 0;
+
+    for (var k = 0; k < len; k++) {
+      if (k in o) {
+        var value = o[k];
+
+        if (typeof value !== 'string' && typeof value !== 'object') {
+          throw new TypeError('Invalid element in locales argument.');
+        }
+
+        var tag = NativeJSCanonicalizeLanguageTag(String(value));
+        if (tag === 'invalid-tag') {
+          throw new RangeError('Invalid language tag: ' + value);
+        }
+
+        if (seen.indexOf(tag) === -1) {
+          seen.push(tag);
+        }
+      }
+    }
   }
 
-  var obj = this;
-  var index = 0;
-  var seen = {};
+  for (var index = 0; index < seen.length; index++) {
+    Object.defineProperty(this, String(index),
+                          {value: seen[index],
+                           writable: false,
+                           enumerable: true,
+                           configurable: false});
+  }
 
-  locales.forEach(function (value) {
-      if (typeof value !== 'string' && typeof value !== 'object') {
-        throw new TypeError('Invalid element in locales argument.');
-      }
-
-      var tag = String(value);
-      var canonicalizedTag = NativeJSCanonicalizeLanguageTag(tag);
-      if (canonicalizedTag === 'invalid-tag') {
-        throw new RangeError('Invalid language tag: ' + tag);
-      }
-
-      if (seen.hasOwnProperty(canonicalizedTag) !== true) {
-        seen[canonicalizedTag] = true;
-      } else {
-        return;
-      }
-
-      Object.defineProperty(
-          obj, index, {value: canonicalizedTag, enumerable: true});
-      index++;
-    });
-
-  Object.defineProperty(this, 'length', {value: index});
+  Object.defineProperty(this, 'length', {value: index,
+                                         writable: false,
+                                         enumerable: false,
+                                         configurable: false});
 };
 
 
@@ -307,6 +316,19 @@ function bestFitSupportedLocalesOf(requestedLocales, availableLocales) {
   // Return lookup results for now.
   return lookupSupportedLocalesOf(requestedLocales, availableLocales);
 }
+
+
+/**
+ * Converts parameter to an Object if possible.
+ */
+function toObject(value) {
+  if (value === undefined || value === null) {
+    throw new TypeError('Value cannot be converted to an Object.');
+  }
+
+  return Object(value);
+}
+
 
 return Intl;
 }());
