@@ -13,19 +13,16 @@
 // limitations under the License.
 
 /**
- * Globalization object is a single object that has some named properties,
+ * Intl object is a single object that has some named properties,
  * all of which are constructors.
- *
- * ECMA402, 7.
  */
-var Globalization = (function() {
+var Intl = (function() {
 
-var Globalization = {};
+var Intl = {};
 
 /**
  * Internal property used for locale resolution fallback.
- *
- * ECMA402, 7.2
+ * It's a implementation replacement for internal DefaultLocale method.
  */
 var CURRENT_HOST_LOCALE = 'root';
 
@@ -40,23 +37,21 @@ var AVAILABLE_LOCALES = {
 
 
 /**
- * Constructs Globalization.LocaleList object given optional locales
- * parameter.
+ * Constructs Intl.LocaleList object given optional locales parameter.
  * Validates the elements as well-formed language tags and omits duplicates.
  *
- * ECMA402, 8.1, 8.2
  * @constructor
  */
-Globalization.LocaleList = function(locales) {
+Intl.LocaleList = function(locales) {
   native function NativeJSCanonicalizeLanguageTag();
 
-  if (!this || this.constructor !== Globalization.LocaleList) {
-    // Constructor is called as a function
-    return new Globalization.LocaleList(locales);
+  if (!this || this === Intl) {
+    // Constructor is called as a function.
+    return new Intl.LocaleList(locales);
   }
 
   if (locales === undefined) {
-    // Constructor is called without arguments
+    // Constructor is called without arguments.
     locales = [CURRENT_HOST_LOCALE];
   }
 
@@ -65,16 +60,22 @@ Globalization.LocaleList = function(locales) {
   var seen = {};
 
   locales.forEach(function (value) {
+      if (typeof value !== 'string' && typeof value !== 'object') {
+        throw new TypeError('Invalid element in locales argument.');
+      }
+
       var tag = String(value);
       var canonicalizedTag = NativeJSCanonicalizeLanguageTag(tag);
       if (canonicalizedTag === 'invalid-tag') {
         throw new RangeError('Invalid language tag: ' + tag);
       }
-      var duplicate = seen.hasOwnProperty(canonicalizedTag);
-      if (duplicate) {
+
+      if (seen.hasOwnProperty(canonicalizedTag) !== true) {
+        seen[canonicalizedTag] = true;
+      } else {
         return;
       }
-      seen[canonicalizedTag] = true;
+
       Object.defineProperty(
           obj, index, {value: canonicalizedTag, enumerable: true});
       index++;
@@ -86,43 +87,36 @@ Globalization.LocaleList = function(locales) {
 
 /**
  * LocaleList prototype object.
- *
- * ECMA402, 8.3.1, 8.4
  */
-Object.defineProperty(Globalization.LocaleList,
+Object.defineProperty(Intl.LocaleList,
                       'prototype',
-                      { value: new Globalization.LocaleList() });
+                      { value: new Intl.LocaleList() });
 
 
 /**
- * Constructs Globalization.Collator object given optional locales and options
+ * Constructs Intl.Collator object given optional locales and options
  * parameters.
  *
- * Ecma402, 10.1, 10.2
  * @constructor
  */
-Globalization.Collator = function(locales, options) {
+Intl.Collator = function(locales, options) {
 };
 
 
 /**
  * Collator prototype object.
- *
- * ECMA402, 10.3.1, 10.4
  */
-Object.defineProperty(Globalization.Collator,
+Object.defineProperty(Intl.Collator,
                       'prototype',
-                      { value: new Globalization.Collator() });
+                      { value: new Intl.Collator() });
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- *
- * ECMA402, 10.3.2
  */
-Globalization.Collator.supportedLocalesOf = function(locales, options) {
+Intl.Collator.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('collator', locales, options);
 };
 
@@ -136,38 +130,35 @@ Globalization.Collator.supportedLocalesOf = function(locales, options) {
  * of this Collator object, and will be negative, zero, or positive, depending
  * on whether x comes before y in the sort order, the Strings are equal under
  * the sort order, or x comes after y in the sort order, respectively.
- *
- * ECMA402, 10.4.2
  */
-Globalization.Collator.prototype.compare = function(x, y) {
+Intl.Collator.prototype.compare = function(x, y) {
 };
 
 
 /**
- * ECMA402, 11.1, 11.2
+ * Constructs Intl.NumberFormat object given optional locales and options
+ * parameters.
+ *
  * @constructor
  */
-Globalization.NumberFormat = function(locales, options) {
+Intl.NumberFormat = function(locales, options) {
 };
 
 
 /**
  * NumberFormat prototype object.
- * ECMA402, 11.3.1, 11.4
  */
-Object.defineProperty(Globalization.NumberFormat,
+Object.defineProperty(Intl.NumberFormat,
                       'prototype',
-                      { value: new Globalization.NumberFormat() });
+                      { value: new Intl.NumberFormat() });
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- *
- * ECMA402, 11.3.2
  */
-Globalization.NumberFormat.supportedLocalesOf = function(locales, options) {
+Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('numberformat', locales, options);
 };
 
@@ -175,39 +166,35 @@ Globalization.NumberFormat.supportedLocalesOf = function(locales, options) {
  * Returns a String value representing the result of calling ToNumber(value)
  * according to the effective locale and the formatting options of this
  * NumberFormat.
- *
- * ECMA402, 11.4.2.
  */
-Globalization.NumberFormat.prototype.format = function (value) {
+Intl.NumberFormat.prototype.format = function (value) {
 };
 
 
 /**
- * ECMA402, 12.1, 12.2
+ * Constructs Intl.DateTimeFormat object given optional locales and options
+ * parameters.
+ *
  * @constructor
  */
-Globalization.DateTimeFormat = function(locales, options) {
+Intl.DateTimeFormat = function(locales, options) {
 };
 
 
 /**
  * DateTimeFormat prototype object.
- *
- * ECMA402, 12.3.1, 12.4
  */
-Object.defineProperty(Globalization.DateTimeFormat,
+Object.defineProperty(Intl.DateTimeFormat,
                       'prototype',
-                      { value: new Globalization.DateTimeFormat() });
+                      { value: new Intl.DateTimeFormat() });
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- *
- * ECMA402, 12.3.2
  */
-Globalization.DateTimeFormat.supportedLocalesOf = function(locales, options) {
+Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('dateformat', locales, options);
 };
 
@@ -216,10 +203,8 @@ Globalization.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  * Returns a String value representing the result of calling ToNumber(date)
  * according to the effective locale and the formatting options of this
  * DateTimeFormat.
- *
- * ECMA402, 12.4.2.
  */
-Globalization.DateTimeFormat.prototype.format = function (date) {
+Intl.DateTimeFormat.prototype.format = function (date) {
 };
 
 
@@ -231,8 +216,6 @@ Globalization.DateTimeFormat.prototype.format = function (date) {
 /**
  * Returns the subset of the provided BCP 47 language priority list
  * for which this LocaleList object has a match.
- *
- * ECMA402, 8.4.7
  */
 function supportedLocalesOf(service, locales, options) {
   native function NativeJSAvailableLocalesOf();
@@ -259,13 +242,13 @@ function supportedLocalesOf(service, locales, options) {
   // Fall back to CURRENT_HOST_LOCALE if necessary.
   var requestedLocales = locales;
   if (requestedLocales === undefined) {
-    requestedLocales = new Globalization.LocaleList();
+    requestedLocales = new Intl.LocaleList();
   }
 
   // Force it to be of LocaleList type (eliminating duplicates and make it
   // well-formed).
-  if (requestedLocales.constructor !== Globalization.LocaleList) {
-    requestedLocales = new Globalization.LocaleList(requestedLocales);
+  if (requestedLocales.constructor !== Intl.LocaleList) {
+    requestedLocales = new Intl.LocaleList(requestedLocales);
   }
 
   // Cache these, they don't ever change per service.
@@ -275,11 +258,11 @@ function supportedLocalesOf(service, locales, options) {
 
   // Use either best fit or lookup algorithm to match locales.
   if (matcher === undefined || matcher === 'best fit') {
-    return new Globalization.LocaleList(bestFitSupportedLocalesOf(
+    return new Intl.LocaleList(bestFitSupportedLocalesOf(
         requestedLocales, AVAILABLE_LOCALES[service]));
   }
 
-  return new Globalization.LocaleList(
+  return new Intl.LocaleList(
       lookupSupportedLocalesOf(requestedLocales, AVAILABLE_LOCALES[service]));
 }
 
@@ -289,18 +272,15 @@ function supportedLocalesOf(service, locales, options) {
  * this LocaleList object has a matching locale when using the BCP 47 Lookup
  * algorithm.
  * Locales appear in the same order in the returned list as in the input list.
- *
- * ECMA402, 8.4.5
  */
 function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
   var matchedLocales = [];
   for (var i = 0; i < requestedLocales.length; ++i) {
     // Remove -u- and -x- extensions.
-    var locale = requestedLocales[i].replace(/-(u|x)(-([a-z0-9]{2,8}))+/, '');
+    var locale = requestedLocales[i].replace(/-u(-([a-z0-9]{2,8}))+/, '');
     do {
       if (availableLocales.hasOwnProperty(locale)) {
-        // We could push either requested or supported locale here.
-        // Spec says the former for now.
+        // Push requested locale not the resolved one.
         matchedLocales.push(requestedLocales[i]);
         break;
       }
@@ -322,18 +302,11 @@ function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
  * this LocaleList object has a matching locale when using the implementation
  * dependent algorithm.
  * Locales appear in the same order in the returned list as in the input list.
- *
- * ECMA402, 8.4.6
  */
 function bestFitSupportedLocalesOf(requestedLocales, availableLocales) {
-  return availableLocales;
+  // Return lookup results for now.
+  return lookupSupportedLocalesOf(requestedLocales, availableLocales);
 }
 
-
-/**
- * ECMA402, 7
- */
-Object.preventExtensions(Globalization);
-
-return Globalization;
+return Intl;
 }());
