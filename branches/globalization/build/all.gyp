@@ -69,7 +69,7 @@
       'variables': {
         'js_files': [
           '../src/api.js',
-          '../src/globalization.js'
+          '../src/intl.js'
         ],
       },
       'actions': [
