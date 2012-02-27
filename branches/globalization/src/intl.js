@@ -37,18 +37,11 @@ var AVAILABLE_LOCALES = {
 
 
 /**
- * Constructs Intl.LocaleList object given optional locales parameter.
- * Validates the elements as well-formed language tags and omits duplicates.
- *
- * @constructor
+ * Initializes the given object so it's a valid LocaleList instance.
+ * Useful for subclassing.
  */
-Intl.LocaleList = function(locales) {
+function initializeLocaleList(localeList, locales) {
   native function NativeJSCanonicalizeLanguageTag();
-
-  if (!this || this === Intl) {
-    // Constructor is called as a function.
-    return new Intl.LocaleList(locales);
-  }
 
   var seen = [];
   if (locales === undefined) {
@@ -80,17 +73,35 @@ Intl.LocaleList = function(locales) {
   }
 
   for (var index = 0; index < seen.length; index++) {
-    Object.defineProperty(this, String(index),
+    Object.defineProperty(localeList, String(index),
                           {value: seen[index],
                            writable: false,
                            enumerable: true,
                            configurable: false});
   }
 
-  Object.defineProperty(this, 'length', {value: index,
-                                         writable: false,
-                                         enumerable: false,
-                                         configurable: false});
+  Object.defineProperty(localeList, 'length', {value: index,
+                                               writable: false,
+                                               enumerable: false,
+                                               configurable: false});
+
+  return localeList;
+}
+
+
+/**
+ * Constructs Intl.LocaleList object given optional locales parameter.
+ * Validates the elements as well-formed language tags and omits duplicates.
+ *
+ * @constructor
+ */
+Intl.LocaleList = function(locales) {
+  if (!this || this === Intl) {
+    // Constructor is called as a function.
+    return new Intl.LocaleList(locales);
+  }
+
+  return initializeLocaleList(toObject(this), locales);
 };
 
 
@@ -103,12 +114,32 @@ Object.defineProperty(Intl.LocaleList,
 
 
 /**
+ * Collator block.
+ */
+
+
+/**
+ * Initializes the given object so it's a valid Collator instance.
+ * Useful for subclassing.
+ */
+function initializeCollator(collator, locales, options) {
+  return collator;
+}
+
+
+/**
  * Constructs Intl.Collator object given optional locales and options
  * parameters.
  *
  * @constructor
  */
 Intl.Collator = function(locales, options) {
+  if (!this || this === Intl) {
+    // Constructor is called as a function.
+    return new Intl.Collator(locales, options);
+  }
+
+  return initializeCollator(toObject(this), locales, options);
 };
 
 
@@ -145,12 +176,27 @@ Intl.Collator.prototype.compare = function(x, y) {
 
 
 /**
+ * Initializes the given object so it's a valid NumberFormat instance.
+ * Useful for subclassing.
+ */
+function initializeNumberFormat(numberFormat, locales, options) {
+  return numberFormat;
+}
+
+
+/**
  * Constructs Intl.NumberFormat object given optional locales and options
  * parameters.
  *
  * @constructor
  */
 Intl.NumberFormat = function(locales, options) {
+  if (!this || this === Intl) {
+    // Constructor is called as a function.
+    return new Intl.NumberFormat(locales, options);
+  }
+
+  return initializeNumberFormat(toObject(this), locales, options);
 };
 
 
@@ -171,6 +217,7 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('numberformat', locales, options);
 };
 
+
 /**
  * Returns a String value representing the result of calling ToNumber(value)
  * according to the effective locale and the formatting options of this
@@ -181,12 +228,27 @@ Intl.NumberFormat.prototype.format = function (value) {
 
 
 /**
+ * Initializes the given object so it's a valid DateTimeFormat instance.
+ * Useful for subclassing.
+ */
+function initializeDateTimeFormat(dateFormat, locales, options) {
+  return dateFormat;
+}
+
+
+/**
  * Constructs Intl.DateTimeFormat object given optional locales and options
  * parameters.
  *
  * @constructor
  */
 Intl.DateTimeFormat = function(locales, options) {
+  if (!this || this === Intl) {
+    // Constructor is called as a function.
+    return new Intl.DateTimeFormat(locales, options);
+  }
+
+  return initializeDateTimeFormat(toObject(this), locales, options);
 };
 
 
@@ -215,11 +277,6 @@ Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  */
 Intl.DateTimeFormat.prototype.format = function (date) {
 };
-
-
-/**
- * Internal functions.
- */
 
 
 /**
