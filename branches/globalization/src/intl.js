@@ -292,18 +292,14 @@ function supportedLocalesOf(service, locales, options) {
 
   // Provide defaults if matcher was not specified.
   if (options === undefined) {
-    options = { 'localeMatcher': 'best fit' };
+    options = {};
+  } else {
+    options = toObject(options);
   }
 
-  var matcher = undefined;
-  if (options.hasOwnProperty('localeMatcher')) {
-    matcher = options['localeMatcher'];
-    if (matcher !== undefined &&
-        matcher !== 'best fit' &&
-        matcher !== 'lookup') {
-      throw new RangeError('Invalid localeMatcher value: ' + matcher);
-    }
-  }
+  var getOption = getGetOption(options, service);
+  var matcher = getOption(options, 'localeMatcher', 'string',
+                          ['lookup', 'best fit'], 'best fit');
 
   // Fall back to CURRENT_HOST_LOCALE if necessary.
   var requestedLocales = locales;
@@ -323,7 +319,7 @@ function supportedLocalesOf(service, locales, options) {
   }
 
   // Use either best fit or lookup algorithm to match locales.
-  if (matcher === undefined || matcher === 'best fit') {
+  if (matcher === 'best fit') {
     return new Intl.LocaleList(bestFitSupportedLocalesOf(
         requestedLocales, AVAILABLE_LOCALES[service]));
   }
@@ -342,7 +338,7 @@ function supportedLocalesOf(service, locales, options) {
 function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
   var matchedLocales = [];
   for (var i = 0; i < requestedLocales.length; ++i) {
-    // Remove -u- and -x- extensions.
+    // Remove -u- extension.
     var locale = requestedLocales[i].replace(/-u(-([a-z0-9]{2,8}))+/, '');
     do {
       if (availableLocales.hasOwnProperty(locale)) {
@@ -370,8 +366,101 @@ function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
  * Locales appear in the same order in the returned list as in the input list.
  */
 function bestFitSupportedLocalesOf(requestedLocales, availableLocales) {
-  // Return lookup results for now.
+  // TODO(cira): implement better best fit algorithm.
   return lookupSupportedLocalesOf(requestedLocales, availableLocales);
+}
+
+
+/**
+ * Returns a getOption function that extracts property value for given
+ * options object. If property is missing it returns defaultValue. If value
+ * is out of range for that property it throws RangeError.
+ */
+function getGetOption(options, caller) {
+  if (options === undefined) {
+    throw new Error('Internal error. Default options are missing.');
+  }
+
+  function getOption(property, type, values, defaultValue) {
+    if (options[property] !== undefined && options[property] !== null) {
+      var value = options[property];
+      switch (type) {
+        case 'boolean':
+          value = Boolean(value);
+          break;
+        case 'string':
+          value = String(value);
+          break;
+        case 'number':
+          value = Number(value);
+          break;
+        default:
+          throw new Error('Internal error. Wrong value type.');
+      }
+      if (values !== undefined && values.indexOf(value) === -1) {
+        throw new RangeError('Value ' + value + ' out of range for ' + caller +
+                             ' options property ' + property);
+      }
+
+      return value;
+    }
+
+    return defaultValue;
+  }
+
+  return getOption;
+}
+
+
+/**
+ * Compares a BCP 47 language priority list requestedLocales against the locales
+ * in availableLocales and determines the best available language to meet the
+ * request. Two algorithms are available to match the locales: the Lookup
+ * algorithm described in RFC 4647 section 3.4, and an implementation dependent
+ * best-fit algorithm. Independent of the locale matching algorithm, options
+ * specified through Unicode locale extension sequences are negotiated
+ * separately, taking the caller’s relevant extension keys and locale data as
+ * well as client-provided options into consideration. Returns an object with
+ * a locale property whose value is the language tag of the selected locale,
+ * and properties for each key in relevantExtensionKeys providing the selected
+ * value for that key.
+ */
+function resolveLocale(service, requestedLocales, options) {
+  if (requestedLocales === undefined) {
+    requestedLocales = new Intl.LocaleList();
+  } else {
+    // TODO(cira): mark well formed locale list objects so we don't re-process
+    // them.
+    requestedLocales = new Intl.LocaleList(requestedLocales);
+  }
+
+  var getOption = getGetOption(service, options);
+  var matcher = getOption('localeMatcher', 'string',
+                          ['lookup', 'best fit'], 'best fit');
+  var resolved;
+  if (matcher === 'lookup') {
+    resolved = lookupMatch(service, requestedLocales);
+  } else {
+    resolved = bestFitMatch(service, requestedLocales);
+  }
+}
+
+
+/**
+ * Returns best matched supported locale and extension info using basic 
+ * lookup algorithm.
+ */
+function lookupMatch(service, requestedLocales) {
+}
+
+
+/**
+ * Returns best matched supported locale and extension info using implementation 
+ * dependend algorithm.
+ */
+function bestFitMatch(service, requestedLocales) {
+  // TODO(cira): implement better best fit algorithm.
+  lookupMatch(service, requestedLocales);
 }
 
 
