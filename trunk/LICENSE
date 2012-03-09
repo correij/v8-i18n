@@ -4,12 +4,9 @@ are:
 
   - ECMAScript test suite, located under test/.
 
-  - Layout tests, located under test/mjsunit/third_party.  These are
-    based on layout tests from webkit.org which are copyrighted by
-    Apple Computer, Inc. and released under a 3-clause BSD license.
-
-  - Valgrind client API header, located at third_party/valgrind/valgrind.h
-    This is release under the BSD license.
+  - Layout tests, located under test/.  These are based on layout tests
+    from webkit.org which are copyrighted by Apple Computer, Inc. and released
+    under a 3-clause BSD license.
 
 These libraries have their own licenses; we recommend you read them,
 as their terms may differ from the terms below.
