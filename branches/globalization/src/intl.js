@@ -522,9 +522,6 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   dateFormat.resolvedOptions.numberingSystem =
       formatter.options.numberingSystem;
 
-  dateFormat.resolvedOptions.icuLocale = formatter.options.icuLocale;
-  dateFormat.resolvedOptions.getLocale = formatter.options.getLocale;
-
   return dateFormat;
 }
 

@@ -33,8 +33,7 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(v8::Handle<v8::String>,
                                                        v8::Handle<v8::Object>,
                                                        v8::Handle<v8::Object>);
 static icu::SimpleDateFormat* CreateICUDateFormat(const icu::Locale&,
-                                                  v8::Handle<v8::Object>,
-                                                  icu::TimeZone*);
+                                                  v8::Handle<v8::Object>);
 static v8::Handle<v8::Value> SetResolvedSettings(const icu::Locale&,
                                                  icu::SimpleDateFormat*);
 
@@ -159,24 +158,11 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(
   }
   icu::Locale icu_locale(icu_result);
 
-  // Create time zone as specified by the user.
-  icu::TimeZone* tz = NULL;
-  icu::UnicodeString timezone;
-  if (Utils::ExtractStringSetting(options, "timeZone", &timezone)) {
-    if (timezone != UNICODE_STRING_SIMPLE("UTC")) {
-      return NULL;
-    }
-    tz = icu::TimeZone::createTimeZone("GMT");
-  } else {
-    tz = icu::TimeZone::createDefault();
-  }
-
-  icu::SimpleDateFormat* date_format =
-      CreateICUDateFormat(icu_locale, options, tz);
+  icu::SimpleDateFormat* date_format = CreateICUDateFormat(icu_locale, options);
   if (!date_format) {
     // Remove extensions and try again.
     icu::Locale no_extension_locale(icu_locale.getBaseName());
-    date_format = CreateICUDateFormat(no_extension_locale, options, tz);
+    date_format = CreateICUDateFormat(no_extension_locale, options);
 
     // Set resolved settings (pattern, numbering system, calendar).
     wrapper->Set(v8::String::New("options"),
@@ -190,9 +176,20 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(
 }
 
 static icu::SimpleDateFormat* CreateICUDateFormat(
-    const icu::Locale& icu_locale,
-    v8::Handle<v8::Object> options,
-    icu::TimeZone* tz) {
+    const icu::Locale& icu_locale, v8::Handle<v8::Object> options) {
+  // Create time zone as specified by the user. We have to re-create time zone
+  // since calendar takes ownership.
+  icu::TimeZone* tz = NULL;
+  icu::UnicodeString timezone;
+  if (Utils::ExtractStringSetting(options, "timeZone", &timezone)) {
+    if (timezone != UNICODE_STRING_SIMPLE("UTC")) {
+      return NULL;
+    }
+    tz = icu::TimeZone::createTimeZone("GMT");
+  } else {
+    tz = icu::TimeZone::createDefault();
+  }
+
   // Create a calendar using locale, and apply time zone to it.
   UErrorCode status = U_ZERO_ERROR;
   icu::Calendar* calendar =
@@ -203,11 +200,12 @@ static icu::SimpleDateFormat* CreateICUDateFormat(
   icu::SimpleDateFormat* date_format = NULL;
   icu::UnicodeString skeleton;
   if (Utils::ExtractStringSetting(options, "skeleton", &skeleton)) {
-    v8::Local<icu::DateTimePatternGenerator> generator(
-        icu::DateTimePatternGenerator::createInstance(icu_locale, status));
+    icu::DateTimePatternGenerator* generator =
+        icu::DateTimePatternGenerator::createInstance(icu_locale, status);
     icu::UnicodeString pattern;
     if (U_SUCCESS(status)) {
       pattern = generator->getBestPattern(skeleton, status);
+      delete generator;
     }
 
     date_format = new icu::SimpleDateFormat(pattern, icu_locale, status);
@@ -237,9 +235,11 @@ static v8::Handle<v8::Value> SetResolvedSettings(
                v8::String::New(reinterpret_cast<const uint16_t*>(
                    pattern.getBuffer()), pattern.length()));
 
-  const icu::Calendar* calendar = date_format->getCalendar();
-  const char* calendar_name = calendar->getType();
-  options->Set(v8::String::New("calendar"), v8::String::New(calendar_name));
+  if (date_format) {
+    const icu::Calendar* calendar = date_format->getCalendar();
+    const char* calendar_name = calendar->getType();
+    options->Set(v8::String::New("calendar"), v8::String::New(calendar_name));
+  }
 
   // Ugly hack. ICU doesn't expose numbering system in any way, so we have
   // to assume that for given locale NumberingSystem constructor produces the
@@ -253,9 +253,6 @@ static v8::Handle<v8::Value> SetResolvedSettings(
   } else {
     options->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
-
-  options->Set(v8::String::New("icuLocale"),
-               v8::String::New(icu_locale.getName()));
 
   return handle_scope.Close(options);
 }
