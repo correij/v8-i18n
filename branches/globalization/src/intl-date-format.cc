@@ -29,10 +29,14 @@ namespace v8_i18n {
 
 v8::Persistent<v8::FunctionTemplate> IntlDateFormat::date_format_template_;
 
-static icu::DateFormat* InitializeDateTimeFormat(const icu::Locale&,
-                                                 v8::Handle<v8::Object>);
-static v8::Handle<v8::Value> SetResolvedSettings(
-    const icu::Locale&, icu::SimpleDateFormat* date_format);
+static icu::SimpleDateFormat* InitializeDateTimeFormat(v8::Handle<v8::String>,
+                                                       v8::Handle<v8::Object>,
+                                                       v8::Handle<v8::Object>);
+static icu::SimpleDateFormat* CreateICUDateFormat(const icu::Locale&,
+                                                  v8::Handle<v8::Object>,
+                                                  icu::TimeZone*);
+static v8::Handle<v8::Value> SetResolvedSettings(const icu::Locale&,
+                                                 icu::SimpleDateFormat*);
 
 icu::SimpleDateFormat* IntlDateFormat::UnpackIntlDateFormat(
     v8::Handle<v8::Object> obj) {
@@ -120,31 +124,16 @@ v8::Handle<v8::Value> IntlDateFormat::JSCreateDateTimeFormat(
   v8::Persistent<v8::Object> wrapper =
       v8::Persistent<v8::Object>::New(local_object);
 
-  // Convert BCP47 into ICU locale format.
-  UErrorCode status = U_ZERO_ERROR;
-  char icu_result[ULOC_FULLNAME_CAPACITY];
-  int icu_length = 0;
-  v8::String::AsciiValue bcp47_locale(args[0]->ToString());
-  uloc_forLanguageTag(*bcp47_locale, icu_result, ULOC_FULLNAME_CAPACITY,
-                      &icu_length, &status);
-  if (U_FAILURE(status) || icu_length == 0) {
-    return v8::ThrowException(v8::Exception::Error(
-        v8::String::New("Internal error. Cannot convert to icu locale.")));
-  }
-  icu::Locale icu_locale(icu_result);
-
   // Set date time formatter as internal field of the resulting JS object.
-  icu::SimpleDateFormat* date_format = static_cast<icu::SimpleDateFormat*>(
-      InitializeDateTimeFormat(icu_locale, args[1]->ToObject()));
-  if (!date_format) {
-    return v8::ThrowException(v8::Exception::Error(
-        v8::String::New("Internal error. Couldn't create date formatter.")));
-  }
-  wrapper->SetPointerInInternalField(0, date_format);
+  icu::SimpleDateFormat* date_format = InitializeDateTimeFormat(
+      args[0]->ToString(), args[1]->ToObject(), wrapper);
 
-  // Set resolved settings (pattern, numbering system, calendar).
-  wrapper->Set(v8::String::New("options"),
-               SetResolvedSettings(icu_locale, date_format));
+  if (!date_format) {
+    return v8::ThrowException(v8::Exception::Error(v8::String::New(
+        "Internal error. Couldn't create ICU date time formatter.")));
+  } else {
+    wrapper->SetPointerInInternalField(0, date_format);
+  }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
   wrapper.MakeWeak(NULL, DeleteIntlDateFormat);
@@ -152,9 +141,23 @@ v8::Handle<v8::Value> IntlDateFormat::JSCreateDateTimeFormat(
   return wrapper;
 }
 
-static icu::DateFormat* InitializeDateTimeFormat(
-    const icu::Locale& icu_locale, v8::Handle<v8::Object> options) {
+static icu::SimpleDateFormat* InitializeDateTimeFormat(
+    v8::Handle<v8::String> locale,
+    v8::Handle<v8::Object> options,
+    v8::Handle<v8::Object> wrapper) {
   v8::HandleScope handle_scope;
+
+  // Convert BCP47 into ICU locale format.
+  UErrorCode status = U_ZERO_ERROR;
+  char icu_result[ULOC_FULLNAME_CAPACITY];
+  int icu_length = 0;
+  v8::String::AsciiValue bcp47_locale(locale);
+  uloc_forLanguageTag(*bcp47_locale, icu_result, ULOC_FULLNAME_CAPACITY,
+                      &icu_length, &status);
+  if (U_FAILURE(status) || icu_length == 0) {
+    return NULL;
+  }
+  icu::Locale icu_locale(icu_result);
 
   // Create time zone as specified by the user.
   icu::TimeZone* tz = NULL;
@@ -168,14 +171,32 @@ static icu::DateFormat* InitializeDateTimeFormat(
     tz = icu::TimeZone::createDefault();
   }
 
+  icu::SimpleDateFormat* date_format =
+      CreateICUDateFormat(icu_locale, options, tz);
+  if (!date_format) {
+    // Remove extensions and try again.
+    icu::Locale no_extension_locale(icu_locale.getBaseName());
+    date_format = CreateICUDateFormat(no_extension_locale, options, tz);
+
+    // Set resolved settings (pattern, numbering system, calendar).
+    wrapper->Set(v8::String::New("options"),
+                 SetResolvedSettings(no_extension_locale, date_format));
+  } else {
+    wrapper->Set(v8::String::New("options"),
+                 SetResolvedSettings(icu_locale, date_format));
+  }
+
+  return date_format;
+}
+
+static icu::SimpleDateFormat* CreateICUDateFormat(
+    const icu::Locale& icu_locale,
+    v8::Handle<v8::Object> options,
+    icu::TimeZone* tz) {
   // Create a calendar using locale, and apply time zone to it.
   UErrorCode status = U_ZERO_ERROR;
   icu::Calendar* calendar =
       icu::Calendar::createInstance(tz, icu_locale, status);
-  if (U_FAILURE(status)) {
-    delete calendar;
-    return NULL;
-  }
 
   // Make formatter from skeleton. Calendar and numbering system are added
   // to the locale as Unicode extension (if they were specified at all).
@@ -184,18 +205,23 @@ static icu::DateFormat* InitializeDateTimeFormat(
   if (Utils::ExtractStringSetting(options, "skeleton", &skeleton)) {
     v8::Local<icu::DateTimePatternGenerator> generator(
         icu::DateTimePatternGenerator::createInstance(icu_locale, status));
-    icu::UnicodeString pattern =
-        generator->getBestPattern(skeleton, status);
+    icu::UnicodeString pattern;
+    if (U_SUCCESS(status)) {
+      pattern = generator->getBestPattern(skeleton, status);
+    }
 
     date_format = new icu::SimpleDateFormat(pattern, icu_locale, status);
-    if (U_FAILURE(status)) {
-      return NULL;
+    if (U_SUCCESS(status)) {
+      date_format->adoptCalendar(calendar);
     }
-    date_format->adoptCalendar(calendar);
-  } else {
-    // Skeleton was not specified.
-    delete calendar;
   }
+
+  if (U_FAILURE(status)) {
+    delete calendar;
+    delete date_format;
+    date_format = NULL;
+  }
+
   return date_format;
 }
 
@@ -221,9 +247,15 @@ static v8::Handle<v8::Value> SetResolvedSettings(
   UErrorCode status = U_ZERO_ERROR;
   icu::NumberingSystem* numbering_system =
       icu::NumberingSystem::createInstance(icu_locale, status);
-  const char* system_name = numbering_system->getName();
-  options->Set(v8::String::New("numberingSystem"),
-               v8::String::New(system_name));
+  if (U_SUCCESS(status)) {
+    const char* ns = numbering_system->getName();
+    options->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
+  } else {
+    options->Set(v8::String::New("numberingSystem"), v8::Undefined());
+  }
+
+  options->Set(v8::String::New("icuLocale"),
+               v8::String::New(icu_locale.getName()));
 
   return handle_scope.Close(options);
 }

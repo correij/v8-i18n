@@ -492,8 +492,9 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
   // ICU prefers options to be passed using -u- extension key/values, so
   // we need to build that. Update the options too with proper values.
-  var extension = updateExtensionAndOptions(
-      options, locale.extension, ['ca', 'nu'], ['calendar', 'numberingSystem']);
+  var extension = updateExtensionAndOptions(options, locale.extension,
+                                            ['ca', 'nu'],
+                                            ['calendar', 'numberingSystem']);
 
   // We implement only best fit algorithm, but still need to check
   // if the formatMatch values are in range.
@@ -512,13 +513,17 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
   var calendar = ICU_CALENDAR_MAP[formatter.options.calendar];
   if (calendar === undefined) {
-    throw new Error('Internal error. Invalid ICU calendar name:' +
-                    formatter.options.calendar);
+    // Use ICU name if we don't have a match. It shouldn't happen, but
+    // it would be too strict to throw for this.
+    calendar = formatter.options.calendar;
   }
   dateFormat.resolvedOptions.calendar = calendar;
 
   dateFormat.resolvedOptions.numberingSystem =
       formatter.options.numberingSystem;
+
+  dateFormat.resolvedOptions.icuLocale = formatter.options.icuLocale;
+  dateFormat.resolvedOptions.getLocale = formatter.options.getLocale;
 
   return dateFormat;
 }
