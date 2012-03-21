@@ -1,4 +1,4 @@
-// Copyright 2011 the v8-i18n authors.
+// Copyright 2012 the v8-i18n authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

@@ -210,10 +210,96 @@ Intl.Collator.prototype.compare = function(x, y) {
 
 
 /**
+ * Verifies that the input is a well-formed ISO 4217 currency code.
+ */
+function isWellFormedCurrencyCode(currency) {
+  if (typeof currency !== "string") {
+    return false;
+  }
+
+  var code = String(currency).toUpperCase();
+  if (code.length !== 3) {
+    return false;
+  }
+
+  if (code.match(/[^A-Z]/) !== null) {
+    return false;
+  }
+  return true;
+}
+
+
+/**
  * Initializes the given object so it's a valid NumberFormat instance.
  * Useful for subclassing.
  */
 function initializeNumberFormat(numberFormat, locales, options) {
+  native function NativeJSCreateNumberFormat();
+
+  if (options === undefined) {
+    options = {};
+  }
+
+  var getOption = getGetOption(options, 'numberformat');
+
+  // We implement best fit only for now, but check for valid range anyways.
+  var matcher = getOption('localeMatcher', 'string',
+                          ['lookup', 'best fit'], 'best fit');
+
+  var locale = resolveLocale('numberformat', locales, options);
+
+  // ICU prefers options to be passed using -u- extension key/values, so
+  // we need to build that. Update the options too with proper values.
+  var extension = updateExtensionAndOptions(options, locale.extension,
+                                            ['nu'], ['numberingSystem']);
+
+  var internalOptions = {};
+  internalOptions.style = getOption(
+      'style', 'string', ['decimal', 'percent', 'currency'], 'decimal');
+
+  var currency = getOption('currency', 'string');
+  if (currency && !isWellFormedCurrencyCode(currency)) {
+    throw new RangeError('Invalid currency code: ' + currency);
+  }
+
+  if (internalOptions.style === 'currency' && currency === undefined) {
+    throw new TypeError('Currency code is required with currency style.');
+  }
+
+  var currencyDisplay = getOption(
+      'currencyDisplay', 'string', ['code', 'symbol', 'name'], 'symbol');
+  if (internalOptions.style === 'currency') {
+    internalOptions.currency = currency.toUpperCase();
+    internalOptions.currencyDisplay = currencyDisplay;
+  }
+
+  var digitRanges = ['minimumIntegerDigits', 'minimumFractionDigits',
+                     'maximumFractionDigits', 'minimumSignificantDigits',
+                     'maximumSignificantDigits'];
+  for (var i = 0; i < digitRanges.length; ++i) {
+    var digits = options[digitRanges[i]];
+    if (digits !== undefined && (digits >= 0 && digits <= 21)) {
+      internalOptions[digitRanges[i]] = Number(digits);
+    }
+  }
+
+  internalOptions.useGrouping = getOption(
+      'useGrouping', 'boolean', undefined, true);
+
+  var formatter = NativeJSCreateNumberFormat(locale.locale + extension,
+                                             internalOptions);
+
+  numberFormat.__formatter__ = formatter;
+
+  numberFormat.resolvedOptions = formatter.options;
+  numberFormat.resolvedOptions.locale = locale.locale;
+  // We can't get information about number or currency style from ICU, so we
+  // assume user request was fulfilled.
+  numberFormat.resolvedOptions.style = internalOptions.style;
+  if (internalOptions.style === 'currency') {
+    numberFormat.resolvedOptions.currencyDisplay = currencyDisplay;
+  }
+
   return numberFormat;
 }
 
@@ -258,6 +344,7 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  * NumberFormat.
  */
 Intl.NumberFormat.prototype.format = function (value) {
+  return this.__formatter__.internalFormat(Number(value));
 };
 
 
@@ -496,9 +583,10 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
                                             ['ca', 'nu'],
                                             ['calendar', 'numberingSystem']);
 
+  var getOption = getGetOption(options, 'dateformat');
+
   // We implement only best fit algorithm, but still need to check
   // if the formatMatch values are in range.
-  var getOption = getGetOption(options, 'dateformat');
   var matcher = getOption('formatMatch', 'string',
                           ['basic', 'best fit'], 'best fit');
 
@@ -714,7 +802,8 @@ function bestFitSupportedLocalesOf(requestedLocales, availableLocales) {
  */
 function getGetOption(options, caller) {
   if (options === undefined) {
-    throw new Error('Internal error. Default options are missing.');
+    throw new Error('Internal ' + caller + ' error. ' +
+                    'Default options are missing.');
   }
 
   function getOption(property, type, values, defaultValue) {

@@ -12,43 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef V8_I18N_SRC_INTL_DATE_FORMAT_H_
-#define V8_I18N_SRC_INTL_DATE_FORMAT_H_
+#ifndef V8_I18N_SRC_INTL_NUMBER_FORMAT_H_
+#define V8_I18N_SRC_INTL_NUMBER_FORMAT_H_
 
 #include "unicode/uversion.h"
 #include "v8/include/v8.h"
 
 namespace U_ICU_NAMESPACE {
-class SimpleDateFormat;
+class DecimalFormat;
 }
 
 namespace v8_i18n {
 
-class IntlDateFormat {
+class IntlNumberFormat {
  public:
-  static v8::Handle<v8::Value> JSCreateDateTimeFormat(
+  static v8::Handle<v8::Value> JSCreateNumberFormat(
       const v8::Arguments& args);
 
   // Helper methods for various bindings.
 
   // Unpacks date format object from corresponding JavaScript object.
-  static icu::SimpleDateFormat* UnpackIntlDateFormat(
+  static icu::DecimalFormat* UnpackIntlNumberFormat(
       v8::Handle<v8::Object> obj);
 
-  // Release memory we allocated for the DateFormat once the JS object that
+  // Release memory we allocated for the NumberFormat once the JS object that
   // holds the pointer gets garbage collected.
-  static void DeleteIntlDateFormat(v8::Persistent<v8::Value> object,
+  static void DeleteIntlNumberFormat(v8::Persistent<v8::Value> object,
                                    void* param);
 
-  // Formats date and returns corresponding string.
+  // Formats number and returns corresponding string.
   static v8::Handle<v8::Value> InternalFormat(const v8::Arguments& args);
 
  private:
-  IntlDateFormat();
+  IntlNumberFormat();
 
-  static v8::Persistent<v8::FunctionTemplate> date_format_template_;
+  static v8::Persistent<v8::FunctionTemplate> number_format_template_;
 };
 
 }  // namespace v8_i18n
 
-#endif  // V8_I18N_SRC_INTL_DATE_FORMAT_H_
+#endif  // V8_I18N_SRC_INTL_NUMBER_FORMAT_H_
