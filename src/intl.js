@@ -35,6 +35,40 @@ var AVAILABLE_LOCALES = {
   'dateformat': undefined
 }
 
+/**
+ * Unicode extension regular expression.
+ */
+var UNICODE_EXTENSION_RE = new RegExp('-u(-[a-z0-9]{2,8})+', 'g');
+
+/**
+ * Replace quoted text (single quote, anything but the quote and quote again).
+ */
+var QUOTED_STRING_RE = new RegExp("'[^']+'", 'g');
+
+/**
+ * Maps ICU calendar names into LDML type.
+ */
+var ICU_CALENDAR_MAP = {
+  'gregorian': 'gregory',
+  'japanese': 'japanese',
+  'buddhist': 'buddhist',
+  'roc': 'roc',
+  'persian': 'persian',
+  'islamic-civil': 'islamicc',
+  'islamic': 'islamic',
+  'hebrew': 'hebrew',
+  'chinese': 'chinese',
+  'indian': 'indian',
+  'coptic': 'coptic',
+  'ethiopic': 'ethiopic',
+  'ethiopic-amete-alem': 'ethioaa'
+};
+
+/**
+ * Global native (C++) methods.
+ */
+native function NativeJSAvailableLocalesOf();
+
 
 /**
  * Initializes the given object so it's a valid LocaleList instance.
@@ -176,10 +210,96 @@ Intl.Collator.prototype.compare = function(x, y) {
 
 
 /**
+ * Verifies that the input is a well-formed ISO 4217 currency code.
+ */
+function isWellFormedCurrencyCode(currency) {
+  if (typeof currency !== "string") {
+    return false;
+  }
+
+  var code = String(currency).toUpperCase();
+  if (code.length !== 3) {
+    return false;
+  }
+
+  if (code.match(/[^A-Z]/) !== null) {
+    return false;
+  }
+  return true;
+}
+
+
+/**
  * Initializes the given object so it's a valid NumberFormat instance.
  * Useful for subclassing.
  */
 function initializeNumberFormat(numberFormat, locales, options) {
+  native function NativeJSCreateNumberFormat();
+
+  if (options === undefined) {
+    options = {};
+  }
+
+  var getOption = getGetOption(options, 'numberformat');
+
+  // We implement best fit only for now, but check for valid range anyways.
+  var matcher = getOption('localeMatcher', 'string',
+                          ['lookup', 'best fit'], 'best fit');
+
+  var locale = resolveLocale('numberformat', locales, options);
+
+  // ICU prefers options to be passed using -u- extension key/values, so
+  // we need to build that. Update the options too with proper values.
+  var extension = updateExtensionAndOptions(options, locale.extension,
+                                            ['nu'], ['numberingSystem']);
+
+  var internalOptions = {};
+  internalOptions.style = getOption(
+      'style', 'string', ['decimal', 'percent', 'currency'], 'decimal');
+
+  var currency = getOption('currency', 'string');
+  if (currency && !isWellFormedCurrencyCode(currency)) {
+    throw new RangeError('Invalid currency code: ' + currency);
+  }
+
+  if (internalOptions.style === 'currency' && currency === undefined) {
+    throw new TypeError('Currency code is required with currency style.');
+  }
+
+  var currencyDisplay = getOption(
+      'currencyDisplay', 'string', ['code', 'symbol', 'name'], 'symbol');
+  if (internalOptions.style === 'currency') {
+    internalOptions.currency = currency.toUpperCase();
+    internalOptions.currencyDisplay = currencyDisplay;
+  }
+
+  var digitRanges = ['minimumIntegerDigits', 'minimumFractionDigits',
+                     'maximumFractionDigits', 'minimumSignificantDigits',
+                     'maximumSignificantDigits'];
+  for (var i = 0; i < digitRanges.length; ++i) {
+    var digits = options[digitRanges[i]];
+    if (digits !== undefined && (digits >= 0 && digits <= 21)) {
+      internalOptions[digitRanges[i]] = Number(digits);
+    }
+  }
+
+  internalOptions.useGrouping = getOption(
+      'useGrouping', 'boolean', undefined, true);
+
+  var formatter = NativeJSCreateNumberFormat(locale.locale + extension,
+                                             internalOptions);
+
+  numberFormat.__formatter__ = formatter;
+
+  numberFormat.resolvedOptions = formatter.options;
+  numberFormat.resolvedOptions.locale = locale.locale;
+  // We can't get information about number or currency style from ICU, so we
+  // assume user request was fulfilled.
+  numberFormat.resolvedOptions.style = internalOptions.style;
+  if (internalOptions.style === 'currency') {
+    numberFormat.resolvedOptions.currencyDisplay = currencyDisplay;
+  }
+
   return numberFormat;
 }
 
@@ -224,7 +344,208 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  * NumberFormat.
  */
 Intl.NumberFormat.prototype.format = function (value) {
+  return this.__formatter__.internalFormat(Number(value));
 };
+
+
+/**
+ * Returns a string that matches LDML representation of the options object.
+ */
+function toLDMLString(options) {
+  var getOption = getGetOption(options, 'dateformat');
+
+  var ldmlString = '';
+
+  var option = getOption('weekday', 'string', ['narrow', 'short', 'long']);
+  ldmlString += appendToLDMLString(
+      option, {narrow: 'EEEEE', short: 'EEE', long: 'EEEE'});
+
+  option = getOption('era', 'string', ['narrow', 'short', 'long']);
+  ldmlString += appendToLDMLString(
+      option, {narrow: 'GGGGG', short: 'GGG', long: 'GGGG'});
+
+  option = getOption('year', 'string', ['2-digit', 'numeric']);
+  ldmlString += appendToLDMLString(option, {'2-digit': 'yy', 'numeric': 'y'});
+
+  option = getOption('month', 'string',
+                     ['2-digit', 'numeric', 'narrow', 'short', 'long']);
+  ldmlString += appendToLDMLString(option, {'2-digit': 'MM', 'numeric': 'M',
+          'narrow': 'MMMMM', 'short': 'MMM', 'long': 'MMMM'});
+
+  option = getOption('day', 'string', ['2-digit', 'numeric']);
+  ldmlString += appendToLDMLString(
+      option, {'2-digit': 'dd', 'numeric': 'd'});
+
+  var hr12 = getOption('hour12', 'boolean');
+  option = getOption('hour', 'string', ['2-digit', 'numeric']);
+  if (hr12 === undefined) {
+    ldmlString += appendToLDMLString(option, {'2-digit': 'jj', 'numeric': 'j'});
+  } else if (hr12 === true) {
+    ldmlString += appendToLDMLString(option, {'2-digit': 'hh', 'numeric': 'h'});
+  } else {
+    ldmlString += appendToLDMLString(option, {'2-digit': 'HH', 'numeric': 'H'});
+  }
+
+  option = getOption('minute', 'string', ['2-digit', 'numeric']);
+  ldmlString += appendToLDMLString(option, {'2-digit': 'mm', 'numeric': 'm'});
+
+  option = getOption('second', 'string', ['2-digit', 'numeric']);
+  ldmlString += appendToLDMLString(option, {'2-digit': 'ss', 'numeric': 's'});
+
+  option = getOption('timeZoneName', 'string', ['short', 'long']);
+  ldmlString += appendToLDMLString(option, {short: 'v', long: 'vv'});
+
+  return ldmlString;
+}
+
+
+/**
+ * Returns either LDML equivalent of the current option or empty string.
+ */
+function appendToLDMLString(option, pairs) {
+  if (option !== undefined) {
+    return pairs[option];
+  } else {
+    return '';
+  }
+}
+
+
+/**
+ * Returns object that matches LDML representation of the date.
+ */
+function fromLDMLString(ldmlString) {
+  // First remove '' quoted text, so we lose 'Uhr' strings.
+  ldmlString = ldmlString.replace(QUOTED_STRING_RE, '');
+
+  var options = {};
+  var match = ldmlString.match(/E{3,5}/g);
+  options = appendToDateTimeObject(
+      options, 'weekday', match, {EEEEE: 'narrow', EEE: 'short', EEEE: 'long'});
+
+  match = ldmlString.match(/G{3,5}/g);
+  options = appendToDateTimeObject(
+      options, 'era', match, {GGGGG: 'narrow', GGG: 'short', GGGG: 'long'});
+
+  match = ldmlString.match(/y{1,2}/g);
+  options = appendToDateTimeObject(
+      options, 'year', match, {y: 'numeric', yy: '2-digit'});
+
+  match = ldmlString.match(/M{1,5}/g);
+  options = appendToDateTimeObject(options, 'month', match, {MM: '2-digit',
+      M: 'numeric', MMMMM: 'narrow', MMM: 'short', MMMM: 'long'});
+
+  // Sometimes we get L instead of M for month - standalone name.
+  match = ldmlString.match(/L{1,5}/g);
+  options = appendToDateTimeObject(options, 'month', match, {LL: '2-digit',
+      L: 'numeric', LLLLL: 'narrow', LLL: 'short', LLLL: 'long'});
+
+  match = ldmlString.match(/d{1,2}/g);
+  options = appendToDateTimeObject(
+      options, 'day', match, {d: 'numeric', dd: '2-digit'});
+
+  match = ldmlString.match(/h{1,2}/g);
+  if (match !== null) {
+    options['hour12'] = true;
+  }
+  options = appendToDateTimeObject(
+      options, 'hour', match, {h: 'numeric', hh: '2-digit'});
+
+  match = ldmlString.match(/H{1,2}/g);
+  if (match !== null) {
+    options['hour12'] = false;
+  }
+  options = appendToDateTimeObject(
+      options, 'hour', match, {H: 'numeric', HH: '2-digit'});
+
+  match = ldmlString.match(/m{1,2}/g);
+  options = appendToDateTimeObject(
+      options, 'minute', match, {m: 'numeric', mm: '2-digit'});
+
+  match = ldmlString.match(/s{1,2}/g);
+  options = appendToDateTimeObject(
+      options, 'second', match, {s: 'numeric', ss: '2-digit'});
+
+  match = ldmlString.match(/v{1,2}/g);
+  options = appendToDateTimeObject(
+      options, 'timeZoneName', match, {v: 'short', vv: 'long'});
+
+  return options;
+}
+
+
+function appendToDateTimeObject(options, option, match, pairs) {
+  if (match === null) {
+    if (!options.hasOwnProperty(option)) {
+      options[option] = undefined;
+    }
+    return options;
+  }
+
+  var property = match[0];
+  options[option] = pairs[property];
+
+  return options;
+}
+
+
+/**
+ * Returns options with at least default values in it.
+ */
+function toDateTimeOptions(options, required, defaults) {
+  if (options === undefined) {
+    options = null;
+  } else {
+    options = toObject(options);
+  }
+
+  options = Object.apply(this, [options]);
+
+  var needsDefault = true;
+  if ((required === 'date' || required === 'all') &&
+      (options.weekday !== undefined || options.year !== undefined ||
+       options.month !== undefined || options.day !== undefined)) {
+    needsDefault = false;
+  }
+
+  if ((required === 'time' || required === 'all') &&
+      (options.hour !== undefined || options.minute !== undefined ||
+       options.second !== undefined)) {
+    needsDefault = false;
+  }
+
+  if (needsDefault && (defaults === 'date' || defaults === 'all')) {
+    Object.defineProperty(options, 'year', {value: 'numeric',
+                                            writable: true,
+                                            enumerable: true,
+                                            configurable: true});
+    Object.defineProperty(options, 'month', {value: 'numeric',
+                                             writable: true,
+                                             enumerable: true,
+                                             configurable: true});
+    Object.defineProperty(options, 'day', {value: 'numeric',
+                                           writable: true,
+                                           enumerable: true,
+                                           configurable: true});
+  }
+
+  if (needsDefault && (defaults === 'time' || defaults === 'all')) {
+    Object.defineProperty(options, 'hour', {value: 'numeric',
+                                            writable: true,
+                                            enumerable: true,
+                                            configurable: true});
+    Object.defineProperty(options, 'minute', {value: 'numeric',
+                                              writable: true,
+                                              enumerable: true,
+                                              configurable: true});
+    Object.defineProperty(options, 'second', {value: 'numeric',
+                                              writable: true,
+                                              enumerable: true,
+                                              configurable: true});
+  }
+
+  return options;
+}
 
 
 /**
@@ -232,6 +553,63 @@ Intl.NumberFormat.prototype.format = function (value) {
  * Useful for subclassing.
  */
 function initializeDateTimeFormat(dateFormat, locales, options) {
+  native function NativeJSCreateDateTimeFormat();
+
+  if (options === undefined) {
+    options = {};
+  }
+
+  options = toDateTimeOptions(options, 'all', 'date');
+
+  var locale = resolveLocale('dateformat', locales, options);
+
+  // Build LDML string for the skeleton that we pass to the formatter.
+  var ldmlString = toLDMLString(options);
+
+  // Filter out supported extension keys so we know what to put in resolved
+  // section later on.
+  // We need to pass calendar and number system to the method.
+  var tz = options.timeZone;
+  if (tz !== undefined) {
+    tz = String(tz).toUpperCase();
+    if (tz !== "UTC") {
+      throw new RangeError("Invalid time zone specified: " + tz);
+    }
+  }
+
+  // ICU prefers options to be passed using -u- extension key/values, so
+  // we need to build that. Update the options too with proper values.
+  var extension = updateExtensionAndOptions(options, locale.extension,
+                                            ['ca', 'nu'],
+                                            ['calendar', 'numberingSystem']);
+
+  var getOption = getGetOption(options, 'dateformat');
+
+  // We implement only best fit algorithm, but still need to check
+  // if the formatMatch values are in range.
+  var matcher = getOption('formatMatch', 'string',
+                          ['basic', 'best fit'], 'best fit');
+
+  var formatter = NativeJSCreateDateTimeFormat(
+      locale.locale + extension, {skeleton: ldmlString, timeZone: tz});
+
+  dateFormat.__formatter__ = formatter;
+  dateFormat.resolvedOptions = fromLDMLString(formatter.options.pattern);
+
+  dateFormat.resolvedOptions.timeZone = tz;
+  dateFormat.resolvedOptions.locale = locale.locale;
+
+  var calendar = ICU_CALENDAR_MAP[formatter.options.calendar];
+  if (calendar === undefined) {
+    // Use ICU name if we don't have a match. It shouldn't happen, but
+    // it would be too strict to throw for this.
+    calendar = formatter.options.calendar;
+  }
+  dateFormat.resolvedOptions.calendar = calendar;
+
+  dateFormat.resolvedOptions.numberingSystem =
+      formatter.options.numberingSystem;
+
   return dateFormat;
 }
 
@@ -275,8 +653,56 @@ Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  * according to the effective locale and the formatting options of this
  * DateTimeFormat.
  */
-Intl.DateTimeFormat.prototype.format = function (date) {
+Intl.DateTimeFormat.prototype.format = function(dateValue) {
+  var dateMs;
+  if (dateValue === undefined) {
+    dateMs = Date.now();
+  } else {
+    dateMs = Number(dateValue);
+  }
+
+  if (!isFinite(dateMs)) {
+    throw new RangeException('Provided date is not in valid range.');
+  }
+
+  return this.__formatter__.internalFormat(new Date(dateMs));
 };
+
+
+/**
+ * Returns new -u- extension with proper key values built from either
+ * old extension and/or options. Option values have priority.
+ * Updates the options object with new values if necessary.
+ */
+function updateExtensionAndOptions(options, extension,
+                                   unicodeKeys, optionsKeys) {
+  if (unicodeKeys.length !== optionsKeys.length) {
+    throw Error('Internal error, unicodeKeys.length !== optionsKeys.length.');
+  }
+
+  // Parse the extension and extract values.
+  for (var i = 0; i < unicodeKeys.length; ++i) {
+    var regex = new RegExp('-' + unicodeKeys[i] + '-([a-z0-9]{3,8})+');
+    var match = extension.match(regex);
+    if (match !== null && !options.hasOwnProperty(optionsKeys[i])) {
+      options[optionsKeys[i]] = match[1];
+    }
+  }
+
+  // Build a new extension (if necessary).
+  var newExtension = '';
+  for (var i = 0; i < optionsKeys.length; ++i) {
+    var key = optionsKeys[i];
+    if (options.hasOwnProperty(key) && options[key] !== undefined) {
+      newExtension += '-' + unicodeKeys[i] + '-' + options[key];
+    }
+  }
+  if (newExtension !== '') {
+    newExtension = '-u' + newExtension;
+  }
+
+  return newExtension;
+}
 
 
 /**
@@ -284,8 +710,6 @@ Intl.DateTimeFormat.prototype.format = function (date) {
  * for which this LocaleList object has a match.
  */
 function supportedLocalesOf(service, locales, options) {
-  native function NativeJSAvailableLocalesOf();
-
   if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
@@ -339,9 +763,9 @@ function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
   var matchedLocales = [];
   for (var i = 0; i < requestedLocales.length; ++i) {
     // Remove -u- extension.
-    var locale = requestedLocales[i].replace(/-u(-([a-z0-9]{2,8}))+/, '');
+    var locale = requestedLocales[i].replace(UNICODE_EXTENSION_RE, '');
     do {
-      if (availableLocales.hasOwnProperty(locale)) {
+      if (availableLocales[locale] !== undefined) {
         // Push requested locale not the resolved one.
         matchedLocales.push(requestedLocales[i]);
         break;
@@ -378,7 +802,8 @@ function bestFitSupportedLocalesOf(requestedLocales, availableLocales) {
  */
 function getGetOption(options, caller) {
   if (options === undefined) {
-    throw new Error('Internal error. Default options are missing.');
+    throw new Error('Internal ' + caller + ' error. ' +
+                    'Default options are missing.');
   }
 
   function getOption(property, type, values, defaultValue) {
@@ -419,7 +844,7 @@ function getGetOption(options, caller) {
  * algorithm described in RFC 4647 section 3.4, and an implementation dependent
  * best-fit algorithm. Independent of the locale matching algorithm, options
  * specified through Unicode locale extension sequences are negotiated
- * separately, taking the caller’s relevant extension keys and locale data as
+ * separately, taking the caller's relevant extension keys and locale data as
  * well as client-provided options into consideration. Returns an object with
  * a locale property whose value is the language tag of the selected locale,
  * and properties for each key in relevantExtensionKeys providing the selected
@@ -434,7 +859,7 @@ function resolveLocale(service, requestedLocales, options) {
     requestedLocales = new Intl.LocaleList(requestedLocales);
   }
 
-  var getOption = getGetOption(service, options);
+  var getOption = getGetOption(options, service);
   var matcher = getOption('localeMatcher', 'string',
                           ['lookup', 'best fit'], 'best fit');
   var resolved;
@@ -443,24 +868,56 @@ function resolveLocale(service, requestedLocales, options) {
   } else {
     resolved = bestFitMatch(service, requestedLocales);
   }
+
+  return resolved;
 }
 
 
 /**
- * Returns best matched supported locale and extension info using basic 
+ * Returns best matched supported locale and extension info using basic
  * lookup algorithm.
  */
 function lookupMatch(service, requestedLocales) {
+  if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
+    throw new Error('Internal error, wrong service type: ' + service);
+  }
+
+  // Cache these, they don't ever change per service.
+  if (AVAILABLE_LOCALES[service] === undefined) {
+    AVAILABLE_LOCALES[service] = NativeJSAvailableLocalesOf(service);
+  }
+
+  for (var i = 0; i < requestedLocales.length; ++i) {
+    // Remove -u- extension.
+    var locale = requestedLocales[i].replace(UNICODE_EXTENSION_RE, '');
+    do {
+      if (AVAILABLE_LOCALES[service][locale] !== undefined) {
+        // Return the resolved locale and extension.
+        var extensionMatch = requestedLocales[i].match(UNICODE_EXTENSION_RE);
+        var extension = (extensionMatch === null) ? '' : extensionMatch[0];
+        return {'locale': locale, 'extension': extension};
+      }
+      // Truncate locale if possible, if not break.
+      var pos = locale.lastIndexOf('-');
+      if (pos === -1) {
+        break;
+      }
+      locale = locale.substring(0, pos);
+    } while (true);
+  }
+
+  // Didn't find a match, return default.
+  return {'locale': CURRENT_HOST_LOCALE, 'extension': ''};
 }
 
 
 /**
- * Returns best matched supported locale and extension info using implementation 
- * dependend algorithm.
+ * Returns best matched supported locale and extension info using
+ * implementation dependend algorithm.
  */
 function bestFitMatch(service, requestedLocales) {
   // TODO(cira): implement better best fit algorithm.
-  lookupMatch(service, requestedLocales);
+  return lookupMatch(service, requestedLocales);
 }
 
 
