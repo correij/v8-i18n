@@ -144,7 +144,10 @@ Intl.LocaleList = function(locales) {
  */
 Object.defineProperty(Intl.LocaleList,
                       'prototype',
-                      { value: new Intl.LocaleList() });
+                      { value: new Intl.LocaleList(),
+                        writable: false,
+                        enumerable: false,
+                        configurable: false });
 
 
 /**
@@ -182,7 +185,10 @@ Intl.Collator = function(locales, options) {
  */
 Object.defineProperty(Intl.Collator,
                       'prototype',
-                      { value: new Intl.Collator() });
+                      { value: new Intl.Collator(),
+                        writable: false,
+                        enumerable: false,
+                        configurable: false });
 
 
 /**
@@ -325,7 +331,10 @@ Intl.NumberFormat = function(locales, options) {
  */
 Object.defineProperty(Intl.NumberFormat,
                       'prototype',
-                      { value: new Intl.NumberFormat() });
+                      { value: new Intl.NumberFormat(),
+                        writable: false,
+                        enumerable: false,
+                        configurable: false });
 
 
 /**
@@ -635,7 +644,10 @@ Intl.DateTimeFormat = function(locales, options) {
  */
 Object.defineProperty(Intl.DateTimeFormat,
                       'prototype',
-                      { value: new Intl.DateTimeFormat() });
+                      { value: new Intl.DateTimeFormat(),
+                        writable: false,
+                        enumerable: false,
+                        configurable: false });
 
 
 /**
