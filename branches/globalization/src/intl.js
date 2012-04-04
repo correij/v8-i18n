@@ -295,16 +295,16 @@ function initializeNumberFormat(numberFormat, locales, options) {
   var formatter = NativeJSCreateNumberFormat(locale.locale + extension,
                                              internalOptions);
 
-  numberFormat.__formatter__ = formatter;
+  formatter.locale = locale.locale;
 
-  numberFormat.resolvedOptions = formatter.options;
-  numberFormat.resolvedOptions.locale = locale.locale;
   // We can't get information about number or currency style from ICU, so we
   // assume user request was fulfilled.
-  numberFormat.resolvedOptions.style = internalOptions.style;
+  formatter.style = internalOptions.style;
   if (internalOptions.style === 'currency') {
-    numberFormat.resolvedOptions.currencyDisplay = currencyDisplay;
+    formatter.currencyDisplay = currencyDisplay;
   }
+
+  numberFormat.__formatter__ = formatter;
 
   return numberFormat;
 }
@@ -335,6 +335,30 @@ Object.defineProperty(Intl.NumberFormat,
                         writable: false,
                         enumerable: false,
                         configurable: false });
+
+
+/**
+ * NumberFormat resolvedOptions getter.
+ */
+Object.defineProperty(Intl.NumberFormat.prototype, 'resolvedOptions', {
+  get: function() {
+    return {
+      locale: this.__formatter__.locale,
+      numberingSystem: this.__formatter__.numberingSystem,
+      style: this.__formatter__.style,
+      currency: this.__formatter__.currency,
+      currencyDisplay: this.__formatter__.currencyDisplay,
+      useGrouping: this.__formatter__.useGrouping,
+      minimumIntegerDigits: this.__formatter__.minimumIntegerDigits,
+      minimumFractionDigits: this.__formatter__.minimumFractionDigits,
+      maximumFractionDigits: this.__formatter__.maximumFractionDigits,
+      minimumSignificantDigits: this.__formatter__.minimumSignificantDigits,
+      maximumSignificantDigits: this.__formatter__.maximumSignificantDigits
+    };
+  },
+  enumerable: false,
+  configurable: true
+});
 
 
 /**
@@ -602,22 +626,9 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   var formatter = NativeJSCreateDateTimeFormat(
       locale.locale + extension, {skeleton: ldmlString, timeZone: tz});
 
+  formatter.locale = locale.locale;
+  formatter.tz = tz;
   dateFormat.__formatter__ = formatter;
-  dateFormat.resolvedOptions = fromLDMLString(formatter.options.pattern);
-
-  dateFormat.resolvedOptions.timeZone = tz;
-  dateFormat.resolvedOptions.locale = locale.locale;
-
-  var calendar = ICU_CALENDAR_MAP[formatter.options.calendar];
-  if (calendar === undefined) {
-    // Use ICU name if we don't have a match. It shouldn't happen, but
-    // it would be too strict to throw for this.
-    calendar = formatter.options.calendar;
-  }
-  dateFormat.resolvedOptions.calendar = calendar;
-
-  dateFormat.resolvedOptions.numberingSystem =
-      formatter.options.numberingSystem;
 
   return dateFormat;
 }
@@ -648,6 +659,41 @@ Object.defineProperty(Intl.DateTimeFormat,
                         writable: false,
                         enumerable: false,
                         configurable: false });
+
+
+/**
+ * DateTimeFormat resolvedOptions getter.
+ */
+Object.defineProperty(Intl.DateTimeFormat.prototype, 'resolvedOptions', {
+  get: function() {
+    var fromPattern = fromLDMLString(this.__formatter__.pattern);
+    var userCalendar = ICU_CALENDAR_MAP[this.__formatter__.calendar];
+    if (userCalendar === undefined) {
+      // Use ICU name if we don't have a match. It shouldn't happen, but
+      // it would be too strict to throw for this.
+      userCalendar = this.__formatter__.calendar;
+    }
+
+    return {
+      locale: this.__formatter__.locale,
+      numberingSystem: this.__formatter__.numberingSystem,
+      calendar: userCalendar,
+      timeZone: this.__formatter__.tz,
+      timeZoneName: fromPattern.timeZoneName,
+      era: fromPattern.era,
+      year: fromPattern.year,
+      month: fromPattern.month,
+      day: fromPattern.day,
+      weekday: fromPattern.weekday,
+      hour12: fromPattern.hour12,
+      hour: fromPattern.hour,
+      minute: fromPattern.minute,
+      second: fromPattern.second
+    };
+  },
+  enumerable: false,
+  configurable: true
+});
 
 
 /**
