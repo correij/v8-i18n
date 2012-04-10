@@ -151,15 +151,34 @@ Object.defineProperty(Intl.LocaleList,
 
 
 /**
- * Collator block.
- */
-
-
-/**
  * Initializes the given object so it's a valid Collator instance.
  * Useful for subclassing.
  */
 function initializeCollator(collator, locales, options) {
+  native function NativeJSCreateCollator();
+
+  if (options === undefined) {
+    options = {};
+  }
+
+  var getOption = getGetOption(options, 'collator');
+
+  var locale = resolveLocale('collator', locales, options);
+
+  // ICU prefers options to be passed using -u- extension key/values, so
+  // we need to build that. Update the options too with proper values.
+  var extension = updateExtensionAndOptions(
+      options, locale.extension,
+      ['kb', 'kc', 'kn', 'kh', 'kk', 'kf'],
+      ['backwards', 'caseLevel', 'numeric', 'hiraganaQuaternary',
+       'normalization', 'caseFirst']);
+
+  var internalOptions = {};
+
+  collator.__collator__ = NativeJSCreateCollator(locale.locale + extension,
+                                                 internalOptions);
+  collator.__collator__.locale = locale.locale;
+
   return collator;
 }
 
@@ -192,6 +211,23 @@ Object.defineProperty(Intl.Collator,
 
 
 /**
+ * Collator resolvedOptions getter.
+ */
+Object.defineProperty(Intl.Collator.prototype, 'resolvedOptions', {
+  get: function() {
+    return {
+      locale: this.__collator__.locale,
+      usage: this.__collator__.usage,
+      sensitivity: this.__collator__.sensitivity,
+      ignorePunctuation: this.__collator__.ignorePunctuation
+    };
+  },
+  enumerable: false,
+  configurable: true
+});
+
+
+/**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
@@ -211,8 +247,25 @@ Intl.Collator.supportedLocalesOf = function(locales, options) {
  * on whether x comes before y in the sort order, the Strings are equal under
  * the sort order, or x comes after y in the sort order, respectively.
  */
-Intl.Collator.prototype.compare = function(x, y) {
+function compare(collator, x, y) {
+  return collator.__collator__.internalCompare(String(x), String(y));
 };
+
+
+Object.defineProperty(Intl.Collator.prototype, 'compare', {
+ get: function() {
+      if (this.__boundCompare__ === undefined) {
+        var that = this;
+        var boundCompare = function(x, y) {
+          return compare(that, x, y);
+        }
+        this.__boundCompare__ = boundCompare;
+      }
+      return this.__boundCompare__;
+    },
+ enumerable: false,
+ configurable: true
+});
 
 
 /**
@@ -247,10 +300,6 @@ function initializeNumberFormat(numberFormat, locales, options) {
   }
 
   var getOption = getGetOption(options, 'numberformat');
-
-  // We implement best fit only for now, but check for valid range anyways.
-  var matcher = getOption('localeMatcher', 'string',
-                          ['lookup', 'best fit'], 'best fit');
 
   var locale = resolveLocale('numberformat', locales, options);
 
