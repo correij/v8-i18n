@@ -36,8 +36,9 @@ static icu::DecimalFormat* InitializeNumberFormat(v8::Handle<v8::String>,
                                                   v8::Handle<v8::Object>);
 static icu::DecimalFormat* CreateICUNumberFormat(const icu::Locale&,
                                                  v8::Handle<v8::Object>);
-static v8::Handle<v8::Value> SetResolvedSettings(const icu::Locale&,
-                                                 icu::DecimalFormat*);
+static void SetResolvedSettings(const icu::Locale&,
+                                icu::DecimalFormat*,
+                                v8::Handle<v8::Object>);
 
 icu::DecimalFormat* IntlNumberFormat::UnpackIntlNumberFormat(
     v8::Handle<v8::Object> obj) {
@@ -166,11 +167,9 @@ static icu::DecimalFormat* InitializeNumberFormat(
     number_format = CreateICUNumberFormat(no_extension_locale, options);
 
     // Set resolved settings (pattern, numbering system).
-    wrapper->Set(v8::String::New("options"),
-                 SetResolvedSettings(no_extension_locale, number_format));
+    SetResolvedSettings(no_extension_locale, number_format, wrapper);
   } else {
-    wrapper->Set(v8::String::New("options"),
-                 SetResolvedSettings(icu_locale, number_format));
+    SetResolvedSettings(icu_locale, number_format, wrapper);
   }
 
   return number_format;
@@ -269,22 +268,21 @@ static icu::DecimalFormat* CreateICUNumberFormat(
   return number_format;
 }
 
-static v8::Handle<v8::Value> SetResolvedSettings(
-    const icu::Locale& icu_locale, icu::DecimalFormat* number_format) {
+static void SetResolvedSettings(const icu::Locale& icu_locale,
+                                icu::DecimalFormat* number_format,
+                                v8::Handle<v8::Object> wrapper) {
   v8::HandleScope handle_scope;
-
-  v8::Handle<v8::Object> options = v8::Object::New();
 
   icu::UnicodeString pattern;
   number_format->toPattern(pattern);
-  options->Set(v8::String::New("v8Pattern"),
+  wrapper->Set(v8::String::New("pattern"),
                v8::String::New(reinterpret_cast<const uint16_t*>(
                    pattern.getBuffer()), pattern.length()));
 
   // Set resolved currency code in options.currency if not empty.
   icu::UnicodeString currency(number_format->getCurrency());
   if (!currency.isEmpty()) {
-    options->Set(v8::String::New("currency"),
+    wrapper->Set(v8::String::New("currency"),
                  v8::String::New(reinterpret_cast<const uint16_t*>(
                      currency.getBuffer()), currency.length()));
   }
@@ -297,30 +295,28 @@ static v8::Handle<v8::Value> SetResolvedSettings(
       icu::NumberingSystem::createInstance(icu_locale, status);
   if (U_SUCCESS(status)) {
     const char* ns = numbering_system->getName();
-    options->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
+    wrapper->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
   } else {
-    options->Set(v8::String::New("numberingSystem"), v8::Undefined());
+    wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
 
-  options->Set(v8::String::New("useGrouping"),
+  wrapper->Set(v8::String::New("useGrouping"),
                v8::Boolean::New(number_format->isGroupingUsed()));
 
-  options->Set(v8::String::New("minimumIntegerDigits"),
+  wrapper->Set(v8::String::New("minimumIntegerDigits"),
                v8::Integer::New(number_format->getMinimumIntegerDigits()));
 
-  options->Set(v8::String::New("minimumFractionDigits"),
+  wrapper->Set(v8::String::New("minimumFractionDigits"),
                v8::Integer::New(number_format->getMinimumFractionDigits()));
 
-  options->Set(v8::String::New("maximumFractionDigits"),
+  wrapper->Set(v8::String::New("maximumFractionDigits"),
                v8::Integer::New(number_format->getMaximumFractionDigits()));
 
-  options->Set(v8::String::New("minimumSignificantDigits"),
+  wrapper->Set(v8::String::New("minimumSignificantDigits"),
                v8::Integer::New(number_format->getMinimumSignificantDigits()));
 
-  options->Set(v8::String::New("maximumSignificantDigits"),
+  wrapper->Set(v8::String::New("maximumSignificantDigits"),
                v8::Integer::New(number_format->getMaximumSignificantDigits()));
-
-  return handle_scope.Close(options);
 }
 
 }  // namespace v8_i18n
