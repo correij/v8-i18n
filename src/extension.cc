@@ -17,6 +17,7 @@
 #include "src/break-iterator.h"
 #include "src/collator.h"
 #include "src/datetime-format.h"
+#include "src/intl-collator.h"
 #include "src/intl-date-format.h"
 #include "src/intl-number-format.h"
 #include "src/locale-list.h"
@@ -52,6 +53,8 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(IntlDateFormat::JSCreateDateTimeFormat);
   } else if (name->Equals(v8::String::New("NativeJSCreateNumberFormat"))) {
     return v8::FunctionTemplate::New(IntlNumberFormat::JSCreateNumberFormat);
+  } else if (name->Equals(v8::String::New("NativeJSCreateCollator"))) {
+    return v8::FunctionTemplate::New(IntlCollator::JSCreateCollator);
   }
 
   return v8::Handle<v8::FunctionTemplate>();

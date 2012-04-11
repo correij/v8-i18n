@@ -34,8 +34,9 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(v8::Handle<v8::String>,
                                                        v8::Handle<v8::Object>);
 static icu::SimpleDateFormat* CreateICUDateFormat(const icu::Locale&,
                                                   v8::Handle<v8::Object>);
-static v8::Handle<v8::Value> SetResolvedSettings(const icu::Locale&,
-                                                 icu::SimpleDateFormat*);
+static void SetResolvedSettings(const icu::Locale&,
+                                icu::SimpleDateFormat*,
+                                v8::Handle<v8::Object>);
 
 icu::SimpleDateFormat* IntlDateFormat::UnpackIntlDateFormat(
     v8::Handle<v8::Object> obj) {
@@ -165,11 +166,9 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(
     date_format = CreateICUDateFormat(no_extension_locale, options);
 
     // Set resolved settings (pattern, numbering system, calendar).
-    wrapper->Set(v8::String::New("options"),
-                 SetResolvedSettings(no_extension_locale, date_format));
+    SetResolvedSettings(no_extension_locale, date_format, wrapper);
   } else {
-    wrapper->Set(v8::String::New("options"),
-                 SetResolvedSettings(icu_locale, date_format));
+    SetResolvedSettings(icu_locale, date_format, wrapper);
   }
 
   return date_format;
@@ -223,22 +222,21 @@ static icu::SimpleDateFormat* CreateICUDateFormat(
   return date_format;
 }
 
-static v8::Handle<v8::Value> SetResolvedSettings(
-    const icu::Locale& icu_locale, icu::SimpleDateFormat* date_format) {
+static void SetResolvedSettings(const icu::Locale& icu_locale,
+                                icu::SimpleDateFormat* date_format,
+                                v8::Handle<v8::Object> wrapper) {
   v8::HandleScope handle_scope;
-
-  v8::Handle<v8::Object> options = v8::Object::New();
 
   icu::UnicodeString pattern;
   date_format->toPattern(pattern);
-  options->Set(v8::String::New("pattern"),
+  wrapper->Set(v8::String::New("pattern"),
                v8::String::New(reinterpret_cast<const uint16_t*>(
                    pattern.getBuffer()), pattern.length()));
 
   if (date_format) {
     const icu::Calendar* calendar = date_format->getCalendar();
     const char* calendar_name = calendar->getType();
-    options->Set(v8::String::New("calendar"), v8::String::New(calendar_name));
+    wrapper->Set(v8::String::New("calendar"), v8::String::New(calendar_name));
   }
 
   // Ugly hack. ICU doesn't expose numbering system in any way, so we have
@@ -249,12 +247,10 @@ static v8::Handle<v8::Value> SetResolvedSettings(
       icu::NumberingSystem::createInstance(icu_locale, status);
   if (U_SUCCESS(status)) {
     const char* ns = numbering_system->getName();
-    options->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
+    wrapper->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
   } else {
-    options->Set(v8::String::New("numberingSystem"), v8::Undefined());
+    wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
-
-  return handle_scope.Close(options);
 }
 
 }  // namespace v8_i18n
