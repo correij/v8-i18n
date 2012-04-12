@@ -41,6 +41,11 @@ var AVAILABLE_LOCALES = {
 var UNICODE_EXTENSION_RE = new RegExp('-u(-[a-z0-9]{2,8})+', 'g');
 
 /**
+ * Matchess any Unicode extension.
+ */
+var ANY_EXTENSION_RE = new RegExp('-[a-z0-9]{1}-.*', 'g');
+
+/**
  * Replace quoted text (single quote, anything but the quote and quote again).
  */
 var QUOTED_STRING_RE = new RegExp("'[^']+'", 'g');
@@ -151,6 +156,21 @@ Object.defineProperty(Intl.LocaleList,
 
 
 /**
+ * Populates internalOptions object with boolean key-value pairs
+ * from extensionMap.
+ */
+function extractBooleanOption(extensionMap, key, property, internalOptions) {
+  if (extensionMap.hasOwnProperty(key)) {
+    if (extensionMap[key] === 'false') {
+      internalOptions[property] = false;
+    } else {
+      internalOptions[property] = true;
+    }
+  }
+}
+
+
+/**
  * Initializes the given object so it's a valid Collator instance.
  * Useful for subclassing.
  */
@@ -163,21 +183,63 @@ function initializeCollator(collator, locales, options) {
 
   var getOption = getGetOption(options, 'collator');
 
+  var internalOptions = {};
+
+  internalOptions.usage =
+      getOption('usage', 'string', ['sort', 'search'], 'sort');
+
+  internalOptions.sensitivity =
+      getOption('sensitivity', 'string', ['base', 'accent', 'case', 'variant']);
+  if (internalOptions.sensitivity === undefined &&
+      internalOptions.usage === 'sort') {
+    internalOptions.sensitivity = 'variant';
+  }
+
+  internalOptions.ignorePunctuation =
+      getOption('ignorePunctuation', 'boolean', undefined, false);
+
   var locale = resolveLocale('collator', locales, options);
 
-  // ICU prefers options to be passed using -u- extension key/values, so
-  // we need to build that. Update the options too with proper values.
-  var extension = updateExtensionAndOptions(
-      options, locale.extension,
-      ['kb', 'kc', 'kn', 'kh', 'kk', 'kf'],
-      ['backwards', 'caseLevel', 'numeric', 'hiraganaQuaternary',
-       'normalization', 'caseFirst']);
+  // ICU can't take kb, kc... parameters through localeID, so we need to pass
+  // them as options.
+  // One exception is -co- which has to be part of the extension, but only for
+  // usage: sort, and its value can't be 'standard' or 'search'.
+  var extensionMap = parseExtension(locale.extension);
 
-  var internalOptions = {};
+  extractBooleanOption(extensionMap, 'kb', 'backwards', internalOptions);
+  extractBooleanOption(extensionMap, 'kc', 'caseLevel', internalOptions);
+  extractBooleanOption(extensionMap, 'kn', 'numeric', internalOptions);
+  extractBooleanOption(
+      extensionMap, 'kh', 'hiraganaQuaternary', internalOptions);
+  extractBooleanOption(extensionMap, 'kk', 'normalization', internalOptions);
+
+  if (extensionMap.hasOwnProperty('kf')) {
+    internalOptions.caseFirst = 'false';
+    if (extensionMap.kf === 'upper') {
+      internalOptions.caseFirst = 'upper';
+    } else if (extensionMap.kf === 'lower') {
+      internalOptions.caseFirst = 'lower';
+    }
+  }
+
+  internalOptions.collation = 'default';
+  var extension = '';
+  if (extensionMap.hasOwnProperty('co') && internalOptions.usage === 'sort') {
+    if (extensionMap.co &&
+        extensionMap.co !== 'standard' && extensionMap.co !== 'search') {
+      extension = '-u-co-' + extensionMap.co;
+      // ICU can't tell us what the collation is, so save user's input.
+      internalOptions.collation = extensionMap.co;
+    }
+  } else if (internalOptions.usage === 'search') {
+    extension = '-u-co-search';
+  }
 
   collator.__collator__ = NativeJSCreateCollator(locale.locale + extension,
                                                  internalOptions);
   collator.__collator__.locale = locale.locale;
+  collator.__collator__.usage = internalOptions.usage;
+  collator.__collator__.collation = internalOptions.collation;
 
   return collator;
 }
@@ -219,7 +281,14 @@ Object.defineProperty(Intl.Collator.prototype, 'resolvedOptions', {
       locale: this.__collator__.locale,
       usage: this.__collator__.usage,
       sensitivity: this.__collator__.sensitivity,
-      ignorePunctuation: this.__collator__.ignorePunctuation
+      ignorePunctuation: this.__collator__.ignorePunctuation,
+      backwards: this.__collator__.numeric,
+      caseLevel: this.__collator__.caseLevel,
+      numeric: this.__collator__.numeric,
+      hiraganaQuaternary: this.__collator__.hiraganaQuaternary,
+      normalization: this.__collator__.normalization,
+      caseFirst: this.__collator__.caseFirst,
+      collation: this.__collator__.collation
     };
   },
   enumerable: false,
@@ -995,8 +1064,8 @@ function lookupMatch(service, requestedLocales) {
   }
 
   for (var i = 0; i < requestedLocales.length; ++i) {
-    // Remove -u- extension.
-    var locale = requestedLocales[i].replace(UNICODE_EXTENSION_RE, '');
+    // Remove all extensions.
+    var locale = requestedLocales[i].replace(ANY_EXTENSION_RE, '');
     do {
       if (AVAILABLE_LOCALES[service][locale] !== undefined) {
         // Return the resolved locale and extension.
@@ -1025,6 +1094,43 @@ function lookupMatch(service, requestedLocales) {
 function bestFitMatch(service, requestedLocales) {
   // TODO(cira): implement better best fit algorithm.
   return lookupMatch(service, requestedLocales);
+}
+
+
+/**
+ * Parses Unicode extension into key - value map.
+ * Returns empty object if the extension string is invalid.
+ * We are not concerned with the validity of the values at this point.
+ */
+function parseExtension(extension) {
+  var extensionSplit = extension.split('-');
+  var extensionMap = {};
+  var previousKey = undefined;
+
+  // Assume ['', 'u', ...] input, but don't throw.
+  if (extensionSplit.length <= 2 ||
+      (extensionSplit[0] !== '' && extensionSplit[1] !== 'u')) {
+    return {};
+  }
+
+  // Key is {2}alphanum, value is {3,8}alphanum.
+  // Some keys may not have explicit values (booleans).
+  for (var i = 2; i < extensionSplit.length; ++i) {
+    var length = extensionSplit[i].length;
+    var element = extensionSplit[i];
+    if (length === 2) {
+      extensionMap[element] = undefined;
+      previousKey = element;
+    } else if (length >= 3 && length <=8 && previousKey !== undefined) {
+      extensionMap[previousKey] = element;
+      previousKey = undefined;
+    } else {
+      // There is a value that's too long, or that doesn't have a key.
+      return {};
+    }
+  }
+
+  return extensionMap;
 }
 
 
