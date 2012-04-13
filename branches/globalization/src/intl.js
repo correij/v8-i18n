@@ -267,9 +267,6 @@ function initializeCollator(collator, locales, options) {
   collator.__collator__.usage = internalOptions.usage;
   collator.__collator__.collation = internalOptions.collation;
 
-  collator.__collator__.em = extensionMap;
-  collator.__collator__.io = internalOptions;
-
   return collator;
 }
 
