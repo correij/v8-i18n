@@ -99,9 +99,35 @@ function initializeLocaleList(localeList, locales) {
           throw new TypeError('Invalid element in locales argument.');
         }
 
-        var tag = NativeJSCanonicalizeLanguageTag(String(value));
+        var languageID = String(value);
+        var tag = NativeJSCanonicalizeLanguageTag(languageID);
         if (tag === 'invalid-tag') {
           throw new RangeError('Invalid language tag: ' + value);
+        }
+
+        // ICU tends to cut extensions it doesn't know about, like kn, kc...
+        // We have to put them back.
+        var extensionMatch = languageID.match(UNICODE_EXTENSION_RE);
+        var extension = (extensionMatch === null) ? '' : extensionMatch[0];
+        // Map eliminates all duplicates.
+        var extensionMap = parseExtension(extension.toLowerCase());
+        extension = '';
+        for (var key in extensionMap) {
+          if (extensionMap.hasOwnProperty(key)) {
+            extension += '-' + key;
+            if (extensionMap[key] !== undefined) {
+              extension += '-' + extensionMap[key];
+            }
+          }
+        }
+        if (extension !== '') {
+          extension = '-u' + extension;
+          // Inject new extension into the tag.
+          if (tag.search(UNICODE_EXTENSION_RE) === -1) {
+            tag += extension;
+          } else {
+            tag = tag.replace(UNICODE_EXTENSION_RE, extension);
+          }
         }
 
         if (seen.indexOf(tag) === -1) {
@@ -241,6 +267,9 @@ function initializeCollator(collator, locales, options) {
   collator.__collator__.usage = internalOptions.usage;
   collator.__collator__.collation = internalOptions.collation;
 
+  collator.__collator__.em = extensionMap;
+  collator.__collator__.io = internalOptions;
+
   return collator;
 }
 
@@ -282,7 +311,7 @@ Object.defineProperty(Intl.Collator.prototype, 'resolvedOptions', {
       usage: this.__collator__.usage,
       sensitivity: this.__collator__.sensitivity,
       ignorePunctuation: this.__collator__.ignorePunctuation,
-      backwards: this.__collator__.numeric,
+      backwards: this.__collator__.backwards,
       caseLevel: this.__collator__.caseLevel,
       numeric: this.__collator__.numeric,
       hiraganaQuaternary: this.__collator__.hiraganaQuaternary,
@@ -1071,7 +1100,7 @@ function lookupMatch(service, requestedLocales) {
         // Return the resolved locale and extension.
         var extensionMatch = requestedLocales[i].match(UNICODE_EXTENSION_RE);
         var extension = (extensionMatch === null) ? '' : extensionMatch[0];
-        return {'locale': locale, 'extension': extension};
+        return {'locale': locale, 'extension': extension, 'position': i};
       }
       // Truncate locale if possible, if not break.
       var pos = locale.lastIndexOf('-');
@@ -1083,7 +1112,7 @@ function lookupMatch(service, requestedLocales) {
   }
 
   // Didn't find a match, return default.
-  return {'locale': CURRENT_HOST_LOCALE, 'extension': ''};
+  return {'locale': CURRENT_HOST_LOCALE, 'extension': '', 'position': -1};
 }
 
 
@@ -1104,8 +1133,6 @@ function bestFitMatch(service, requestedLocales) {
  */
 function parseExtension(extension) {
   var extensionSplit = extension.split('-');
-  var extensionMap = {};
-  var previousKey = undefined;
 
   // Assume ['', 'u', ...] input, but don't throw.
   if (extensionSplit.length <= 2 ||
@@ -1115,6 +1142,8 @@ function parseExtension(extension) {
 
   // Key is {2}alphanum, value is {3,8}alphanum.
   // Some keys may not have explicit values (booleans).
+  var extensionMap = {};
+  var previousKey = undefined;
   for (var i = 2; i < extensionSplit.length; ++i) {
     var length = extensionSplit[i].length;
     var element = extensionSplit[i];

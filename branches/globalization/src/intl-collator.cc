@@ -206,6 +206,18 @@ static icu::Collator* CreateICUCollator(
   SetBooleanAttribute(
       UCOL_NORMALIZATION_MODE, "normalization", options, collator);
 
+  icu::UnicodeString case_first;
+  if (Utils::ExtractStringSetting(options, "caseFirst", &case_first)) {
+    if (case_first == UNICODE_STRING_SIMPLE("upper")) {
+      collator->setAttribute(UCOL_CASE_FIRST, UCOL_UPPER_FIRST, status);
+    } else if (case_first == UNICODE_STRING_SIMPLE("lower")) {
+      collator->setAttribute(UCOL_CASE_FIRST, UCOL_LOWER_FIRST, status);
+    } else {
+      // Default (false/off).
+      collator->setAttribute(UCOL_CASE_FIRST, UCOL_OFF, status);
+    }
+  }
+
   icu::UnicodeString sensitivity;
   if (Utils::ExtractStringSetting(options, "sensitivity", &sensitivity)) {
     if (sensitivity == UNICODE_STRING_SIMPLE("base")) {

@@ -76,9 +76,9 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
   v8::String::AsciiValue service(args[0]->ToString());
   if (strcmp(*service, "collator") == 0) {
     available_locales = icu::Collator::getAvailableLocales(count);
-  } else if (strcmp(*service, "numberformat")) {
+  } else if (strcmp(*service, "numberformat") == 0) {
     available_locales = icu::NumberFormat::getAvailableLocales(count);
-  } else if (strcmp(*service, "dateformat")) {
+  } else if (strcmp(*service, "dateformat") == 0) {
     available_locales = icu::DateFormat::getAvailableLocales(count);
   }
 
