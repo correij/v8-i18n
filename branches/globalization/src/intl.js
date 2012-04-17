@@ -21,10 +21,14 @@ var Intl = (function() {
 var Intl = {};
 
 /**
- * Internal property used for locale resolution fallback.
- * It's a implementation replacement for internal DefaultLocale method.
+ * Global native (C++) methods.
  */
-var CURRENT_HOST_LOCALE = 'root';
+native function NativeJSAvailableLocalesOf();
+
+/**
+ * List of available services.
+ */
+var AVAILABLE_SERVICES = ['collator', 'numberformat', 'dateformat'];
 
 /**
  * Caches available locales for each service.
@@ -34,6 +38,11 @@ var AVAILABLE_LOCALES = {
   'numberformat': undefined,
   'dateformat': undefined
 }
+
+/**
+ * Global default locale, set by LocaleList constructor.
+ */
+var CURRENT_HOST_LOCALE = undefined;
 
 /**
  * Unicode extension regular expression.
@@ -69,11 +78,6 @@ var ICU_CALENDAR_MAP = {
   'ethiopic-amete-alem': 'ethioaa'
 };
 
-/**
- * Global native (C++) methods.
- */
-native function NativeJSAvailableLocalesOf();
-
 
 /**
  * Initializes the given object so it's a valid LocaleList instance.
@@ -81,6 +85,9 @@ native function NativeJSAvailableLocalesOf();
  */
 function initializeLocaleList(localeList, locales) {
   native function NativeJSCanonicalizeLanguageTag();
+
+  // Invoke it here to cover all initialization paths.
+  CURRENT_HOST_LOCALE = defaultLocale();
 
   var seen = [];
   if (locales === undefined) {
@@ -927,7 +934,7 @@ function supportedLocalesOf(service, locales, options) {
   var matcher = getOption(options, 'localeMatcher', 'string',
                           ['lookup', 'best fit'], 'best fit');
 
-  // Fall back to CURRENT_HOST_LOCALE if necessary.
+  // Fall back to default locale if necessary.
   var requestedLocales = locales;
   if (requestedLocales === undefined) {
     requestedLocales = new Intl.LocaleList();
@@ -1099,7 +1106,7 @@ function lookupMatch(service, requestedLocales) {
         var extension = (extensionMatch === null) ? '' : extensionMatch[0];
         return {'locale': locale, 'extension': extension, 'position': i};
       }
-      // Truncate locale if possible, if not break.
+      // Truncate locale if possible.
       var pos = locale.lastIndexOf('-');
       if (pos === -1) {
         break;
@@ -1169,6 +1176,49 @@ function toObject(value) {
   }
 
   return Object(value);
+}
+
+
+/**
+ * Returns default locale.
+ * Uses navigator.language (browsers), or falls back to 'und' (server side).
+ */
+function defaultLocale() {
+  // First initialization happens without navigator.language so
+  // CURRENT_HOST_LOCALE becames 'und'. We want to retain the value that's
+  // assigned on user initiated call to LocaleList constructor.
+  if (CURRENT_HOST_LOCALE !== undefined && CURRENT_HOST_LOCALE !== 'und') {
+    return CURRENT_HOST_LOCALE;
+  }
+
+  var fallback = 'und';
+
+  // Use navigator.language if it exists.
+  if ((typeof this === 'object') &&
+      this.hasOwnProperty('navigator') &&
+      this.navigator.language !== undefined) {
+    // Canonicalize (we don't want to fail here).
+    try {
+      var browserLocale = Intl.LocaleList([this.navigator.language]);
+    } catch (e) {
+      return fallback;
+    }
+
+    // Browser locale can be anything. We have to check if it's supported by
+    // all of the services.
+    var locale = {};
+    for (var i = 0; i < AVAILABLE_SERVICES.length; ++i) {
+      locale = bestFitMatch(AVAILABLE_SERVICES[i], browserLocale);
+      if (locale.locale === 'und') {
+        return fallback;
+      }
+    }
+    // Returns the best match we have to current browser locale.
+    return locale.locale;
+  }
+
+  // We are probably server side, 'und' should work fine.
+  return fallback;
 }
 
 
