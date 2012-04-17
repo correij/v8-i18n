@@ -107,34 +107,13 @@ function initializeLocaleList(localeList, locales) {
         }
 
         var languageID = String(value);
+        // This call will strip -kn but not -kn-true extensions.
+        // ICU bug filled - http://bugs.icu-project.org/trac/ticket/9265.
+        // TODO(cira): check if -u-kn-true-kc-true-kh-true still throws after
+        // upgrade to ICU 4.9.
         var tag = NativeJSCanonicalizeLanguageTag(languageID);
         if (tag === 'invalid-tag') {
           throw new RangeError('Invalid language tag: ' + value);
-        }
-
-        // ICU tends to cut extensions it doesn't know about, like kn, kc...
-        // We have to put them back.
-        var extensionMatch = languageID.match(UNICODE_EXTENSION_RE);
-        var extension = (extensionMatch === null) ? '' : extensionMatch[0];
-        // Map eliminates all duplicates.
-        var extensionMap = parseExtension(extension.toLowerCase());
-        extension = '';
-        for (var key in extensionMap) {
-          if (extensionMap.hasOwnProperty(key)) {
-            extension += '-' + key;
-            if (extensionMap[key] !== undefined) {
-              extension += '-' + extensionMap[key];
-            }
-          }
-        }
-        if (extension !== '') {
-          extension = '-u' + extension;
-          // Inject new extension into the tag.
-          if (tag.search(UNICODE_EXTENSION_RE) === -1) {
-            tag += extension;
-          } else {
-            tag = tag.replace(UNICODE_EXTENSION_RE, extension);
-          }
         }
 
         if (seen.indexOf(tag) === -1) {
