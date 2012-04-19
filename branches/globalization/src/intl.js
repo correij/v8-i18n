@@ -80,12 +80,33 @@ var ICU_CALENDAR_MAP = {
 
 
 /**
+ * Canonicalizes the language tag, or throws in case the tag is invalid.
+ */
+function canonicalizeLanguageTag(localeID) {
+  native function NativeJSCanonicalizeLanguageTag();
+
+  if (typeof localeID !== 'string' && typeof localeID !== 'object') {
+    throw new TypeError('Language ID should be string or object.');
+  }
+
+  // This call will strip -kn but not -kn-true extensions.
+  // ICU bug filled - http://bugs.icu-project.org/trac/ticket/9265.
+  // TODO(cira): check if -u-kn-true-kc-true-kh-true still throws after
+  // upgrade to ICU 4.9.
+  var tag = NativeJSCanonicalizeLanguageTag(String(localeID));
+  if (tag === 'invalid-tag') {
+    throw new RangeError('Invalid language tag: ' + localeID);
+  }
+
+  return tag;
+}
+
+
+/**
  * Initializes the given object so it's a valid LocaleList instance.
  * Useful for subclassing.
  */
 function initializeLocaleList(localeList, locales) {
-  native function NativeJSCanonicalizeLanguageTag();
-
   // Invoke it here to cover all initialization paths.
   CURRENT_HOST_LOCALE = defaultLocale();
 
@@ -102,19 +123,7 @@ function initializeLocaleList(localeList, locales) {
       if (k in o) {
         var value = o[k];
 
-        if (typeof value !== 'string' && typeof value !== 'object') {
-          throw new TypeError('Invalid element in locales argument.');
-        }
-
-        var languageID = String(value);
-        // This call will strip -kn but not -kn-true extensions.
-        // ICU bug filled - http://bugs.icu-project.org/trac/ticket/9265.
-        // TODO(cira): check if -u-kn-true-kc-true-kh-true still throws after
-        // upgrade to ICU 4.9.
-        var tag = NativeJSCanonicalizeLanguageTag(languageID);
-        if (tag === 'invalid-tag') {
-          throw new RangeError('Invalid language tag: ' + value);
-        }
+        var tag = canonicalizeLanguageTag(value);
 
         if (seen.indexOf(tag) === -1) {
           seen.push(tag);
@@ -1163,14 +1172,14 @@ function toObject(value) {
  * Uses navigator.language (browsers), or falls back to 'und' (server side).
  */
 function defaultLocale() {
+  var fallback = 'und';
+
   // First initialization happens without navigator.language so
   // CURRENT_HOST_LOCALE becames 'und'. We want to retain the value that's
   // assigned on user initiated call to LocaleList constructor.
-  if (CURRENT_HOST_LOCALE !== undefined && CURRENT_HOST_LOCALE !== 'und') {
+  if (CURRENT_HOST_LOCALE !== undefined && CURRENT_HOST_LOCALE !== fallback) {
     return CURRENT_HOST_LOCALE;
   }
-
-  var fallback = 'und';
 
   // Use navigator.language if it exists.
   if ((typeof this === 'object') &&
@@ -1178,7 +1187,7 @@ function defaultLocale() {
       this.navigator.language !== undefined) {
     // Canonicalize (we don't want to fail here).
     try {
-      var browserLocale = Intl.LocaleList([this.navigator.language]);
+      var browserLocale = canonicalizeLanguageTag(this.navigator.language);
     } catch (e) {
       return fallback;
     }
@@ -1187,8 +1196,8 @@ function defaultLocale() {
     // all of the services.
     var locale = {};
     for (var i = 0; i < AVAILABLE_SERVICES.length; ++i) {
-      locale = bestFitMatch(AVAILABLE_SERVICES[i], browserLocale);
-      if (locale.locale === 'und') {
+      locale = bestFitMatch(AVAILABLE_SERVICES[i], [browserLocale]);
+      if (locale.locale === fallback) {
         return fallback;
       }
     }
