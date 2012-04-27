@@ -21,7 +21,7 @@
 
 namespace v8_i18n {
 
-v8::Persistent<v8::FunctionTemplate> IntlCollator::intl_collator_template_;
+v8::Persistent<v8::ObjectTemplate> IntlCollator::intl_collator_template_;
 
 static icu::Collator* InitializeCollator(
     v8::Handle<v8::String>, v8::Handle<v8::Object>, v8::Handle<v8::Object>);
@@ -39,7 +39,9 @@ static void SetBooleanSetting(
     UColAttribute, icu::Collator*, const char*, v8::Handle<v8::Object>);
 
 icu::Collator* IntlCollator::UnpackIntlCollator(v8::Handle<v8::Object> obj) {
-  if (intl_collator_template_->HasInstance(obj)) {
+  v8::HandleScope handle_scope;
+
+  if (obj->HasOwnProperty(v8::String::New("usage"))) {
     return static_cast<icu::Collator*>(obj->GetPointerFromInternalField(0));
   }
 
@@ -75,19 +77,21 @@ static v8::Handle<v8::Value> ThrowExceptionForICUError(const char* message) {
 }
 
 // static
-v8::Handle<v8::Value> IntlCollator::InternalCompare(const v8::Arguments& args) {
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString()) {
+v8::Handle<v8::Value> IntlCollator::JSInternalCompare(
+    const v8::Arguments& args) {
+  if (args.Length() != 3 || !args[0]->IsObject() ||
+      !args[1]->IsString() || !args[2]->IsString()) {
     return v8::ThrowException(v8::Exception::SyntaxError(
-        v8::String::New("Two string arguments are required.")));
+        v8::String::New("Collator and two string arguments are required.")));
   }
 
-  icu::Collator* collator = UnpackIntlCollator(args.Holder());
+  icu::Collator* collator = UnpackIntlCollator(args[0]->ToObject());
   if (!collator) {
     return ThrowUnexpectedObjectError();
   }
 
-  v8::String::Value string_value1(args[0]);
-  v8::String::Value string_value2(args[1]);
+  v8::String::Value string_value1(args[1]);
+  v8::String::Value string_value2(args[2]);
   const UChar* string1 = reinterpret_cast<const UChar*>(*string_value1);
   const UChar* string2 = reinterpret_cast<const UChar*>(*string_value2);
   UErrorCode status = U_ZERO_ERROR;
@@ -112,27 +116,17 @@ v8::Handle<v8::Value> IntlCollator::JSCreateCollator(
   }
 
   if (intl_collator_template_.IsEmpty()) {
-    v8::Local<v8::FunctionTemplate> raw_template(v8::FunctionTemplate::New());
-
-    // Define internal field count on instance template.
-    v8::Local<v8::ObjectTemplate> object_template =
-        raw_template->InstanceTemplate();
+    v8::Local<v8::ObjectTemplate> raw_template(v8::ObjectTemplate::New());
 
     // Set aside internal fields for icu collator.
-    object_template->SetInternalFieldCount(1);
-
-    // Define all of the prototype methods on prototype template.
-    v8::Local<v8::ObjectTemplate> proto = raw_template->PrototypeTemplate();
-    proto->Set(v8::String::New("internalCompare"),
-               v8::FunctionTemplate::New(InternalCompare));
+    raw_template->SetInternalFieldCount(1);
 
     intl_collator_template_ =
-        v8::Persistent<v8::FunctionTemplate>::New(raw_template);
+        v8::Persistent<v8::ObjectTemplate>::New(raw_template);
   }
 
   // Create an empty object wrapper.
-  v8::Local<v8::Object> local_object =
-      intl_collator_template_->GetFunction()->NewInstance();
+  v8::Local<v8::Object> local_object = intl_collator_template_->NewInstance();
   v8::Persistent<v8::Object> wrapper =
       v8::Persistent<v8::Object>::New(local_object);
 

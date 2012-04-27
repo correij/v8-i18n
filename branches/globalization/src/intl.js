@@ -338,7 +338,8 @@ Intl.Collator.supportedLocalesOf = function(locales, options) {
  * the sort order, or x comes after y in the sort order, respectively.
  */
 function compare(collator, x, y) {
-  return collator.__collator__.internalCompare(String(x), String(y));
+  native function NativeJSInternalCompare();
+  return NativeJSInternalCompare(collator.__collator__, String(x), String(y));
 };
 
 
@@ -516,7 +517,8 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  * NumberFormat.
  */
 Intl.NumberFormat.prototype.format = function (value) {
-  return this.__formatter__.internalFormat(Number(value));
+  native function NativeJSInternalNumberFormat();
+  return NativeJSInternalNumberFormat(this.__formatter__, Number(value));
 };
 
 
@@ -851,6 +853,8 @@ Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  * DateTimeFormat.
  */
 Intl.DateTimeFormat.prototype.format = function(dateValue) {
+  native function NativeJSInternalDateFormat();
+
   var dateMs;
   if (dateValue === undefined) {
     dateMs = Date.now();
@@ -862,7 +866,7 @@ Intl.DateTimeFormat.prototype.format = function(dateValue) {
     throw new RangeException('Provided date is not in valid range.');
   }
 
-  return this.__formatter__.internalFormat(new Date(dateMs));
+  return NativeJSInternalDateFormat(this.__formatter__, new Date(dateMs));
 };
 
 

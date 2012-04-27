@@ -27,7 +27,7 @@
 
 namespace v8_i18n {
 
-v8::Persistent<v8::FunctionTemplate> IntlDateFormat::date_format_template_;
+v8::Persistent<v8::ObjectTemplate> IntlDateFormat::date_format_template_;
 
 static icu::SimpleDateFormat* InitializeDateTimeFormat(v8::Handle<v8::String>,
                                                        v8::Handle<v8::Object>,
@@ -40,7 +40,9 @@ static void SetResolvedSettings(const icu::Locale&,
 
 icu::SimpleDateFormat* IntlDateFormat::UnpackIntlDateFormat(
     v8::Handle<v8::Object> obj) {
-  if (date_format_template_->HasInstance(obj)) {
+  v8::HandleScope handle_scope;
+
+  if (obj->HasOwnProperty(v8::String::New("locale"))) {
     return static_cast<icu::SimpleDateFormat*>(
         obj->GetPointerFromInternalField(0));
   }
@@ -63,19 +65,20 @@ void IntlDateFormat::DeleteIntlDateFormat(v8::Persistent<v8::Value> object,
   persistent_object.Dispose();
 }
 
-v8::Handle<v8::Value> IntlDateFormat::InternalFormat(
+v8::Handle<v8::Value> IntlDateFormat::JSInternalFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
   double millis = 0.0;
-  if (args.Length() != 1 || !args[0]->IsDate()) {
+  if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsDate()) {
     v8::ThrowException(v8::Exception::Error(
         v8::String::New("Internal error. Date value has to be specified.")));
   } else {
-    millis = v8::Date::Cast(*args[0])->NumberValue();
+    millis = v8::Date::Cast(*args[1])->NumberValue();
   }
 
-  icu::SimpleDateFormat* date_format = UnpackIntlDateFormat(args.Holder());
+  icu::SimpleDateFormat* date_format =
+      UnpackIntlDateFormat(args[0]->ToObject());
   if (!date_format) {
     return v8::ThrowException(v8::Exception::Error(
         v8::String::New("DateTimeFormat method called on an object "
@@ -100,27 +103,18 @@ v8::Handle<v8::Value> IntlDateFormat::JSCreateDateTimeFormat(
   }
 
   if (date_format_template_.IsEmpty()) {
-    v8::Local<v8::FunctionTemplate> raw_template(v8::FunctionTemplate::New());
-
-    // Define internal field count on instance template.
-    v8::Local<v8::ObjectTemplate> object_template =
-        raw_template->InstanceTemplate();
+    v8::Local<v8::ObjectTemplate> raw_template(v8::ObjectTemplate::New());
 
     // Set aside internal field for icu date time formatter.
-    object_template->SetInternalFieldCount(1);
-
-    // Define all of the prototype methods on prototype template.
-    v8::Local<v8::ObjectTemplate> proto = raw_template->PrototypeTemplate();
-    proto->Set(v8::String::New("internalFormat"),
-               v8::FunctionTemplate::New(InternalFormat));
+    raw_template->SetInternalFieldCount(1);
 
     date_format_template_ =
-        v8::Persistent<v8::FunctionTemplate>::New(raw_template);
+        v8::Persistent<v8::ObjectTemplate>::New(raw_template);
   }
 
   // Create an empty object wrapper.
   v8::Local<v8::Object> local_object =
-      date_format_template_->GetFunction()->NewInstance();
+      date_format_template_->NewInstance();
   v8::Persistent<v8::Object> wrapper =
       v8::Persistent<v8::Object>::New(local_object);
 

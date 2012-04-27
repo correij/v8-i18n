@@ -41,12 +41,12 @@ class IntlDateFormat {
                                    void* param);
 
   // Formats date and returns corresponding string.
-  static v8::Handle<v8::Value> InternalFormat(const v8::Arguments& args);
+  static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
 
  private:
   IntlDateFormat();
 
-  static v8::Persistent<v8::FunctionTemplate> date_format_template_;
+  static v8::Persistent<v8::ObjectTemplate> date_format_template_;
 };
 
 }  // namespace v8_i18n

@@ -41,12 +41,12 @@ class IntlNumberFormat {
                                    void* param);
 
   // Formats number and returns corresponding string.
-  static v8::Handle<v8::Value> InternalFormat(const v8::Arguments& args);
+  static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
 
  private:
   IntlNumberFormat();
 
-  static v8::Persistent<v8::FunctionTemplate> number_format_template_;
+  static v8::Persistent<v8::ObjectTemplate> number_format_template_;
 };
 
 }  // namespace v8_i18n
