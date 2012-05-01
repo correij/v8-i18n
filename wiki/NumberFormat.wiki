@@ -33,25 +33,25 @@ style: 'decimal'
 
 Other options are locale specific.
 
-== NumberFormat with default locale and settings ==
+== !NumberFormat with default locale and settings ==
 {{{
 var nf = v8Intl.NumberFormat();
 nf.format(12345.67);  // Returns a string.
 }}}
 
-== NumberFormat with user locale and default settings ==
+== !NumberFormat with user locale and default settings ==
 {{{
 var nf = v8Intl.NumberFormat(['sr']);
 nf.format(12345.67);
 }}}
 
-== NumberFormat with user locale and settings ==
+== !NumberFormat with user locale and settings ==
 {{{
 var nf = v8Intl.NumberFormat(['sr'], {style:'currency', currency:'RSD', currencyDisplay:'code'});
 nf.format(12345.67);
 }}}
 
-== NumberFormat with user locale and Unicode extension ==
+== !NumberFormat with user locale and Unicode extension ==
 {{{
 var nf = v8Intl.NumberFormat(['th-u-nu-thai']);
 nf.format(12345.67);
