@@ -16,7 +16,7 @@
  * Intl object is a single object that has some named properties,
  * all of which are constructors.
  */
-var Intl = (function() {
+var v8Intl = (function() {
 
 var Intl = {};
 
