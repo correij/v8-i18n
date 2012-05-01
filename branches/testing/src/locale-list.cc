@@ -76,9 +76,9 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
   v8::String::AsciiValue service(args[0]->ToString());
   if (strcmp(*service, "collator") == 0) {
     available_locales = icu::Collator::getAvailableLocales(count);
-  } else if (strcmp(*service, "numberformat")) {
+  } else if (strcmp(*service, "numberformat") == 0) {
     available_locales = icu::NumberFormat::getAvailableLocales(count);
-  } else if (strcmp(*service, "dateformat")) {
+  } else if (strcmp(*service, "dateformat") == 0) {
     available_locales = icu::DateFormat::getAvailableLocales(count);
   }
 
@@ -100,6 +100,9 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
     // Index is just a dummy value for the property value.
     locales->Set(v8::String::New(result, strlen(result)), v8::Integer::New(i));
   }
+
+  // Append 'und' to the list of supported locales.
+  locales->Set(v8::String::New("und"), v8::Integer::New(count));
 
   return handle_scope.Close(locales);
 }

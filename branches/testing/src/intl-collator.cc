@@ -21,23 +21,27 @@
 
 namespace v8_i18n {
 
-v8::Persistent<v8::FunctionTemplate> IntlCollator::intl_collator_template_;
+v8::Persistent<v8::ObjectTemplate> IntlCollator::intl_collator_template_;
 
-static icu::Collator* InitializeCollator(v8::Handle<v8::String>,
-                                         v8::Handle<v8::Object>,
-                                         v8::Handle<v8::Object>);
-static icu::Collator* CreateICUCollator(const icu::Locale&,
-                                        v8::Handle<v8::Object>);
-static void SetResolvedSettings(const icu::Locale&,
-                                icu::Collator*,
-                                v8::Handle<v8::Object>);
-static void SetBooleanAttribute(UColAttribute,
-                                icu::Collator*,
-                                const char*,
-                                v8::Handle<v8::Object>);
+static icu::Collator* InitializeCollator(
+    v8::Handle<v8::String>, v8::Handle<v8::Object>, v8::Handle<v8::Object>);
+
+static icu::Collator* CreateICUCollator(
+    const icu::Locale&, v8::Handle<v8::Object>);
+
+static bool SetBooleanAttribute(
+    UColAttribute, const char*, v8::Handle<v8::Object>, icu::Collator*);
+
+static void SetResolvedSettings(
+    const icu::Locale&, icu::Collator*, v8::Handle<v8::Object>);
+
+static void SetBooleanSetting(
+    UColAttribute, icu::Collator*, const char*, v8::Handle<v8::Object>);
 
 icu::Collator* IntlCollator::UnpackIntlCollator(v8::Handle<v8::Object> obj) {
-  if (intl_collator_template_->HasInstance(obj)) {
+  v8::HandleScope handle_scope;
+
+  if (obj->HasOwnProperty(v8::String::New("usage"))) {
     return static_cast<icu::Collator*>(obj->GetPointerFromInternalField(0));
   }
 
@@ -73,19 +77,21 @@ static v8::Handle<v8::Value> ThrowExceptionForICUError(const char* message) {
 }
 
 // static
-v8::Handle<v8::Value> IntlCollator::InternalCompare(const v8::Arguments& args) {
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString()) {
+v8::Handle<v8::Value> IntlCollator::JSInternalCompare(
+    const v8::Arguments& args) {
+  if (args.Length() != 3 || !args[0]->IsObject() ||
+      !args[1]->IsString() || !args[2]->IsString()) {
     return v8::ThrowException(v8::Exception::SyntaxError(
-        v8::String::New("Two string arguments are required.")));
+        v8::String::New("Collator and two string arguments are required.")));
   }
 
-  icu::Collator* collator = UnpackIntlCollator(args.Holder());
+  icu::Collator* collator = UnpackIntlCollator(args[0]->ToObject());
   if (!collator) {
     return ThrowUnexpectedObjectError();
   }
 
-  v8::String::Value string_value1(args[0]);
-  v8::String::Value string_value2(args[1]);
+  v8::String::Value string_value1(args[1]);
+  v8::String::Value string_value2(args[2]);
   const UChar* string1 = reinterpret_cast<const UChar*>(*string_value1);
   const UChar* string2 = reinterpret_cast<const UChar*>(*string_value2);
   UErrorCode status = U_ZERO_ERROR;
@@ -110,27 +116,17 @@ v8::Handle<v8::Value> IntlCollator::JSCreateCollator(
   }
 
   if (intl_collator_template_.IsEmpty()) {
-    v8::Local<v8::FunctionTemplate> raw_template(v8::FunctionTemplate::New());
-
-    // Define internal field count on instance template.
-    v8::Local<v8::ObjectTemplate> object_template =
-        raw_template->InstanceTemplate();
+    v8::Local<v8::ObjectTemplate> raw_template(v8::ObjectTemplate::New());
 
     // Set aside internal fields for icu collator.
-    object_template->SetInternalFieldCount(1);
-
-    // Define all of the prototype methods on prototype template.
-    v8::Local<v8::ObjectTemplate> proto = raw_template->PrototypeTemplate();
-    proto->Set(v8::String::New("internalCompare"),
-               v8::FunctionTemplate::New(InternalCompare));
+    raw_template->SetInternalFieldCount(1);
 
     intl_collator_template_ =
-        v8::Persistent<v8::FunctionTemplate>::New(raw_template);
+        v8::Persistent<v8::ObjectTemplate>::New(raw_template);
   }
 
   // Create an empty object wrapper.
-  v8::Local<v8::Object> local_object =
-      intl_collator_template_->GetFunction()->NewInstance();
+  v8::Local<v8::Object> local_object = intl_collator_template_->NewInstance();
   v8::Persistent<v8::Object> wrapper =
       v8::Persistent<v8::Object>::New(local_object);
 
@@ -195,49 +191,66 @@ static icu::Collator* CreateICUCollator(
     return NULL;
   }
 
-  // Below, we change collation options that are explicitly specified
-  // by a caller in JavaScript. Otherwise, we don't touch because
-  // we don't want to change the locale-dependent default value.
-  // The three options below are very likely to have the same default
-  // across locales, but I haven't checked them all. Others we may add
-  // in the future have certainly locale-dependent default (e.g.
-  // caseFirst is upperFirst for Danish while is off for most other locales).
+  // Set flags first, and then override them with sensitivity if necessary.
+  SetBooleanAttribute(UCOL_FRENCH_COLLATION, "backwards", options, collator);
+  SetBooleanAttribute(UCOL_CASE_LEVEL, "caseLevel", options, collator);
+  SetBooleanAttribute(UCOL_NUMERIC_COLLATION, "numeric", options, collator);
+  SetBooleanAttribute(
+      UCOL_HIRAGANA_QUATERNARY_MODE, "hiraganaQuaternary", options, collator);
+  SetBooleanAttribute(
+      UCOL_NORMALIZATION_MODE, "normalization", options, collator);
 
-  bool ignore_case, ignore_accents, numeric;
-
-  if (Utils::ExtractBooleanSetting(options, "ignoreCase", &ignore_case)) {
-    // We need to explicitly set the level to secondary to get case ignored.
-    // The default L3 ignores UCOL_CASE_LEVEL == UCOL_OFF !
-    if (ignore_case) {
-      collator->setStrength(icu::Collator::SECONDARY);
-    }
-    collator->setAttribute(UCOL_CASE_LEVEL, ignore_case ? UCOL_OFF : UCOL_ON,
-                           status);
-    if (U_FAILURE(status)) {
-      delete collator;
-      return NULL;
-    }
-  }
-
-  // Accents are taken into account with strength secondary or higher.
-  if (Utils::ExtractBooleanSetting(options, "ignoreAccents", &ignore_accents)) {
-    if (!ignore_accents) {
-      collator->setStrength(icu::Collator::SECONDARY);
+  icu::UnicodeString case_first;
+  if (Utils::ExtractStringSetting(options, "caseFirst", &case_first)) {
+    if (case_first == UNICODE_STRING_SIMPLE("upper")) {
+      collator->setAttribute(UCOL_CASE_FIRST, UCOL_UPPER_FIRST, status);
+    } else if (case_first == UNICODE_STRING_SIMPLE("lower")) {
+      collator->setAttribute(UCOL_CASE_FIRST, UCOL_LOWER_FIRST, status);
     } else {
-      collator->setStrength(icu::Collator::PRIMARY);
+      // Default (false/off).
+      collator->setAttribute(UCOL_CASE_FIRST, UCOL_OFF, status);
     }
   }
 
-  if (Utils::ExtractBooleanSetting(options, "numeric", &numeric)) {
-    collator->setAttribute(UCOL_NUMERIC_COLLATION,
-                           numeric ? UCOL_ON : UCOL_OFF, status);
-    if (U_FAILURE(status)) {
-      delete collator;
-      return NULL;
+  icu::UnicodeString sensitivity;
+  if (Utils::ExtractStringSetting(options, "sensitivity", &sensitivity)) {
+    if (sensitivity == UNICODE_STRING_SIMPLE("base")) {
+      collator->setStrength(icu::Collator::PRIMARY);
+    } else if (sensitivity == UNICODE_STRING_SIMPLE("accent")) {
+      collator->setStrength(icu::Collator::SECONDARY);
+    } else if (sensitivity == UNICODE_STRING_SIMPLE("case")) {
+      collator->setStrength(icu::Collator::PRIMARY);
+      collator->setAttribute(UCOL_CASE_LEVEL, UCOL_ON, status);
+    } else {
+      // variant (default)
+      collator->setStrength(icu::Collator::TERTIARY);
+    }
+  }
+
+  bool ignore;
+  if (Utils::ExtractBooleanSetting(options, "ignorePunctuation", &ignore)) {
+    if (ignore) {
+      collator->setAttribute(UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, status);
     }
   }
 
   return collator;
+}
+
+static bool SetBooleanAttribute(UColAttribute attribute,
+                                const char* name,
+                                v8::Handle<v8::Object> options,
+                                icu::Collator* collator) {
+  UErrorCode status = U_ZERO_ERROR;
+  bool result;
+  if (Utils::ExtractBooleanSetting(options, name, &result)) {
+    collator->setAttribute(attribute, result ? UCOL_ON : UCOL_OFF, status);
+    if (U_FAILURE(status)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 static void SetResolvedSettings(const icu::Locale& icu_locale,
@@ -245,56 +258,74 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
                                 v8::Handle<v8::Object> wrapper) {
   v8::HandleScope handle_scope;
 
-  SetBooleanAttribute(UCOL_FRENCH_COLLATION, collator, "backwards", wrapper);
-  SetBooleanAttribute(UCOL_CASE_LEVEL, collator, "caseLevel", wrapper);
-  SetBooleanAttribute(UCOL_NUMERIC_COLLATION, collator, "numeric", wrapper);
-  SetBooleanAttribute(UCOL_HIRAGANA_QUATERNARY_MODE, collator,
-                      "hiraganaQuaternary", wrapper);
-  SetBooleanAttribute(UCOL_NORMALIZATION_MODE, collator,
-                      "normalization", wrapper);
+  SetBooleanSetting(UCOL_FRENCH_COLLATION, collator, "backwards", wrapper);
+  SetBooleanSetting(UCOL_CASE_LEVEL, collator, "caseLevel", wrapper);
+  SetBooleanSetting(UCOL_NUMERIC_COLLATION, collator, "numeric", wrapper);
+  SetBooleanSetting(
+      UCOL_HIRAGANA_QUATERNARY_MODE, collator, "hiraganaQuaternary", wrapper);
+  SetBooleanSetting(
+      UCOL_NORMALIZATION_MODE, collator, "normalization", wrapper);
 
   UErrorCode status = U_ZERO_ERROR;
 
-  UColAttributeValue attr_result =
-      collator->getAttribute(UCOL_CASE_FIRST, status);
-  if(attr_result == UCOL_LOWER_FIRST) {
-    wrapper->Set(v8::String::New("caseFirst"), v8::String::New("lower"));
-  } else if(attr_result == UCOL_UPPER_FIRST) {
-    wrapper->Set(v8::String::New("caseFirst"), v8::String::New("upper"));
-  } else {
-    // Default.
-    wrapper->Set(v8::String::New("caseFirst"), v8::String::New("false"));
+  switch (collator->getAttribute(UCOL_CASE_FIRST, status)) {
+    case UCOL_LOWER_FIRST:
+      wrapper->Set(v8::String::New("caseFirst"), v8::String::New("lower"));
+      break;
+    case UCOL_UPPER_FIRST:
+      wrapper->Set(v8::String::New("caseFirst"), v8::String::New("upper"));
+      break;
+    default:
+      wrapper->Set(v8::String::New("caseFirst"), v8::String::New("false"));
   }
 
-  attr_result = collator->getAttribute(UCOL_STRENGTH, status);
-  if(attr_result == UCOL_PRIMARY) {
-    wrapper->Set(v8::String::New("strength"), v8::String::New("primary"));
-  } else if(attr_result == UCOL_SECONDARY) {
-    wrapper->Set(v8::String::New("strength"), v8::String::New("secondary"));
-  } else if(attr_result == UCOL_TERTIARY) {
-    wrapper->Set(v8::String::New("strength"), v8::String::New("tertiary"));
-  } else if(attr_result == UCOL_QUATERNARY) {
-    wrapper->Set(v8::String::New("strength"), v8::String::New("quaternary"));
+  switch (collator->getAttribute(UCOL_STRENGTH, status)) {
+    case UCOL_PRIMARY: {
+      wrapper->Set(v8::String::New("strength"), v8::String::New("primary"));
+
+      // case level: true + s1 -> case, s1 -> base.
+      if (UCOL_ON == collator->getAttribute(UCOL_CASE_LEVEL, status)) {
+        wrapper->Set(v8::String::New("sensitivity"), v8::String::New("case"));
+      } else {
+        wrapper->Set(v8::String::New("sensitivity"), v8::String::New("base"));
+      }
+      break;
+    }
+    case UCOL_SECONDARY:
+      wrapper->Set(v8::String::New("strength"), v8::String::New("secondary"));
+      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("accent"));
+      break;
+    case UCOL_TERTIARY:
+      wrapper->Set(v8::String::New("strength"), v8::String::New("tertiary"));
+      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
+      break;
+    case UCOL_QUATERNARY:
+      // We shouldn't get quaternary and identical from ICU, but if we do
+      // put them into variant.
+      wrapper->Set(v8::String::New("strength"), v8::String::New("quaternary"));
+      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
+      break;
+    default:
+      wrapper->Set(v8::String::New("strength"), v8::String::New("identical"));
+      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
+  }
+
+  if (UCOL_SHIFTED == collator->getAttribute(UCOL_ALTERNATE_HANDLING, status)) {
+    wrapper->Set(v8::String::New("ignorePunctuation"), v8::Boolean::New(true));
   } else {
-    wrapper->Set(v8::String::New("strength"), v8::String::New("identical"));
+    wrapper->Set(v8::String::New("ignorePunctuation"), v8::Boolean::New(false));
   }
 }
 
-static void SetBooleanAttribute(UColAttribute attribute,
-                                icu::Collator* collator,
-                                const char* property,
-                                v8::Handle<v8::Object> wrapper) {
+static void SetBooleanSetting(UColAttribute attribute,
+                              icu::Collator* collator,
+                              const char* property,
+                              v8::Handle<v8::Object> wrapper) {
   UErrorCode status = U_ZERO_ERROR;
-  bool bool_result;
-  UColAttributeValue attr_result = collator->getAttribute(attribute, status);
-  if (attr_result == UCOL_ON) {
-    bool_result = true;
+  if (UCOL_ON == collator->getAttribute(attribute, status)) {
+    wrapper->Set(v8::String::New(property), v8::Boolean::New(true));
   } else {
-    bool_result = false;
-  }
-
-  if(U_SUCCESS(status)) {
-    wrapper->Set(v8::String::New(property), v8::Boolean::New(bool_result));
+    wrapper->Set(v8::String::New(property), v8::Boolean::New(false));
   }
 }
 
