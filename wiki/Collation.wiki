@@ -1,0 +1,64 @@
+= Introduction =
+Sorting strings is a complex, locale sensitive operation.
+
+== Settings ==
+Collator constructor accepts optional locale array and optional settings object.<br>
+Settings object and valid values for all the keys:
+<code>
+usage: {'sort', 'search'}
+sensitivity: {'base', 'accent', 'case', 'variant'}
+ignorePunctuation: {true, false}
+</code>
+
+Other collation properties can be passed using Unicode extensions:
+<code>
+Key    Property            Type       Values
+kb     backwards           "boolean"  true/false
+kc     caseLevel           "boolean"  true/false
+kn     numeric             "boolean"  true/false
+kh     hiraganaQuaternary  "boolean"  true/false
+kk     normalization       "boolean"  true/false
+kf     caseFirst           "string"   "upper", "lower", "false"
+</code>
+
+== Default locale ==
+Default locale is set to *navigator.language* if it's supported by Chrome, or to *und*.<br>
+The safest approach is to specify target locale and check if it was available through resolvedOptions property.
+
+== Default settings ==
+<code>
+usage: 'sort'
+ignorePunctuation: false
+sensitivity: 'variant' // For usage:'sort', it's locale dependent for usage:'search'
+</code>
+
+== Collator with default locale and settings ==
+<code>
+var array = ['d', 'a', 'b', 'c'];
+var coll = v8Intl.Collator();
+array.sort(coll.compare);
+</code>
+
+== Collator with user locale and default settings ==
+<code>
+var array = ['d', 'a', 'b', 'c'];
+var coll = v8Intl.Collator(['sr']);
+array.sort(coll.compare);
+</code>
+
+== Collator with user locale and settings ==
+<code>
+var array = ['d', 'a', 'b', 'c'];
+// Create collator sensitive to difference in base letters, a != b,
+// and to accents, a != á.
+var coll = v8Intl.Collator(['sr'], {sensitivity:'accent'});
+array.sort(coll.compare);
+</code>
+
+== Collator with user locale and Unicode extension ==
+<code>
+var array = ['d', 'a', 'b', 'c'];
+// Turn on numeric sort so '1' sorts before '12'.
+var coll = v8Intl.Collator(['sr-u-kn-true']);
+array.sort(coll.compare);
+</code>
