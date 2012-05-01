@@ -18,7 +18,7 @@
  */
 var v8Intl = (function() {
 
-var Intl = {};
+var v8Intl = {};
 
 /**
  * Global native (C++) methods.
@@ -155,15 +155,15 @@ function initializeLocaleList(localeList, locales) {
 
 
 /**
- * Constructs Intl.LocaleList object given optional locales parameter.
+ * Constructs v8Intl.LocaleList object given optional locales parameter.
  * Validates the elements as well-formed language tags and omits duplicates.
  *
  * @constructor
  */
-Intl.LocaleList = function(locales) {
-  if (!this || this === Intl) {
+v8Intl.LocaleList = function(locales) {
+  if (!this || this === v8Intl) {
     // Constructor is called as a function.
-    return new Intl.LocaleList(locales);
+    return new v8Intl.LocaleList(locales);
   }
 
   return initializeLocaleList(toObject(this), locales);
@@ -173,9 +173,9 @@ Intl.LocaleList = function(locales) {
 /**
  * LocaleList prototype object.
  */
-Object.defineProperty(Intl.LocaleList,
+Object.defineProperty(v8Intl.LocaleList,
                       'prototype',
-                      { value: new Intl.LocaleList(),
+                      { value: new v8Intl.LocaleList(),
                         writable: false,
                         enumerable: false,
                         configurable: false });
@@ -272,15 +272,15 @@ function initializeCollator(collator, locales, options) {
 
 
 /**
- * Constructs Intl.Collator object given optional locales and options
+ * Constructs v8Intl.Collator object given optional locales and options
  * parameters.
  *
  * @constructor
  */
-Intl.Collator = function(locales, options) {
-  if (!this || this === Intl) {
+v8Intl.Collator = function(locales, options) {
+  if (!this || this === v8Intl) {
     // Constructor is called as a function.
-    return new Intl.Collator(locales, options);
+    return new v8Intl.Collator(locales, options);
   }
 
   return initializeCollator(toObject(this), locales, options);
@@ -290,9 +290,9 @@ Intl.Collator = function(locales, options) {
 /**
  * Collator prototype object.
  */
-Object.defineProperty(Intl.Collator,
+Object.defineProperty(v8Intl.Collator,
                       'prototype',
-                      { value: new Intl.Collator(),
+                      { value: new v8Intl.Collator(),
                         writable: false,
                         enumerable: false,
                         configurable: false });
@@ -301,7 +301,7 @@ Object.defineProperty(Intl.Collator,
 /**
  * Collator resolvedOptions getter.
  */
-Object.defineProperty(Intl.Collator.prototype, 'resolvedOptions', {
+Object.defineProperty(v8Intl.Collator.prototype, 'resolvedOptions', {
   get: function() {
     return {
       locale: this.__collator__.locale,
@@ -327,7 +327,7 @@ Object.defineProperty(Intl.Collator.prototype, 'resolvedOptions', {
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
  */
-Intl.Collator.supportedLocalesOf = function(locales, options) {
+v8Intl.Collator.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('collator', locales, options);
 };
 
@@ -348,7 +348,7 @@ function compare(collator, x, y) {
 };
 
 
-Object.defineProperty(Intl.Collator.prototype, 'compare', {
+Object.defineProperty(v8Intl.Collator.prototype, 'compare', {
  get: function() {
       if (this.__boundCompare__ === undefined) {
         var that = this;
@@ -456,15 +456,15 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
 
 /**
- * Constructs Intl.NumberFormat object given optional locales and options
+ * Constructs v8Intl.NumberFormat object given optional locales and options
  * parameters.
  *
  * @constructor
  */
-Intl.NumberFormat = function(locales, options) {
-  if (!this || this === Intl) {
+v8Intl.NumberFormat = function(locales, options) {
+  if (!this || this === v8Intl) {
     // Constructor is called as a function.
-    return new Intl.NumberFormat(locales, options);
+    return new v8Intl.NumberFormat(locales, options);
   }
 
   return initializeNumberFormat(toObject(this), locales, options);
@@ -474,9 +474,9 @@ Intl.NumberFormat = function(locales, options) {
 /**
  * NumberFormat prototype object.
  */
-Object.defineProperty(Intl.NumberFormat,
+Object.defineProperty(v8Intl.NumberFormat,
                       'prototype',
-                      { value: new Intl.NumberFormat(),
+                      { value: new v8Intl.NumberFormat(),
                         writable: false,
                         enumerable: false,
                         configurable: false });
@@ -485,7 +485,7 @@ Object.defineProperty(Intl.NumberFormat,
 /**
  * NumberFormat resolvedOptions getter.
  */
-Object.defineProperty(Intl.NumberFormat.prototype, 'resolvedOptions', {
+Object.defineProperty(v8Intl.NumberFormat.prototype, 'resolvedOptions', {
   get: function() {
     return {
       locale: this.__formatter__.locale,
@@ -511,7 +511,7 @@ Object.defineProperty(Intl.NumberFormat.prototype, 'resolvedOptions', {
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
  */
-Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
+v8Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('numberformat', locales, options);
 };
 
@@ -521,7 +521,7 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  * according to the effective locale and the formatting options of this
  * NumberFormat.
  */
-Intl.NumberFormat.prototype.format = function (value) {
+v8Intl.NumberFormat.prototype.format = function (value) {
   native function NativeJSInternalNumberFormat();
   return NativeJSInternalNumberFormat(this.__formatter__, Number(value));
 };
@@ -781,15 +781,15 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
 
 /**
- * Constructs Intl.DateTimeFormat object given optional locales and options
+ * Constructs v8Intl.DateTimeFormat object given optional locales and options
  * parameters.
  *
  * @constructor
  */
-Intl.DateTimeFormat = function(locales, options) {
-  if (!this || this === Intl) {
+v8Intl.DateTimeFormat = function(locales, options) {
+  if (!this || this === v8Intl) {
     // Constructor is called as a function.
-    return new Intl.DateTimeFormat(locales, options);
+    return new v8Intl.DateTimeFormat(locales, options);
   }
 
   return initializeDateTimeFormat(toObject(this), locales, options);
@@ -799,9 +799,9 @@ Intl.DateTimeFormat = function(locales, options) {
 /**
  * DateTimeFormat prototype object.
  */
-Object.defineProperty(Intl.DateTimeFormat,
+Object.defineProperty(v8Intl.DateTimeFormat,
                       'prototype',
-                      { value: new Intl.DateTimeFormat(),
+                      { value: new v8Intl.DateTimeFormat(),
                         writable: false,
                         enumerable: false,
                         configurable: false });
@@ -810,7 +810,7 @@ Object.defineProperty(Intl.DateTimeFormat,
 /**
  * DateTimeFormat resolvedOptions getter.
  */
-Object.defineProperty(Intl.DateTimeFormat.prototype, 'resolvedOptions', {
+Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'resolvedOptions', {
   get: function() {
     var fromPattern = fromLDMLString(this.__formatter__.pattern);
     var userCalendar = ICU_CALENDAR_MAP[this.__formatter__.calendar];
@@ -847,7 +847,7 @@ Object.defineProperty(Intl.DateTimeFormat.prototype, 'resolvedOptions', {
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
  */
-Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
+v8Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('dateformat', locales, options);
 };
 
@@ -857,7 +857,7 @@ Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  * according to the effective locale and the formatting options of this
  * DateTimeFormat.
  */
-Intl.DateTimeFormat.prototype.format = function(dateValue) {
+v8Intl.DateTimeFormat.prototype.format = function(dateValue) {
   native function NativeJSInternalDateFormat();
 
   var dateMs;
@@ -934,13 +934,13 @@ function supportedLocalesOf(service, locales, options) {
   // Fall back to default locale if necessary.
   var requestedLocales = locales;
   if (requestedLocales === undefined) {
-    requestedLocales = new Intl.LocaleList();
+    requestedLocales = new v8Intl.LocaleList();
   }
 
   // Force it to be of LocaleList type (eliminating duplicates and make it
   // well-formed).
-  if (requestedLocales.constructor !== Intl.LocaleList) {
-    requestedLocales = new Intl.LocaleList(requestedLocales);
+  if (requestedLocales.constructor !== v8Intl.LocaleList) {
+    requestedLocales = new v8Intl.LocaleList(requestedLocales);
   }
 
   // Cache these, they don't ever change per service.
@@ -950,11 +950,11 @@ function supportedLocalesOf(service, locales, options) {
 
   // Use either best fit or lookup algorithm to match locales.
   if (matcher === 'best fit') {
-    return new Intl.LocaleList(bestFitSupportedLocalesOf(
+    return new v8Intl.LocaleList(bestFitSupportedLocalesOf(
         requestedLocales, AVAILABLE_LOCALES[service]));
   }
 
-  return new Intl.LocaleList(
+  return new v8Intl.LocaleList(
       lookupSupportedLocalesOf(requestedLocales, AVAILABLE_LOCALES[service]));
 }
 
@@ -1058,11 +1058,11 @@ function getGetOption(options, caller) {
  */
 function resolveLocale(service, requestedLocales, options) {
   if (requestedLocales === undefined) {
-    requestedLocales = new Intl.LocaleList();
+    requestedLocales = new v8Intl.LocaleList();
   } else {
     // TODO(cira): mark well formed locale list objects so we don't re-process
     // them.
-    requestedLocales = new Intl.LocaleList(requestedLocales);
+    requestedLocales = new v8Intl.LocaleList(requestedLocales);
   }
 
   var getOption = getGetOption(options, service);
@@ -1224,5 +1224,5 @@ function defaultLocale() {
 var CLEANUP_RE = new RegExp('');
 CLEANUP_RE.test('');
 
-return Intl;
+return v8Intl;
 }());
