@@ -52,6 +52,48 @@ bool Utils::ExtractStringSetting(const v8::Handle<v8::Object>& settings,
 }
 
 // static
+bool Utils::ExtractIntegerSetting(const v8::Handle<v8::Object>& settings,
+                                  const char* setting,
+                                  int32_t* result) {
+  if (!setting || !result) return false;
+
+  v8::HandleScope handle_scope;
+  v8::TryCatch try_catch;
+  v8::Handle<v8::Value> value = settings->Get(v8::String::New(setting));
+  if (try_catch.HasCaught()) {
+    return false;
+  }
+  // No need to check if |value| is empty because it's taken care of
+  // by TryCatch above.
+  if (!value->IsUndefined() && !value->IsNull() && value->IsNumber()) {
+    *result = static_cast<int32_t>(value->Int32Value());
+    return true;
+  }
+  return false;
+}
+
+// static
+bool Utils::ExtractBooleanSetting(const v8::Handle<v8::Object>& settings,
+                                  const char* setting,
+                                  bool* result) {
+  if (!setting || !result) return false;
+
+  v8::HandleScope handle_scope;
+  v8::TryCatch try_catch;
+  v8::Handle<v8::Value> value = settings->Get(v8::String::New(setting));
+  if (try_catch.HasCaught()) {
+    return false;
+  }
+  // No need to check if |value| is empty because it's taken care of
+  // by TryCatch above.
+  if (!value->IsUndefined() && !value->IsNull() && value->IsBoolean()) {
+    *result = static_cast<bool>(value->BooleanValue());
+    return true;
+  }
+  return false;
+}
+
+// static
 void Utils::AsciiToUChar(const char* source,
                          int32_t source_length,
                          UChar* target,

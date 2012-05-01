@@ -34,8 +34,16 @@
         '../src/datetime-format.cc',
         '../src/datetime-format.h',
         '../src/extension.cc',
+        '../src/intl-collator.cc',
+        '../src/intl-collator.h',
+        '../src/intl-date-format.cc',
+        '../src/intl-date-format.h',
+        '../src/intl-number-format.cc',
+        '../src/intl-number-format.h',
         '../src/language-matcher.cc',
         '../src/language-matcher.h',
+        '../src/locale-list.cc',
+        '../src/locale-list.h',
         '../src/locale.cc',
         '../src/locale.h',
         '../src/natives.h',
@@ -50,8 +58,8 @@
         '<(v8_path)',
       ],
       'dependencies': [
-        '<(v8_path)/v8/tools/gyp/v8.gyp:v8',
         '<(icu_path)/icu.gyp:*',
+        '<(v8_path)/v8/tools/gyp/v8.gyp:v8',
         'api2c#host',
       ],
       'direct_dependent_settings': {
@@ -66,7 +74,8 @@
       'toolsets': ['host'],
       'variables': {
         'js_files': [
-          '../src/api.js'
+          '../src/api.js',
+          '../src/intl.js'
         ],
       },
       'actions': [
