@@ -37,7 +37,7 @@ var AVAILABLE_LOCALES = {
   'collator': undefined,
   'numberformat': undefined,
   'dateformat': undefined
-}
+};
 
 /**
  * Global default locale, set by LocaleList constructor.
@@ -50,7 +50,7 @@ var CURRENT_HOST_LOCALE = undefined;
 var UNICODE_EXTENSION_RE = new RegExp('-u(-[a-z0-9]{2,8})+', 'g');
 
 /**
- * Matchess any Unicode extension.
+ * Matches any Unicode extension.
  */
 var ANY_EXTENSION_RE = new RegExp('-[a-z0-9]{1}-.*', 'g');
 
@@ -58,6 +58,11 @@ var ANY_EXTENSION_RE = new RegExp('-[a-z0-9]{1}-.*', 'g');
  * Replace quoted text (single quote, anything but the quote and quote again).
  */
 var QUOTED_STRING_RE = new RegExp("'[^']+'", 'g');
+
+/**
+ * Matches valid service name.
+ */
+var SERVICE_RE = new RegExp('^(collator|numberformat|dateformat)$');
 
 /**
  * Maps ICU calendar names into LDML type.
@@ -911,7 +916,7 @@ function updateExtensionAndOptions(options, extension,
  * for which this LocaleList object has a match.
  */
 function supportedLocalesOf(service, locales, options) {
-  if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
+  if (service.match(SERVICE_RE) === null) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
 
@@ -1079,7 +1084,7 @@ function resolveLocale(service, requestedLocales, options) {
  * lookup algorithm.
  */
 function lookupMatch(service, requestedLocales) {
-  if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
+  if (service.match(SERVICE_RE) === null) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
 
@@ -1213,6 +1218,11 @@ function defaultLocale() {
   return fallback;
 }
 
+// Fix RegExp global state so we don't fail WebKit layout test:
+// fast/js/regexp-caching.html
+// It seems that 'g' or test() operations leave state changed.
+var CLEANUP_RE = new RegExp('');
+CLEANUP_RE.test('');
 
 return Intl;
 }());
