@@ -16,15 +16,19 @@
  * Intl object is a single object that has some named properties,
  * all of which are constructors.
  */
-var Intl = (function() {
+var v8Intl = (function() {
 
 var Intl = {};
 
 /**
- * Internal property used for locale resolution fallback.
- * It's a implementation replacement for internal DefaultLocale method.
+ * Global native (C++) methods.
  */
-var CURRENT_HOST_LOCALE = 'root';
+native function NativeJSAvailableLocalesOf();
+
+/**
+ * List of available services.
+ */
+var AVAILABLE_SERVICES = ['collator', 'numberformat', 'dateformat'];
 
 /**
  * Caches available locales for each service.
@@ -33,7 +37,12 @@ var AVAILABLE_LOCALES = {
   'collator': undefined,
   'numberformat': undefined,
   'dateformat': undefined
-}
+};
+
+/**
+ * Global default locale, set by LocaleList constructor.
+ */
+var CURRENT_HOST_LOCALE = undefined;
 
 /**
  * Unicode extension regular expression.
@@ -41,9 +50,19 @@ var AVAILABLE_LOCALES = {
 var UNICODE_EXTENSION_RE = new RegExp('-u(-[a-z0-9]{2,8})+', 'g');
 
 /**
+ * Matches any Unicode extension.
+ */
+var ANY_EXTENSION_RE = new RegExp('-[a-z0-9]{1}-.*', 'g');
+
+/**
  * Replace quoted text (single quote, anything but the quote and quote again).
  */
 var QUOTED_STRING_RE = new RegExp("'[^']+'", 'g');
+
+/**
+ * Matches valid service name.
+ */
+var SERVICE_RE = new RegExp('^(collator|numberformat|dateformat)$');
 
 /**
  * Maps ICU calendar names into LDML type.
@@ -64,10 +83,28 @@ var ICU_CALENDAR_MAP = {
   'ethiopic-amete-alem': 'ethioaa'
 };
 
+
 /**
- * Global native (C++) methods.
+ * Canonicalizes the language tag, or throws in case the tag is invalid.
  */
-native function NativeJSAvailableLocalesOf();
+function canonicalizeLanguageTag(localeID) {
+  native function NativeJSCanonicalizeLanguageTag();
+
+  if (typeof localeID !== 'string' && typeof localeID !== 'object') {
+    throw new TypeError('Language ID should be string or object.');
+  }
+
+  // This call will strip -kn but not -kn-true extensions.
+  // ICU bug filled - http://bugs.icu-project.org/trac/ticket/9265.
+  // TODO(cira): check if -u-kn-true-kc-true-kh-true still throws after
+  // upgrade to ICU 4.9.
+  var tag = NativeJSCanonicalizeLanguageTag(String(localeID));
+  if (tag === 'invalid-tag') {
+    throw new RangeError('Invalid language tag: ' + localeID);
+  }
+
+  return tag;
+}
 
 
 /**
@@ -75,7 +112,8 @@ native function NativeJSAvailableLocalesOf();
  * Useful for subclassing.
  */
 function initializeLocaleList(localeList, locales) {
-  native function NativeJSCanonicalizeLanguageTag();
+  // Invoke it here to cover all initialization paths.
+  CURRENT_HOST_LOCALE = defaultLocale();
 
   var seen = [];
   if (locales === undefined) {
@@ -90,14 +128,7 @@ function initializeLocaleList(localeList, locales) {
       if (k in o) {
         var value = o[k];
 
-        if (typeof value !== 'string' && typeof value !== 'object') {
-          throw new TypeError('Invalid element in locales argument.');
-        }
-
-        var tag = NativeJSCanonicalizeLanguageTag(String(value));
-        if (tag === 'invalid-tag') {
-          throw new RangeError('Invalid language tag: ' + value);
-        }
+        var tag = canonicalizeLanguageTag(value);
 
         if (seen.indexOf(tag) === -1) {
           seen.push(tag);
@@ -151,6 +182,21 @@ Object.defineProperty(Intl.LocaleList,
 
 
 /**
+ * Populates internalOptions object with boolean key-value pairs
+ * from extensionMap.
+ */
+function extractBooleanOption(extensionMap, key, property, internalOptions) {
+  if (extensionMap.hasOwnProperty(key)) {
+    if (extensionMap[key] === 'false') {
+      internalOptions[property] = false;
+    } else {
+      internalOptions[property] = true;
+    }
+  }
+}
+
+
+/**
  * Initializes the given object so it's a valid Collator instance.
  * Useful for subclassing.
  */
@@ -163,21 +209,63 @@ function initializeCollator(collator, locales, options) {
 
   var getOption = getGetOption(options, 'collator');
 
+  var internalOptions = {};
+
+  internalOptions.usage =
+      getOption('usage', 'string', ['sort', 'search'], 'sort');
+
+  internalOptions.sensitivity =
+      getOption('sensitivity', 'string', ['base', 'accent', 'case', 'variant']);
+  if (internalOptions.sensitivity === undefined &&
+      internalOptions.usage === 'sort') {
+    internalOptions.sensitivity = 'variant';
+  }
+
+  internalOptions.ignorePunctuation =
+      getOption('ignorePunctuation', 'boolean', undefined, false);
+
   var locale = resolveLocale('collator', locales, options);
 
-  // ICU prefers options to be passed using -u- extension key/values, so
-  // we need to build that. Update the options too with proper values.
-  var extension = updateExtensionAndOptions(
-      options, locale.extension,
-      ['kb', 'kc', 'kn', 'kh', 'kk', 'kf'],
-      ['backwards', 'caseLevel', 'numeric', 'hiraganaQuaternary',
-       'normalization', 'caseFirst']);
+  // ICU can't take kb, kc... parameters through localeID, so we need to pass
+  // them as options.
+  // One exception is -co- which has to be part of the extension, but only for
+  // usage: sort, and its value can't be 'standard' or 'search'.
+  var extensionMap = parseExtension(locale.extension);
 
-  var internalOptions = {};
+  extractBooleanOption(extensionMap, 'kb', 'backwards', internalOptions);
+  extractBooleanOption(extensionMap, 'kc', 'caseLevel', internalOptions);
+  extractBooleanOption(extensionMap, 'kn', 'numeric', internalOptions);
+  extractBooleanOption(
+      extensionMap, 'kh', 'hiraganaQuaternary', internalOptions);
+  extractBooleanOption(extensionMap, 'kk', 'normalization', internalOptions);
+
+  if (extensionMap.hasOwnProperty('kf')) {
+    internalOptions.caseFirst = 'false';
+    if (extensionMap.kf === 'upper') {
+      internalOptions.caseFirst = 'upper';
+    } else if (extensionMap.kf === 'lower') {
+      internalOptions.caseFirst = 'lower';
+    }
+  }
+
+  internalOptions.collation = 'default';
+  var extension = '';
+  if (extensionMap.hasOwnProperty('co') && internalOptions.usage === 'sort') {
+    if (extensionMap.co &&
+        extensionMap.co !== 'standard' && extensionMap.co !== 'search') {
+      extension = '-u-co-' + extensionMap.co;
+      // ICU can't tell us what the collation is, so save user's input.
+      internalOptions.collation = extensionMap.co;
+    }
+  } else if (internalOptions.usage === 'search') {
+    extension = '-u-co-search';
+  }
 
   collator.__collator__ = NativeJSCreateCollator(locale.locale + extension,
                                                  internalOptions);
   collator.__collator__.locale = locale.locale;
+  collator.__collator__.usage = internalOptions.usage;
+  collator.__collator__.collation = internalOptions.collation;
 
   return collator;
 }
@@ -219,7 +307,14 @@ Object.defineProperty(Intl.Collator.prototype, 'resolvedOptions', {
       locale: this.__collator__.locale,
       usage: this.__collator__.usage,
       sensitivity: this.__collator__.sensitivity,
-      ignorePunctuation: this.__collator__.ignorePunctuation
+      ignorePunctuation: this.__collator__.ignorePunctuation,
+      backwards: this.__collator__.backwards,
+      caseLevel: this.__collator__.caseLevel,
+      numeric: this.__collator__.numeric,
+      hiraganaQuaternary: this.__collator__.hiraganaQuaternary,
+      normalization: this.__collator__.normalization,
+      caseFirst: this.__collator__.caseFirst,
+      collation: this.__collator__.collation
     };
   },
   enumerable: false,
@@ -248,7 +343,8 @@ Intl.Collator.supportedLocalesOf = function(locales, options) {
  * the sort order, or x comes after y in the sort order, respectively.
  */
 function compare(collator, x, y) {
-  return collator.__collator__.internalCompare(String(x), String(y));
+  native function NativeJSInternalCompare();
+  return NativeJSInternalCompare(collator.__collator__, String(x), String(y));
 };
 
 
@@ -426,7 +522,8 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  * NumberFormat.
  */
 Intl.NumberFormat.prototype.format = function (value) {
-  return this.__formatter__.internalFormat(Number(value));
+  native function NativeJSInternalNumberFormat();
+  return NativeJSInternalNumberFormat(this.__formatter__, Number(value));
 };
 
 
@@ -761,6 +858,8 @@ Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  * DateTimeFormat.
  */
 Intl.DateTimeFormat.prototype.format = function(dateValue) {
+  native function NativeJSInternalDateFormat();
+
   var dateMs;
   if (dateValue === undefined) {
     dateMs = Date.now();
@@ -772,7 +871,7 @@ Intl.DateTimeFormat.prototype.format = function(dateValue) {
     throw new RangeException('Provided date is not in valid range.');
   }
 
-  return this.__formatter__.internalFormat(new Date(dateMs));
+  return NativeJSInternalDateFormat(this.__formatter__, new Date(dateMs));
 };
 
 
@@ -817,7 +916,7 @@ function updateExtensionAndOptions(options, extension,
  * for which this LocaleList object has a match.
  */
 function supportedLocalesOf(service, locales, options) {
-  if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
+  if (service.match(SERVICE_RE) === null) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
 
@@ -832,7 +931,7 @@ function supportedLocalesOf(service, locales, options) {
   var matcher = getOption(options, 'localeMatcher', 'string',
                           ['lookup', 'best fit'], 'best fit');
 
-  // Fall back to CURRENT_HOST_LOCALE if necessary.
+  // Fall back to default locale if necessary.
   var requestedLocales = locales;
   if (requestedLocales === undefined) {
     requestedLocales = new Intl.LocaleList();
@@ -985,7 +1084,7 @@ function resolveLocale(service, requestedLocales, options) {
  * lookup algorithm.
  */
 function lookupMatch(service, requestedLocales) {
-  if (/^(collator|numberformat|dateformat)$/.test(service) === false) {
+  if (service.match(SERVICE_RE) === null) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
 
@@ -995,16 +1094,16 @@ function lookupMatch(service, requestedLocales) {
   }
 
   for (var i = 0; i < requestedLocales.length; ++i) {
-    // Remove -u- extension.
-    var locale = requestedLocales[i].replace(UNICODE_EXTENSION_RE, '');
+    // Remove all extensions.
+    var locale = requestedLocales[i].replace(ANY_EXTENSION_RE, '');
     do {
       if (AVAILABLE_LOCALES[service][locale] !== undefined) {
         // Return the resolved locale and extension.
         var extensionMatch = requestedLocales[i].match(UNICODE_EXTENSION_RE);
         var extension = (extensionMatch === null) ? '' : extensionMatch[0];
-        return {'locale': locale, 'extension': extension};
+        return {'locale': locale, 'extension': extension, 'position': i};
       }
-      // Truncate locale if possible, if not break.
+      // Truncate locale if possible.
       var pos = locale.lastIndexOf('-');
       if (pos === -1) {
         break;
@@ -1014,7 +1113,7 @@ function lookupMatch(service, requestedLocales) {
   }
 
   // Didn't find a match, return default.
-  return {'locale': CURRENT_HOST_LOCALE, 'extension': ''};
+  return {'locale': CURRENT_HOST_LOCALE, 'extension': '', 'position': -1};
 }
 
 
@@ -1029,6 +1128,43 @@ function bestFitMatch(service, requestedLocales) {
 
 
 /**
+ * Parses Unicode extension into key - value map.
+ * Returns empty object if the extension string is invalid.
+ * We are not concerned with the validity of the values at this point.
+ */
+function parseExtension(extension) {
+  var extensionSplit = extension.split('-');
+
+  // Assume ['', 'u', ...] input, but don't throw.
+  if (extensionSplit.length <= 2 ||
+      (extensionSplit[0] !== '' && extensionSplit[1] !== 'u')) {
+    return {};
+  }
+
+  // Key is {2}alphanum, value is {3,8}alphanum.
+  // Some keys may not have explicit values (booleans).
+  var extensionMap = {};
+  var previousKey = undefined;
+  for (var i = 2; i < extensionSplit.length; ++i) {
+    var length = extensionSplit[i].length;
+    var element = extensionSplit[i];
+    if (length === 2) {
+      extensionMap[element] = undefined;
+      previousKey = element;
+    } else if (length >= 3 && length <=8 && previousKey !== undefined) {
+      extensionMap[previousKey] = element;
+      previousKey = undefined;
+    } else {
+      // There is a value that's too long, or that doesn't have a key.
+      return {};
+    }
+  }
+
+  return extensionMap;
+}
+
+
+/**
  * Converts parameter to an Object if possible.
  */
 function toObject(value) {
@@ -1039,6 +1175,54 @@ function toObject(value) {
   return Object(value);
 }
 
+
+/**
+ * Returns default locale.
+ * Uses navigator.language (browsers), or falls back to 'und' (server side).
+ */
+function defaultLocale() {
+  var fallback = 'und';
+
+  // First initialization happens without navigator.language so
+  // CURRENT_HOST_LOCALE becames 'und'. We want to retain the value that's
+  // assigned on user initiated call to LocaleList constructor.
+  if (CURRENT_HOST_LOCALE !== undefined && CURRENT_HOST_LOCALE !== fallback) {
+    return CURRENT_HOST_LOCALE;
+  }
+
+  // Use navigator.language if it exists.
+  if ((typeof this === 'object') &&
+      this.hasOwnProperty('navigator') &&
+      this.navigator.language !== undefined) {
+    // Canonicalize (we don't want to fail here).
+    try {
+      var browserLocale = canonicalizeLanguageTag(this.navigator.language);
+    } catch (e) {
+      return fallback;
+    }
+
+    // Browser locale can be anything. We have to check if it's supported by
+    // all of the services.
+    var locale = {};
+    for (var i = 0; i < AVAILABLE_SERVICES.length; ++i) {
+      locale = bestFitMatch(AVAILABLE_SERVICES[i], [browserLocale]);
+      if (locale.locale === fallback) {
+        return fallback;
+      }
+    }
+    // Returns the best match we have to current browser locale.
+    return locale.locale;
+  }
+
+  // We are probably server side, 'und' should work fine.
+  return fallback;
+}
+
+// Fix RegExp global state so we don't fail WebKit layout test:
+// fast/js/regexp-caching.html
+// It seems that 'g' or test() operations leave state changed.
+var CLEANUP_RE = new RegExp('');
+CLEANUP_RE.test('');
 
 return Intl;
 }());

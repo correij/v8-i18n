@@ -51,10 +51,16 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(JSAvailableLocalesOf);
   } else if (name->Equals(v8::String::New("NativeJSCreateDateTimeFormat"))) {
     return v8::FunctionTemplate::New(IntlDateFormat::JSCreateDateTimeFormat);
+  } else if (name->Equals(v8::String::New("NativeJSInternalDateFormat"))) {
+    return v8::FunctionTemplate::New(IntlDateFormat::JSInternalFormat);
   } else if (name->Equals(v8::String::New("NativeJSCreateNumberFormat"))) {
     return v8::FunctionTemplate::New(IntlNumberFormat::JSCreateNumberFormat);
+  } else if (name->Equals(v8::String::New("NativeJSInternalNumberFormat"))) {
+    return v8::FunctionTemplate::New(IntlNumberFormat::JSInternalFormat);
   } else if (name->Equals(v8::String::New("NativeJSCreateCollator"))) {
     return v8::FunctionTemplate::New(IntlCollator::JSCreateCollator);
+  } else if (name->Equals(v8::String::New("NativeJSInternalCompare"))) {
+    return v8::FunctionTemplate::New(IntlCollator::JSInternalCompare);
   }
 
   return v8::Handle<v8::FunctionTemplate>();
