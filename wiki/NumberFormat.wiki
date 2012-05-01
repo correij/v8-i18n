@@ -1,0 +1,58 @@
+= Introduction =
+Formatting numbers a complex, locale sensitive operation.
+
+== Settings ==
+!NumberFormat constructor accepts optional locale array and optional settings object.<br>
+Settings object and valid values for all the keys:
+{{{
+style: {'decimal', 'percent', 'currency'}
+currency: {'USD', 'RSD', ...} // ISO 4217 3-letter currency code. Currency has to be specified if style: 'currency'.
+currencyDisplay: {'code', 'symbol', 'name'}
+numberingSystem: {'gregory', 'thai', ...} // Numbering system listed in TR#35
+minimumIntegerDigits: {0, 1,...}
+minimumFractionDigits: {0, 1,...}
+maximumFractionDigits: {0, 1,...}
+minimumSignificantDigits: {0, 1,...}
+maximumSignificantDigits: {0, 1,...}
+}}}
+
+Other formatting properties can be passed using Unicode extensions:
+{{{
+Key    Property            Type       Values
+nu     numberingSystem     "string"   "thai", ...
+}}}
+
+== Default locale ==
+Default locale is set to *navigator.language* if it's supported by Chrome, or to *und*.<br>
+The safest approach is to specify target locale and check if it was available through resolvedOptions property.
+
+== Default settings ==
+{{{
+style: 'decimal'
+}}}
+
+Other options are locale specific.
+
+== NumberFormat with default locale and settings ==
+{{{
+var nf = v8Intl.NumberFormat();
+nf.format(12345.67);  // Returns a string.
+}}}
+
+== NumberFormat with user locale and default settings ==
+{{{
+var nf = v8Intl.NumberFormat(['sr']);
+nf.format(12345.67);
+}}}
+
+== NumberFormat with user locale and settings ==
+{{{
+var nf = v8Intl.NumberFormat(['sr'], {style:'currency', currency:'RSD', currencyDisplay:'code'});
+nf.format(12345.67);
+}}}
+
+== NumberFormat with user locale and Unicode extension ==
+{{{
+var nf = v8Intl.NumberFormat(['th-u-nu-thai']);
+nf.format(12345.67);
+}}}
