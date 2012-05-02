@@ -1,0 +1,63 @@
+= Introduction =
+Formatting dates is a complex, locale sensitive operation.
+
+== Settings ==
+!DateTimeFormat constructor accepts optional locale array and optional settings object.<br>
+Settings object and valid values for all the keys:
+{{{
+weekday: {'narrow', 'short', 'long'}
+era: {'narrow', 'short', 'long'}
+year: {'2-digit', 'numeric'}
+month: {'2-digit', 'numeric', 'narrow', 'short', 'long'}
+day: {'2-digit', 'numeric'}
+hour: {'2-digit', 'numeric'}
+minute: {'2-digit', 'numeric'}
+second: {'2-digit', 'numeric'}
+timeZoneName: {'short', 'long'}
+tz: {undefined, 'UTC'}  // Undefined represents local time zone.
+hour12: {true/false}  // Use 12 or 24h format.
+}}}
+
+Other formatting properties can be passed using Unicode extensions:
+{{{
+Key    Property            Type       Values
+ca     calendar            "string"   "gregory", ...
+nu     numberingSystem     "string"   "thai", ...
+}}}
+
+== Default locale ==
+Default locale is set to *navigator.language* if it's supported by Chrome, or to *und*.<br>
+The safest approach is to specify target locale and check if it was available through resolvedOptions property.
+
+== Default settings ==
+{{{
+day: 'numeric'
+month: 'numeric'
+year: 'numeric'
+}}}
+
+Other options are locale specific. For example, hour12 is set by locale to either true or false.
+
+== !DateTimeFormat with default locale and settings ==
+{{{
+var dtf = v8Intl.DateTimeFormat();
+dtf.format();  // Returns a string representing now().
+}}}
+
+== !DateTimeFormat with user locale and default settings ==
+{{{
+var dtf = v8Intl.DateTimeFormat(['sr']);
+dtf.format();
+}}}
+
+== !DateTimeFormat with user locale and settings ==
+{{{
+var dtf = v8Intl.DateTimeFormat(['sr'], {hour:'2-digit', minute:'2-digit'});
+dtf.format(new Date(1974, 7, 29, 12, 15, 0));
+}}}
+
+== !DateTimeFormat with user locale and Unicode extension ==
+{{{
+var dtf = v8Intl.DateTimeFormat(['th-u-nu-thai']);
+dtf.format();
+}}}
