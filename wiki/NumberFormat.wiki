@@ -1,5 +1,5 @@
 = Introduction =
-Formatting numbers a complex, locale sensitive operation.
+Formatting numbers is a complex, locale sensitive operation.
 
 == Settings ==
 !NumberFormat constructor accepts optional locale array and optional settings object.<br>
@@ -8,7 +8,7 @@ Settings object and valid values for all the keys:
 style: {'decimal', 'percent', 'currency'}
 currency: {'USD', 'RSD', ...} // ISO 4217 3-letter currency code. Currency has to be specified if style: 'currency'.
 currencyDisplay: {'code', 'symbol', 'name'}
-numberingSystem: {'gregory', 'thai', ...} // Numbering system listed in TR#35
+numberingSystem: {'latn', 'thai', ...} // Numbering system listed in TR#35
 minimumIntegerDigits: {0, 1,...}
 minimumFractionDigits: {0, 1,...}
 maximumFractionDigits: {0, 1,...}
