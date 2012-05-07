@@ -192,11 +192,7 @@ static icu::Collator* CreateICUCollator(
   }
 
   // Set flags first, and then override them with sensitivity if necessary.
-  SetBooleanAttribute(UCOL_FRENCH_COLLATION, "backwards", options, collator);
-  SetBooleanAttribute(UCOL_CASE_LEVEL, "caseLevel", options, collator);
   SetBooleanAttribute(UCOL_NUMERIC_COLLATION, "numeric", options, collator);
-  SetBooleanAttribute(
-      UCOL_HIRAGANA_QUATERNARY_MODE, "hiraganaQuaternary", options, collator);
   SetBooleanAttribute(
       UCOL_NORMALIZATION_MODE, "normalization", options, collator);
 
@@ -258,11 +254,7 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
                                 v8::Handle<v8::Object> wrapper) {
   v8::HandleScope handle_scope;
 
-  SetBooleanSetting(UCOL_FRENCH_COLLATION, collator, "backwards", wrapper);
-  SetBooleanSetting(UCOL_CASE_LEVEL, collator, "caseLevel", wrapper);
   SetBooleanSetting(UCOL_NUMERIC_COLLATION, collator, "numeric", wrapper);
-  SetBooleanSetting(
-      UCOL_HIRAGANA_QUATERNARY_MODE, collator, "hiraganaQuaternary", wrapper);
   SetBooleanSetting(
       UCOL_NORMALIZATION_MODE, collator, "normalization", wrapper);
 
