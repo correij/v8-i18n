@@ -171,17 +171,6 @@ v8Intl.LocaleList = function(locales) {
 
 
 /**
- * LocaleList prototype object.
- */
-Object.defineProperty(v8Intl.LocaleList,
-                      'prototype',
-                      { value: new v8Intl.LocaleList(),
-                        writable: false,
-                        enumerable: false,
-                        configurable: false });
-
-
-/**
  * Populates internalOptions object with boolean key-value pairs
  * from extensionMap.
  */
@@ -232,11 +221,7 @@ function initializeCollator(collator, locales, options) {
   // usage: sort, and its value can't be 'standard' or 'search'.
   var extensionMap = parseExtension(locale.extension);
 
-  extractBooleanOption(extensionMap, 'kb', 'backwards', internalOptions);
-  extractBooleanOption(extensionMap, 'kc', 'caseLevel', internalOptions);
   extractBooleanOption(extensionMap, 'kn', 'numeric', internalOptions);
-  extractBooleanOption(
-      extensionMap, 'kh', 'hiraganaQuaternary', internalOptions);
   extractBooleanOption(extensionMap, 'kk', 'normalization', internalOptions);
 
   if (extensionMap.hasOwnProperty('kf')) {
@@ -288,17 +273,6 @@ v8Intl.Collator = function(locales, options) {
 
 
 /**
- * Collator prototype object.
- */
-Object.defineProperty(v8Intl.Collator,
-                      'prototype',
-                      { value: new v8Intl.Collator(),
-                        writable: false,
-                        enumerable: false,
-                        configurable: false });
-
-
-/**
  * Collator resolvedOptions getter.
  */
 Object.defineProperty(v8Intl.Collator.prototype, 'resolvedOptions', {
@@ -308,10 +282,7 @@ Object.defineProperty(v8Intl.Collator.prototype, 'resolvedOptions', {
       usage: this.__collator__.usage,
       sensitivity: this.__collator__.sensitivity,
       ignorePunctuation: this.__collator__.ignorePunctuation,
-      backwards: this.__collator__.backwards,
-      caseLevel: this.__collator__.caseLevel,
       numeric: this.__collator__.numeric,
-      hiraganaQuaternary: this.__collator__.hiraganaQuaternary,
       normalization: this.__collator__.normalization,
       caseFirst: this.__collator__.caseFirst,
       collation: this.__collator__.collation
@@ -472,17 +443,6 @@ v8Intl.NumberFormat = function(locales, options) {
 
 
 /**
- * NumberFormat prototype object.
- */
-Object.defineProperty(v8Intl.NumberFormat,
-                      'prototype',
-                      { value: new v8Intl.NumberFormat(),
-                        writable: false,
-                        enumerable: false,
-                        configurable: false });
-
-
-/**
  * NumberFormat resolvedOptions getter.
  */
 Object.defineProperty(v8Intl.NumberFormat.prototype, 'resolvedOptions', {
@@ -523,6 +483,7 @@ v8Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  */
 v8Intl.NumberFormat.prototype.format = function (value) {
   native function NativeJSInternalNumberFormat();
+
   return NativeJSInternalNumberFormat(this.__formatter__, Number(value));
 };
 
@@ -797,17 +758,6 @@ v8Intl.DateTimeFormat = function(locales, options) {
 
 
 /**
- * DateTimeFormat prototype object.
- */
-Object.defineProperty(v8Intl.DateTimeFormat,
-                      'prototype',
-                      { value: new v8Intl.DateTimeFormat(),
-                        writable: false,
-                        enumerable: false,
-                        configurable: false });
-
-
-/**
  * DateTimeFormat resolvedOptions getter.
  */
 Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'resolvedOptions', {
@@ -1070,9 +1020,9 @@ function resolveLocale(service, requestedLocales, options) {
                           ['lookup', 'best fit'], 'best fit');
   var resolved;
   if (matcher === 'lookup') {
-    resolved = lookupMatch(service, requestedLocales);
+    resolved = lookupMatcher(service, requestedLocales);
   } else {
-    resolved = bestFitMatch(service, requestedLocales);
+    resolved = bestFitMatcher(service, requestedLocales);
   }
 
   return resolved;
@@ -1083,7 +1033,7 @@ function resolveLocale(service, requestedLocales, options) {
  * Returns best matched supported locale and extension info using basic
  * lookup algorithm.
  */
-function lookupMatch(service, requestedLocales) {
+function lookupMatcher(service, requestedLocales) {
   if (service.match(SERVICE_RE) === null) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
@@ -1121,9 +1071,9 @@ function lookupMatch(service, requestedLocales) {
  * Returns best matched supported locale and extension info using
  * implementation dependend algorithm.
  */
-function bestFitMatch(service, requestedLocales) {
+function bestFitMatcher(service, requestedLocales) {
   // TODO(cira): implement better best fit algorithm.
-  return lookupMatch(service, requestedLocales);
+  return lookupMatcher(service, requestedLocales);
 }
 
 
@@ -1205,7 +1155,7 @@ function defaultLocale() {
     // all of the services.
     var locale = {};
     for (var i = 0; i < AVAILABLE_SERVICES.length; ++i) {
-      locale = bestFitMatch(AVAILABLE_SERVICES[i], [browserLocale]);
+      locale = bestFitMatcher(AVAILABLE_SERVICES[i], [browserLocale]);
       if (locale.locale === fallback) {
         return fallback;
       }

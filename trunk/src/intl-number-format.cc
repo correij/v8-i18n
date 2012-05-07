@@ -76,7 +76,7 @@ v8::Handle<v8::Value> IntlNumberFormat::JSInternalFormat(
   v8::HandleScope handle_scope;
 
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsNumber()) {
-    v8::ThrowException(v8::Exception::Error(
+    return v8::ThrowException(v8::Exception::Error(
         v8::String::New("Formatter and numeric value have to be specified.")));
   }
 
@@ -296,6 +296,7 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   } else {
     wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
+  delete numbering_system;
 
   wrapper->Set(v8::String::New("useGrouping"),
                v8::Boolean::New(number_format->isGroupingUsed()));

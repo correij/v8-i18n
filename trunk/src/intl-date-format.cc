@@ -71,8 +71,9 @@ v8::Handle<v8::Value> IntlDateFormat::JSInternalFormat(
 
   double millis = 0.0;
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsDate()) {
-    v8::ThrowException(v8::Exception::Error(
-        v8::String::New("Internal error. Date value has to be specified.")));
+    return v8::ThrowException(v8::Exception::Error(
+        v8::String::New(
+            "Internal error. Formatter and date value have to be specified.")));
   } else {
     millis = v8::Date::Cast(*args[1])->NumberValue();
   }
@@ -245,6 +246,7 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   } else {
     wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
+  delete numbering_system;
 }
 
 }  // namespace v8_i18n
