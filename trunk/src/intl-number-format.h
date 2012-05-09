@@ -38,15 +38,13 @@ class IntlNumberFormat {
   // Release memory we allocated for the NumberFormat once the JS object that
   // holds the pointer gets garbage collected.
   static void DeleteIntlNumberFormat(v8::Persistent<v8::Value> object,
-                                   void* param);
+                                     void* param);
 
   // Formats number and returns corresponding string.
   static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
 
  private:
   IntlNumberFormat();
-
-  static v8::Persistent<v8::ObjectTemplate> number_format_template_;
 };
 
 }  // namespace v8_i18n

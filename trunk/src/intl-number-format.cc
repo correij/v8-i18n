@@ -29,8 +29,6 @@
 
 namespace v8_i18n {
 
-v8::Persistent<v8::ObjectTemplate> IntlNumberFormat::number_format_template_;
-
 static icu::DecimalFormat* InitializeNumberFormat(v8::Handle<v8::String>,
                                                   v8::Handle<v8::Object>,
                                                   v8::Handle<v8::Object>);
@@ -106,18 +104,11 @@ v8::Handle<v8::Value> IntlNumberFormat::JSCreateNumberFormat(
             "Internal error. Locale and options are required.")));
   }
 
-  if (number_format_template_.IsEmpty()) {
-    v8::Local<v8::ObjectTemplate> raw_template(v8::ObjectTemplate::New());
-
-    // Set aside internal field for icu number formatter.
-    raw_template->SetInternalFieldCount(1);
-
-    number_format_template_ =
-        v8::Persistent<v8::ObjectTemplate>::New(raw_template);
-  }
+  v8::Persistent<v8::ObjectTemplate> number_format_template =
+      Utils::GetTemplate();
 
   // Create an empty object wrapper.
-  v8::Local<v8::Object> local_object = number_format_template_->NewInstance();
+  v8::Local<v8::Object> local_object = number_format_template->NewInstance();
   v8::Persistent<v8::Object> wrapper =
       v8::Persistent<v8::Object>::New(local_object);
 

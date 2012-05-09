@@ -45,8 +45,6 @@ class IntlDateFormat {
 
  private:
   IntlDateFormat();
-
-  static v8::Persistent<v8::ObjectTemplate> date_format_template_;
 };
 
 }  // namespace v8_i18n
