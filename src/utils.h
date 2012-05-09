@@ -57,6 +57,9 @@ class Utils {
                            UChar* target,
                            int32_t target_length);
 
+  // Creates an ObjectTemplate with one internal field.
+  static v8::Persistent<v8::ObjectTemplate> GetTemplate();
+
  private:
   Utils() {}
 };

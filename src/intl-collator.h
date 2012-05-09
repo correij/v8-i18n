@@ -44,8 +44,6 @@ class IntlCollator {
 
  private:
   IntlCollator() {}
-
-  static v8::Persistent<v8::ObjectTemplate> intl_collator_template_;
 };
 
 }  // namespace v8_i18n
