@@ -83,6 +83,34 @@ var ICU_CALENDAR_MAP = {
   'ethiopic-amete-alem': 'ethioaa'
 };
 
+/**
+ * Map of Unicode extensions to option properties, and their values and types,
+ * for a collator.
+ */
+var COLLATOR_KEY_MAP = {
+  'kn': {'property': 'numeric', 'type': 'boolean'},
+  'kk': {'property': 'normalization', 'type':'boolean'},
+  'kf': {'property': 'caseFirst', 'type': 'string',
+         'values': ['false', 'lower', 'upper']}
+};
+
+/**
+ * Map of Unicode extensions to option properties, and their values and types,
+ * for a number format.
+ */
+var NUMBER_FORMAT_KEY_MAP = {
+  'nu': {'property': undefined, 'type': 'string'}
+};
+
+/**
+ * Map of Unicode extensions to option properties, and their values and types,
+ * for a date/time format.
+ */
+var DATETIME_FORMAT_KEY_MAP = {
+  'ca': {'property': undefined, 'type': 'string'},
+  'nu': {'property': undefined, 'type': 'string'}
+};
+
 
 /**
  * Canonicalizes the language tag, or throws in case the tag is invalid.
@@ -171,21 +199,6 @@ v8Intl.LocaleList = function(locales) {
 
 
 /**
- * Populates internalOptions object with boolean key-value pairs
- * from extensionMap.
- */
-function extractBooleanOption(extensionMap, key, property, internalOptions) {
-  if (extensionMap.hasOwnProperty(key)) {
-    if (extensionMap[key] === 'false') {
-      internalOptions[property] = false;
-    } else {
-      internalOptions[property] = true;
-    }
-  }
-}
-
-
-/**
  * Initializes the given object so it's a valid Collator instance.
  * Useful for subclassing.
  */
@@ -220,18 +233,8 @@ function initializeCollator(collator, locales, options) {
   // One exception is -co- which has to be part of the extension, but only for
   // usage: sort, and its value can't be 'standard' or 'search'.
   var extensionMap = parseExtension(locale.extension);
-
-  extractBooleanOption(extensionMap, 'kn', 'numeric', internalOptions);
-  extractBooleanOption(extensionMap, 'kk', 'normalization', internalOptions);
-
-  if (extensionMap.hasOwnProperty('kf')) {
-    internalOptions.caseFirst = 'false';
-    if (extensionMap.kf === 'upper') {
-      internalOptions.caseFirst = 'upper';
-    } else if (extensionMap.kf === 'lower') {
-      internalOptions.caseFirst = 'lower';
-    }
-  }
+  setOptions(
+      options, extensionMap, COLLATOR_KEY_MAP, getOption, internalOptions);
 
   internalOptions.collation = 'default';
   var extension = '';
@@ -370,11 +373,6 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
   var locale = resolveLocale('numberformat', locales, options);
 
-  // ICU prefers options to be passed using -u- extension key/values, so
-  // we need to build that. Update the options too with proper values.
-  var extension = updateExtensionAndOptions(options, locale.extension,
-                                            ['nu'], ['numberingSystem']);
-
   var internalOptions = {};
   internalOptions.style = getOption(
       'style', 'string', ['decimal', 'percent', 'currency'], 'decimal');
@@ -407,6 +405,12 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
   internalOptions.useGrouping = getOption(
       'useGrouping', 'boolean', undefined, true);
+
+  // ICU prefers options to be passed using -u- extension key/values for
+  // number format, so we need to build that.
+  var extensionMap = parseExtension(locale.extension);
+  var extension = setOptions(options, extensionMap, NUMBER_FORMAT_KEY_MAP,
+                             getOption, internalOptions);
 
   var formatter = NativeJSCreateNumberFormat(locale.locale + extension,
                                              internalOptions);
@@ -699,9 +703,16 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
     options = {};
   }
 
+  var locale = resolveLocale('dateformat', locales, options);
+
   options = toDateTimeOptions(options, 'all', 'date');
 
-  var locale = resolveLocale('dateformat', locales, options);
+  var getOption = getGetOption(options, 'dateformat');
+
+  // We implement only best fit algorithm, but still need to check
+  // if the formatMatcher values are in range.
+  var matcher = getOption('formatMatcher', 'string',
+                          ['basic', 'best fit'], 'best fit');
 
   // Build LDML string for the skeleton that we pass to the formatter.
   var ldmlString = toLDMLString(options);
@@ -718,17 +729,11 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   }
 
   // ICU prefers options to be passed using -u- extension key/values, so
-  // we need to build that. Update the options too with proper values.
-  var extension = updateExtensionAndOptions(options, locale.extension,
-                                            ['ca', 'nu'],
-                                            ['calendar', 'numberingSystem']);
-
-  var getOption = getGetOption(options, 'dateformat');
-
-  // We implement only best fit algorithm, but still need to check
-  // if the formatMatch values are in range.
-  var matcher = getOption('formatMatch', 'string',
-                          ['basic', 'best fit'], 'best fit');
+  // we need to build that.
+  var internalOptions = {};
+  var extensionMap = parseExtension(locale.extension);
+  var extension = setOptions(options, extensionMap, DATETIME_FORMAT_KEY_MAP,
+                             getOption, internalOptions);
 
   var formatter = NativeJSCreateDateTimeFormat(
       locale.locale + extension, {skeleton: ldmlString, timeZone: tz});
@@ -823,42 +828,6 @@ v8Intl.DateTimeFormat.prototype.format = function(dateValue) {
 
   return NativeJSInternalDateFormat(this.__formatter__, new Date(dateMs));
 };
-
-
-/**
- * Returns new -u- extension with proper key values built from either
- * old extension and/or options. Option values have priority.
- * Updates the options object with new values if necessary.
- */
-function updateExtensionAndOptions(options, extension,
-                                   unicodeKeys, optionsKeys) {
-  if (unicodeKeys.length !== optionsKeys.length) {
-    throw Error('Internal error, unicodeKeys.length !== optionsKeys.length.');
-  }
-
-  // Parse the extension and extract values.
-  for (var i = 0; i < unicodeKeys.length; ++i) {
-    var regex = new RegExp('-' + unicodeKeys[i] + '-([a-z0-9]{3,8})+');
-    var match = extension.match(regex);
-    if (match !== null && !options.hasOwnProperty(optionsKeys[i])) {
-      options[optionsKeys[i]] = match[1];
-    }
-  }
-
-  // Build a new extension (if necessary).
-  var newExtension = '';
-  for (var i = 0; i < optionsKeys.length; ++i) {
-    var key = optionsKeys[i];
-    if (options.hasOwnProperty(key) && options[key] !== undefined) {
-      newExtension += '-' + unicodeKeys[i] + '-' + options[key];
-    }
-  }
-  if (newExtension !== '') {
-    newExtension = '-u' + newExtension;
-  }
-
-  return newExtension;
-}
 
 
 /**
@@ -1123,6 +1092,69 @@ function toObject(value) {
   }
 
   return Object(value);
+}
+
+
+/**
+ * Populates internalOptions object with boolean key-value pairs
+ * from extensionMap and options.
+ * Returns filtered extension (number and date format constructors use
+ * Unicode extensions for passing parameters to ICU).
+ * It's used for extension-option pairs only, e.g. kn-normalization, but not
+ * for 'sensitivity' since it doesn't have extension equivalent.
+ * Extensions like nu and ca don't have options equivalent, so we place
+ * undefined in the map.property to denote that.
+ */
+function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
+  var extension = '';
+
+  function updateExtension(key, value) {
+    return '-' + key + '-' + String(value);
+  }
+
+  function updateProperty(property, type, value) {
+    if (type === 'boolean' && (typeof value === 'string')) {
+      value = (value === 'true') ? true : false;
+    }
+
+    if (property !== undefined) {
+      outOptions[property] = value;
+    }
+  }
+
+  for (var key in keyValues) {
+    if (keyValues.hasOwnProperty(key)) {
+      var value = undefined;
+      var map = keyValues[key];
+      if (map.property !== undefined) {
+        // This may return true if user specifies numeric: 'false', since
+        // Boolean('nonempty') === true.
+        value = getOption(map.property, map.type, map.values);
+      }
+      if (value !== undefined) {
+        updateProperty(map.property, map.type, value);
+        extension += updateExtension(key, value);
+        continue;
+      }
+      // User options didn't have it, check Unicode extension.
+      // Here we want to convert strings 'true', 'false' into proper Boolean
+      // values (not a user error).
+      if (extensionMap.hasOwnProperty(key)) {
+        value = extensionMap[key];
+        if (value !== undefined) {
+          updateProperty(map.property, map.type, value);
+          extension += updateExtension(key, value);
+        } else if (map.type === 'boolean') {
+          // Boolean keys are allowed not to have values in Unicode extension.
+          // Those default to true.
+          updateProperty(map.property, map.type, true);
+          extension += updateExtension(key, true);
+        }
+      }
+    }
+  }
+
+  return extension === ''? '' : '-u' + extension;
 }
 
 
