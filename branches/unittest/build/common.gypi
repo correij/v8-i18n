@@ -14,16 +14,16 @@
 
 {
   'variables': {
-  'conditions': [
-    # A flag for POSIX platforms
-    ['OS=="win"', {
-      'os_posix%': 0,
-    }, {
-      'os_posix%': 1,
-    }],
-  ],
-  # Set this to true when building with Clang.
-  # See http://code.google.com/p/chromium/wiki/Clang for details.
-  'clang%': 0,
+    'conditions': [
+      # A flag for POSIX platforms
+      ['OS=="win"', {
+        'os_posix%': 0,
+      }, {
+        'os_posix%': 1,
+      }],
+    ],
+    # Set this to true when building with Clang.
+    # See http://code.google.com/p/chromium/wiki/Clang for details.
+    'clang%': 0,
   },
 }

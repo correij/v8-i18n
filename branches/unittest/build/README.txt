@@ -26,12 +26,13 @@ svn checkout http://v8.googlecode.com/svn/trunk/ v8
 Generate your project files (assuming v8, icu and v8-i18n are at the same level):
 
 build/gyp/gyp --depth . -Dv8_path=../.. -Dicu_path=../../icu -Dtarget_arch=ia32 \
--I../v8/build/standalone.gypi -Ibuild/common.gypi build/unittest.gyp
+-Dwerror= -I../v8/build/standalone.gypi -Ibuild/common.gypi build/unittest.gyp
 
 -depth points to the root
 -Dicu_path points to icu/icu.gyp
 -Dv8_path points to v8 checkout
 -Dtarget_arch (x64, ia32) describe your target architecture
+-Dwerror allows ICU to compile with some warnings
 -I../v8/build/standalone.gypi points to gyp variables needed for standalone build
 -Ibuild/common.gypi points to gyp variables needed for icu to build (use in non-Chromium builds)
 
