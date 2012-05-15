@@ -21,7 +21,7 @@
       'target_name': 'test-runner',
       'type': 'executable',
       'sources': [
-        '../unittest/test-runner.cc',
+        '../tests/test-runner.cc',
       ],
       'include_dirs': [
         '..',

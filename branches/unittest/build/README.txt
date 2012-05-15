@@ -25,21 +25,23 @@ svn checkout http://v8.googlecode.com/svn/trunk/ v8
 
 Generate your project files (assuming v8, icu and v8-i18n are at the same level):
 
-build/gyp/gyp --depth . -Dv8_path=../.. -Dicu_path=../../icu -Dtarget_arch=ia32 \
--Dwerror= -I../v8/build/standalone.gypi -Ibuild/common.gypi build/unittest.gyp
+build/gyp/gyp --depth . -Dv8_path=../.. -Dicu_path=../../icu \
+-Dicu_use_data_file_flag -Dwerror= -Dv8_use_snapshot \
+-I../v8/build/standalone.gypi -Ibuild/common.gypi build/unittest.gyp
 
 -depth points to the root
 -Dicu_path points to icu/icu.gyp
 -Dv8_path points to v8 checkout
--Dtarget_arch (x64, ia32) describe your target architecture
 -Dwerror allows ICU to compile with some warnings
+-Dv8_use_snapshot makes v8_base show up in deps. chain before v8_snapshot
+-Dicu_use_data_file_flag - don't compile data file, just use existing one
 -I../v8/build/standalone.gypi points to gyp variables needed for standalone build
 -Ibuild/common.gypi points to gyp variables needed for icu to build (use in non-Chromium builds)
 
 Building:
 
-1. make unittest
-2. xcodebuild -project build/unittest.xcodeproj -configuration Release
+Linux:  make -j30 test-runner
+Mac OS: xcodebuild -project build/unittest.xcodeproj -configuration Release -target test-runner
 
 
 Running the tests:
