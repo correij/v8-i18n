@@ -28,19 +28,22 @@ if __name__ == '__main__':
 sys.path.insert(0, os.path.join(v8_i18n_root, 'build', 'gyp', 'pylib'))
 import gyp
 
-# See build/README.txt for explanation of arguments.
 args = []
+
 # Points to the parent of the src folder, in this case, project root.
 args.append('--depth=' + v8_i18n_root)
 
 # Include some gypi files.
 args.append('-I' + os.path.join(v8_i18n_root, 'build', 'common.gypi'))
+
+# Necessary for building standalone v8 project.
 args.append('-I' + os.path.join(v8_i18n_root, '..', 'v8', 'build', 'standalone.gypi'))
 
-# Add some command line flags
+# Point to v8 and icu checkouts.
 args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', '..', 'icu'))
 args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', '..'))
-args.append('-Dv8_use_snapshot')
+
+# ICU build fails if werror is on.
 args.append('-Dwerror=')
 
 # Process unittest.gyp file.
