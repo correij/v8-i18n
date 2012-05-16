@@ -63,7 +63,8 @@ def main(argv):
       print 'PASS'
       print
     else:
-      if (test in expectations.expect_fail):
+      rel_file_name = os.path.relpath(test, script_dir)
+      if (rel_file_name in expectations.expect_fail):
         expect_fail.append(test)
         print 'FAIL_OK'
         print
