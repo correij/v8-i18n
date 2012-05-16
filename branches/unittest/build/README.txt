@@ -11,12 +11,14 @@ Getting GYP:
 
 1. Go to the root of v8-i18n checkout.
 2. Run 'svn co http://gyp.googlecode.com/svn/trunk build/gyp' command.
-3. Tweak gyp/pylib/generator/make.py:
+
+In case you are getting ar errors during link, you may have hit a problem with
+symlinks and ar. Please patch gyp generator like so (removes non-essential
+support for thin archives):
+
+gyp/pylib/generator/make.py:
 -    arflags_target = 'crsT'
 +    arflags_target = 'crs'
-
-For some reason ar archiver gets confused with .. in the dependency path,
-and creates invalid 'T'hin archive.
 
 
 Getting ICU:
@@ -39,8 +41,3 @@ You may have to change paths to v8 and icu in the script.
 Building:
 
 Linux:  make -j30 test-runner
-
-
-Running the tests:
-
-test-runner path-to-tests

@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This is the file that holds expectations for test runs.
+import expectations
+
 import os
 import subprocess
 import sys
@@ -49,14 +52,40 @@ def main(argv):
   harness = os.path.join(script_dir, 'data', 'test', 'harness', 'sta.js')
   adapter = os.path.join(script_dir, '..', 'adapter.js')
 
+  failed = []
+  passed = []
+  expect_fail = []
   for test in tests:
     print 'Testing: ', test
     status = subprocess.call([argv[1], adapter, harness, test])
-    if status != 0:
-      print 'FAIL'
-    else:
+    if status == 0:
+      passed.append(test)
       print 'PASS'
+      print
+    else:
+      if (test in expectations.expect_fail):
+        expect_fail.append(test)
+        print 'FAIL_OK'
+        print
+      else:
+        failed.append(test)
+        print 'FAIL'
+        print
 
+  print
+  print '=========================== RESULTS ================================='
+  print
+  print 'Number of tests passing: ', len(passed)
+  print 'Number of tests failing: ', len(failed)
+  print 'Number of tests expected to fail: ', len(expect_fail)
+  print
+  if (len(failed) == 0):
+    print 'All tests are PASSING.'
+  else:
+    print 'Tests that failed:'
+    for bad in failed:
+      print '\t', bad
+  print
 
 if __name__ == '__main__':
   main(sys.argv)
