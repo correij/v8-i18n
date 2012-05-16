@@ -36,26 +36,30 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  v8::HandleScope handle_scope;
+  {
+    // Extra scope so HandleScope can clean up before v8::V8::Dispose.
+    // Otherwise we get SEGFAULT.
+    v8::HandleScope handle_scope;
 
-  v8::Handle<v8::String> source = ReadFile(argv[1]);
-  if (source.IsEmpty()) {
-    printf("Error loading file: %s\n", argv[1]);
-    return 1;
+    v8::Handle<v8::String> source = ReadFile(argv[1]);
+    if (source.IsEmpty()) {
+      printf("Error loading file: %s\n", argv[1]);
+      return 1;
+    }
+
+    v8::Persistent<v8::Context> context = CreateContext();
+    if (context.IsEmpty()) {
+      printf("Couldn't create test context.\n");
+      return 1;
+    }
+
+    context->Enter();
+    printf("Testing: %s\n", argv[1]);
+    ExecuteString(source, v8::String::New(argv[1]));
+
+    context->Exit();
+    context.Dispose();
   }
-
-  v8::Persistent<v8::Context> context = CreateContext();
-  if (context.IsEmpty()) {
-    printf("Couldn't create test context.\n");
-    return 1;
-  }
-
-  context->Enter();
-  printf("Testing: %s\n", argv[1]);
-  ExecuteString(source, v8::String::New(argv[1]));
-
-  context->Exit();
-  context.Dispose();
 
   v8::V8::Dispose();
   return 0;

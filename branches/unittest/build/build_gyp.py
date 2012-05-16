@@ -40,11 +40,8 @@ args.append('-I' + os.path.join(v8_i18n_root, '..', 'v8', 'build', 'standalone.g
 # Add some command line flags
 args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', '..', 'icu'))
 args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', '..'))
-#args.append('-Dicu_use_data_file_flag')
 args.append('-Dv8_use_snapshot')
 args.append('-Dwerror=')
-args.append('-Dcomponent=static_library')
-args.append('-Dlibrary=static_library')
 
 # Process unittest.gyp file.
 args.append(os.path.join(v8_i18n_root, 'build','unittest.gyp'))
