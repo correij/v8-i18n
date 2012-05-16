@@ -1,0 +1,45 @@
+== Dependencies necessary for running the tests ==
+
+  # GYP build system
+  # ICU library
+  # V8 library
+
+If you are running tests under Chromium you have all them available already.
+
+=== Getting GYP ===
+
+  # Go to the root of v8-i18n checkout.
+  # Run 'svn co http://gyp.googlecode.com/svn/trunk build/gyp' command.
+
+In case you are getting *ar* errors during linking, you may have hit a problem with
+symlinks and ar. Please patch gyp generator like so (removes non-essential support for thin archives):
+
+*gyp/pylib/generator/make.py*:
+{{{
+-    arflags_target = 'crsT'
++    arflags_target = 'crs'
+}}}
+
+=== Getting ICU ===
+
+  * svn checkout http://src.chromium.org/chrome/trunk/deps/third_party/icu46 icu
+
+
+=== Getting V8 ===
+
+  * svn checkout http://v8.googlecode.com/svn/trunk/ v8
+
+
+=== Generate make files ===
+
+  * python build/build_gyp.py
+
+You may have to change paths to v8 and icu in the script to point to your checkout location.
+
+=== Building ===
+
+Linux:  *make -j30 test-runner*
+
+=== Running tests ===
+
+Take a look at README.txt in each of the tests/ subfolders, e.g. tests/test262/README.txt.
