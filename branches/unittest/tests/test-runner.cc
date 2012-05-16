@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Some functions are taken from v8/samples/shell.cc file.
+// Most of the functionality is taken from v8/samples/shell.cc file.
 
 #include <assert.h>
 #include <fcntl.h>
@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  int status = 0;
   {
     // Extra scope so HandleScope can clean up before v8::V8::Dispose.
     // Otherwise we get SEGFAULT.
@@ -53,10 +54,13 @@ int main(int argc, char* argv[]) {
       v8::Handle<v8::String> source = ReadFile(argv[i]);
       if (source.IsEmpty()) {
         printf("Error loading file: %s\n", argv[i]);
-        return 1;
+        status = 1;
+        break;
       }
-      printf("Excecuting: %s\n", argv[i]);
-      ExecuteString(source, v8::String::New(argv[i]));
+      if (!ExecuteString(source, v8::String::New(argv[i]))) {
+        status = 1;
+        break;
+      }
     }
 
     context->Exit();
@@ -64,7 +68,7 @@ int main(int argc, char* argv[]) {
   }
 
   v8::V8::Dispose();
-  return 0;
+  return status;
 }
 
 // Creates global javascript context with our extension loaded.
@@ -97,13 +101,6 @@ bool ExecuteString(v8::Handle<v8::String> source, v8::Handle<v8::Value> name) {
       return false;
     } else {
       assert(!try_catch.HasCaught());
-      if (!result->IsUndefined()) {
-        // If all went well and the result wasn't undefined then print
-        // the returned value.
-        v8::String::Utf8Value str(result);
-        const char* cstr = ToCString(str);
-        printf("%s\n", cstr);
-      }
       return true;
     }
   }
