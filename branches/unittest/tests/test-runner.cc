@@ -31,8 +31,8 @@ v8::Handle<v8::String> ReadFile(const char* name);
 const char* ToCString(const v8::String::Utf8Value& value);
 
 int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    printf("Usage:\n\ttest-runner test-file-name\n");
+  if (argc < 2) {
+    printf("Usage:\n\ttest-runner file1 file2 ... fileN\n");
     return 1;
   }
 
@@ -41,12 +41,6 @@ int main(int argc, char* argv[]) {
     // Otherwise we get SEGFAULT.
     v8::HandleScope handle_scope;
 
-    v8::Handle<v8::String> source = ReadFile(argv[1]);
-    if (source.IsEmpty()) {
-      printf("Error loading file: %s\n", argv[1]);
-      return 1;
-    }
-
     v8::Persistent<v8::Context> context = CreateContext();
     if (context.IsEmpty()) {
       printf("Couldn't create test context.\n");
@@ -54,8 +48,16 @@ int main(int argc, char* argv[]) {
     }
 
     context->Enter();
-    printf("Testing: %s\n", argv[1]);
-    ExecuteString(source, v8::String::New(argv[1]));
+
+    for (int i = 1; i < argc; ++i) {
+      v8::Handle<v8::String> source = ReadFile(argv[i]);
+      if (source.IsEmpty()) {
+        printf("Error loading file: %s\n", argv[i]);
+        return 1;
+      }
+      printf("Excecuting: %s\n", argv[i]);
+      ExecuteString(source, v8::String::New(argv[i]));
+    }
 
     context->Exit();
     context.Dispose();
