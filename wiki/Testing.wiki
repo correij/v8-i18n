@@ -12,9 +12,9 @@ If you are running tests under Chromium you have all them available already.
   # Run 'svn co http://gyp.googlecode.com/svn/trunk build/gyp' command.
 
 In case you are getting *ar* errors during linking, you may have hit a problem with
-symlinks and ar. Please patch gyp generator like so (removes non-essential support for thin archives):
+symlinks and ar. Please replace all 'crsT' with 'crs' in gyp generator (removes non-essential support for thin archives):
 
-*gyp/pylib/generator/make.py*:
+*build/gyp/pylib/gyp/generator/make.py*:
 {{{
 -    arflags_target = 'crsT'
 +    arflags_target = 'crs'
