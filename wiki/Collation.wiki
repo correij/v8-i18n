@@ -29,6 +29,14 @@ ignorePunctuation: false
 sensitivity: 'variant' // For usage:'sort', it's locale dependent for usage:'search'
 }}}
 
+== Setting locale info ==
+It is more efficient to create a global LocaleList object and use it
+when constructing the Collator (or any other service). It avoids re-validation of locales in the list.
+{{{
+var localeList = v8Intl.LocaleList(['sr-rs', 'de-u-co-phonebk'])
+// Result is well formed and canonicalized: ['sr-RS', 'de-u-co-phonebk'] 
+}}}
+
 == Collator with default locale and settings ==
 {{{
 var array = ['d', 'a', 'b', 'c'];
@@ -39,7 +47,7 @@ array.sort(coll.compare);
 == Collator with user locale and default settings ==
 {{{
 var array = ['d', 'a', 'b', 'c'];
-var coll = v8Intl.Collator(['sr']);
+var coll = v8Intl.Collator(localeList);
 array.sort(coll.compare);
 }}}
 
@@ -48,7 +56,7 @@ array.sort(coll.compare);
 var array = ['d', 'a', 'b', 'c'];
 // Create collator sensitive to difference in base letters, a != b,
 // and to accents, a != á.
-var coll = v8Intl.Collator(['sr'], {sensitivity:'accent'});
+var coll = v8Intl.Collator(localeList, {sensitivity:'accent'});
 array.sort(coll.compare);
 }}}
 
