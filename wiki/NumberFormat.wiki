@@ -33,6 +33,14 @@ style: 'decimal'
 
 Other options are locale specific.
 
+== Setting locale info ==
+It is more efficient to create a global LocaleList object and use it
+when constructing the NumberFormat (or any other service). It avoids re-validation of locales in the list.
+{{{
+var localeList = v8Intl.LocaleList(['sr-rs', 'fr-CA', 'de-de'])
+// Result is well formed and canonicalized: ['sr-RS', 'fr-CA', 'de-DE'] 
+}}}
+
 == !NumberFormat with default locale and settings ==
 {{{
 var nf = v8Intl.NumberFormat();
@@ -41,13 +49,13 @@ nf.format(12345.67);  // Returns a string.
 
 == !NumberFormat with user locale and default settings ==
 {{{
-var nf = v8Intl.NumberFormat(['sr']);
+var nf = v8Intl.NumberFormat(localeList);
 nf.format(12345.67);
 }}}
 
 == !NumberFormat with user locale and settings ==
 {{{
-var nf = v8Intl.NumberFormat(['sr'], {style:'currency', currency:'RSD', currencyDisplay:'code'});
+var nf = v8Intl.NumberFormat(localeList, {style:'currency', currency:'RSD', currencyDisplay:'code'});
 nf.format(12345.67);
 }}}
 
