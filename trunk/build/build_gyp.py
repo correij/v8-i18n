@@ -42,6 +42,7 @@ args.append('-I' + os.path.join(v8_i18n_root, '..', 'v8', 'build', 'standalone.g
 # Point to v8 and icu checkouts.
 args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', '..', 'icu'))
 args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', '..'))
+args.append('-Dclang=1')
 
 # ICU build fails if werror is on.
 args.append('-Dwerror=')
