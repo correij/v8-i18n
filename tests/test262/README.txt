@@ -7,4 +7,4 @@ hg clone http://hg.ecmascript.org/tests/test262/ data
 
 2. Run (pick proper path to test-runner binary):
 
-python run-402-tests.py ../../out/Debug/test-runner
+python run-tests.py ../../out/Debug/test-runner
