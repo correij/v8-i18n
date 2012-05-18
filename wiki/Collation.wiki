@@ -8,6 +8,9 @@ Settings object and valid values for all the keys:
 usage: {'sort', 'search'}
 sensitivity: {'base', 'accent', 'case', 'variant'}
 ignorePunctuation: {true, false}
+numeric: {true, false}
+normalization: {true, false}
+caseFirst: {'upper', 'lower', 'false'}
 }}}
 
 Other collation properties can be passed using Unicode extensions:
