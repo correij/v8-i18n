@@ -40,11 +40,6 @@ var AVAILABLE_LOCALES = {
 };
 
 /**
- * Global default locale, set by LocaleList constructor.
- */
-var CURRENT_HOST_LOCALE = undefined;
-
-/**
  * Unicode extension regular expression.
  */
 var UNICODE_EXTENSION_RE = new RegExp('-u(-[a-z0-9]{2,8})+', 'g');
@@ -136,17 +131,14 @@ function canonicalizeLanguageTag(localeID) {
 
 
 /**
- * Initializes the given object so it's a valid LocaleList instance.
- * Useful for subclassing.
+ * Returns an array where all locales are canonicalized and duplicates removed.
+ * Throws on locales that are not well formed BCP47 tags.
  */
-function initializeLocaleList(localeList, locales) {
-  // Invoke it here to cover all initialization paths.
-  CURRENT_HOST_LOCALE = defaultLocale();
-
+function initializeLocaleList(locales) {
   var seen = [];
   if (locales === undefined) {
     // Constructor is called without arguments.
-    seen = [CURRENT_HOST_LOCALE];
+    seen = [];
   } else {
     var o = toObject(locales);
     // Converts it to UInt32 (>>> is shr on 32bit integers).
@@ -165,37 +157,8 @@ function initializeLocaleList(localeList, locales) {
     }
   }
 
-  for (var index = 0; index < seen.length; index++) {
-    Object.defineProperty(localeList, String(index),
-                          {value: seen[index],
-                           writable: false,
-                           enumerable: true,
-                           configurable: false});
-  }
-
-  Object.defineProperty(localeList, 'length', {value: index,
-                                               writable: false,
-                                               enumerable: false,
-                                               configurable: false});
-
-  return localeList;
+  return seen;
 }
-
-
-/**
- * Constructs v8Intl.LocaleList object given optional locales parameter.
- * Validates the elements as well-formed language tags and omits duplicates.
- *
- * @constructor
- */
-v8Intl.LocaleList = function(locales) {
-  if (!this || this === v8Intl) {
-    // Constructor is called as a function.
-    return new v8Intl.LocaleList(locales);
-  }
-
-  return initializeLocaleList(toObject(this), locales);
-};
 
 
 /**
@@ -251,7 +214,6 @@ function initializeCollator(collator, locales, options) {
 
   collator.__collator__ = NativeJSCreateCollator(locale.locale + extension,
                                                  internalOptions);
-  collator.__collator__.locale = locale.locale;
   collator.__collator__.usage = internalOptions.usage;
   collator.__collator__.collation = internalOptions.collation;
 
@@ -410,8 +372,6 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
   var formatter = NativeJSCreateNumberFormat(locale.locale + extension,
                                              internalOptions);
-
-  formatter.locale = locale.locale;
 
   // We can't get information about number or currency style from ICU, so we
   // assume user request was fulfilled.
@@ -746,7 +706,6 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   var formatter = NativeJSCreateDateTimeFormat(
       locale.locale + extension, {skeleton: ldmlString, timeZone: tz});
 
-  formatter.locale = locale.locale;
   formatter.tz = tz;
   dateFormat.__formatter__ = formatter;
 
@@ -851,8 +810,8 @@ Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'format', {
 
 
 /**
- * Returns the subset of the provided BCP 47 language priority list
- * for which this LocaleList object has a match.
+ * Returns an intersection of locales and service supported locales.
+ * Parameter locales is treated as a priority list.
  */
 function supportedLocalesOf(service, locales, options) {
   if (service.match(SERVICE_RE) === null) {
@@ -870,17 +829,7 @@ function supportedLocalesOf(service, locales, options) {
   var matcher = getOption(options, 'localeMatcher', 'string',
                           ['lookup', 'best fit'], 'best fit');
 
-  // Fall back to default locale if necessary.
-  var requestedLocales = locales;
-  if (requestedLocales === undefined) {
-    requestedLocales = new v8Intl.LocaleList();
-  }
-
-  // Force it to be of LocaleList type (eliminating duplicates and make it
-  // well-formed).
-  if (requestedLocales.constructor !== v8Intl.LocaleList) {
-    requestedLocales = new v8Intl.LocaleList(requestedLocales);
-  }
+  var requestedLocales = initializeLocaleList(locales);
 
   // Cache these, they don't ever change per service.
   if (AVAILABLE_LOCALES[service] === undefined) {
@@ -889,19 +838,18 @@ function supportedLocalesOf(service, locales, options) {
 
   // Use either best fit or lookup algorithm to match locales.
   if (matcher === 'best fit') {
-    return new v8Intl.LocaleList(bestFitSupportedLocalesOf(
+    return initializeLocaleList(bestFitSupportedLocalesOf(
         requestedLocales, AVAILABLE_LOCALES[service]));
   }
 
-  return new v8Intl.LocaleList(
-      lookupSupportedLocalesOf(requestedLocales, AVAILABLE_LOCALES[service]));
+  return initializeLocaleList(lookupSupportedLocalesOf(
+      requestedLocales, AVAILABLE_LOCALES[service]));
 }
 
 
 /**
  * Returns the subset of the provided BCP 47 language priority list for which
- * this LocaleList object has a matching locale when using the BCP 47 Lookup
- * algorithm.
+ * this service has a matching locale when using the BCP 47 Lookup algorithm.
  * Locales appear in the same order in the returned list as in the input list.
  */
 function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
@@ -930,7 +878,7 @@ function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
 
 /**
  * Returns the subset of the provided BCP 47 language priority list for which
- * this LocaleList object has a matching locale when using the implementation
+ * this service has a matching locale when using the implementation
  * dependent algorithm.
  * Locales appear in the same order in the returned list as in the input list.
  */
@@ -996,13 +944,7 @@ function getGetOption(options, caller) {
  * value for that key.
  */
 function resolveLocale(service, requestedLocales, options) {
-  if (requestedLocales === undefined) {
-    requestedLocales = new v8Intl.LocaleList();
-  } else {
-    // TODO(cira): mark well formed locale list objects so we don't re-process
-    // them.
-    requestedLocales = new v8Intl.LocaleList(requestedLocales);
-  }
+  requestedLocales = initializeLocaleList(requestedLocales);
 
   var getOption = getGetOption(options, service);
   var matcher = getOption('localeMatcher', 'string',
@@ -1051,8 +993,8 @@ function lookupMatcher(service, requestedLocales) {
     } while (true);
   }
 
-  // Didn't find a match, return default.
-  return {'locale': CURRENT_HOST_LOCALE, 'extension': '', 'position': -1};
+  // Didn't find a match, return empty.
+  return {'locale': '', 'extension': '', 'position': -1};
 }
 
 
@@ -1177,48 +1119,6 @@ function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
   return extension === ''? '' : '-u' + extension;
 }
 
-
-/**
- * Returns default locale.
- * Uses navigator.language (browsers), or falls back to 'und' (server side).
- */
-function defaultLocale() {
-  var fallback = 'und';
-
-  // First initialization happens without navigator.language so
-  // CURRENT_HOST_LOCALE becames 'und'. We want to retain the value that's
-  // assigned on user initiated call to LocaleList constructor.
-  if (CURRENT_HOST_LOCALE !== undefined && CURRENT_HOST_LOCALE !== fallback) {
-    return CURRENT_HOST_LOCALE;
-  }
-
-  // Use navigator.language if it exists.
-  if ((typeof this === 'object') &&
-      this.hasOwnProperty('navigator') &&
-      this.navigator.language !== undefined) {
-    // Canonicalize (we don't want to fail here).
-    try {
-      var browserLocale = canonicalizeLanguageTag(this.navigator.language);
-    } catch (e) {
-      return fallback;
-    }
-
-    // Browser locale can be anything. We have to check if it's supported by
-    // all of the services.
-    var locale = {};
-    for (var i = 0; i < AVAILABLE_SERVICES.length; ++i) {
-      locale = bestFitMatcher(AVAILABLE_SERVICES[i], [browserLocale]);
-      if (locale.locale === fallback) {
-        return fallback;
-      }
-    }
-    // Returns the best match we have to current browser locale.
-    return locale.locale;
-  }
-
-  // We are probably server side, 'und' should work fine.
-  return fallback;
-}
 
 // Fix RegExp global state so we don't fail WebKit layout test:
 // fast/js/regexp-caching.html
