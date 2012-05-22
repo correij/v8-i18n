@@ -26,8 +26,7 @@ nu     numberingSystem     "string"   "thai", ...
 }}}
 
 == Default locale ==
-Default locale is set to *navigator.language* if it's supported by Chrome, or to *und*.<br>
-The safest approach is to specify target locale and check if it was available through resolvedOptions property.
+The safest approach is to specify target locale and check if it was available through resolvedOptions method.
 
 == Default settings ==
 {{{
@@ -38,14 +37,6 @@ year: 'numeric'
 
 Other options are locale specific. For example, hour12 is set by locale to either true or false.
 
-== Setting locale info ==
-It is more efficient to create a global LocaleList object and use it
-when constructing the DateTimeFormat (or any other service). It avoids re-validation of locales in the list.
-{{{
-var localeList = v8Intl.LocaleList(['sr-rs', 'fr-CA', 'de-de'])
-// Result is well formed and canonicalized: ['sr-RS', 'fr-CA', 'de-DE'] 
-}}}
-
 == !DateTimeFormat with default locale and settings ==
 {{{
 var dtf = v8Intl.DateTimeFormat();
@@ -54,13 +45,13 @@ dtf.format();  // Returns a string representing now().
 
 == !DateTimeFormat with user locale and default settings ==
 {{{
-var dtf = v8Intl.DateTimeFormat(localeList);
+var dtf = v8Intl.DateTimeFormat(['sr-rs', 'fr-CA', 'de-de']);
 dtf.format();
 }}}
 
 == !DateTimeFormat with user locale and settings ==
 {{{
-var dtf = v8Intl.DateTimeFormat(localeList, {hour:'2-digit', minute:'2-digit'});
+var dtf = v8Intl.DateTimeFormat(['sr-rs', 'fr-CA', 'de-de'], {hour:'2-digit', minute:'2-digit'});
 dtf.format(new Date(1974, 7, 29, 12, 15, 0));
 }}}
 
