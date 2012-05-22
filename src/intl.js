@@ -276,24 +276,20 @@ v8Intl.Collator = function(locales, options) {
 
 
 /**
- * Collator resolvedOptions getter.
+ * Collator resolvedOptions method.
  */
-Object.defineProperty(v8Intl.Collator.prototype, 'resolvedOptions', {
-  get: function() {
-    return {
-      locale: this.__collator__.locale,
-      usage: this.__collator__.usage,
-      sensitivity: this.__collator__.sensitivity,
-      ignorePunctuation: this.__collator__.ignorePunctuation,
-      numeric: this.__collator__.numeric,
-      normalization: this.__collator__.normalization,
-      caseFirst: this.__collator__.caseFirst,
-      collation: this.__collator__.collation
-    };
-  },
-  enumerable: false,
-  configurable: true
-});
+v8Intl.Collator.prototype.resolvedOptions = function() {
+  return {
+    locale: this.__collator__.locale,
+    usage: this.__collator__.usage,
+    sensitivity: this.__collator__.sensitivity,
+    ignorePunctuation: this.__collator__.ignorePunctuation,
+    numeric: this.__collator__.numeric,
+    normalization: this.__collator__.normalization,
+    caseFirst: this.__collator__.caseFirst,
+    collation: this.__collator__.collation
+  };
+};
 
 
 /**
@@ -447,27 +443,23 @@ v8Intl.NumberFormat = function(locales, options) {
 
 
 /**
- * NumberFormat resolvedOptions getter.
+ * NumberFormat resolvedOptions method.
  */
-Object.defineProperty(v8Intl.NumberFormat.prototype, 'resolvedOptions', {
-  get: function() {
-    return {
-      locale: this.__formatter__.locale,
-      numberingSystem: this.__formatter__.numberingSystem,
-      style: this.__formatter__.style,
-      currency: this.__formatter__.currency,
-      currencyDisplay: this.__formatter__.currencyDisplay,
-      useGrouping: this.__formatter__.useGrouping,
-      minimumIntegerDigits: this.__formatter__.minimumIntegerDigits,
-      minimumFractionDigits: this.__formatter__.minimumFractionDigits,
-      maximumFractionDigits: this.__formatter__.maximumFractionDigits,
-      minimumSignificantDigits: this.__formatter__.minimumSignificantDigits,
-      maximumSignificantDigits: this.__formatter__.maximumSignificantDigits
-    };
-  },
-  enumerable: false,
-  configurable: true
-});
+v8Intl.NumberFormat.prototype.resolvedOptions = function() {
+  return {
+    locale: this.__formatter__.locale,
+    numberingSystem: this.__formatter__.numberingSystem,
+    style: this.__formatter__.style,
+    currency: this.__formatter__.currency,
+    currencyDisplay: this.__formatter__.currencyDisplay,
+    useGrouping: this.__formatter__.useGrouping,
+    minimumIntegerDigits: this.__formatter__.minimumIntegerDigits,
+    minimumFractionDigits: this.__formatter__.minimumFractionDigits,
+    maximumFractionDigits: this.__formatter__.maximumFractionDigits,
+    minimumSignificantDigits: this.__formatter__.minimumSignificantDigits,
+    maximumSignificantDigits: this.__formatter__.maximumSignificantDigits
+  };
+};
 
 
 /**
@@ -779,38 +771,34 @@ v8Intl.DateTimeFormat = function(locales, options) {
 
 
 /**
- * DateTimeFormat resolvedOptions getter.
+ * DateTimeFormat resolvedOptions method.
  */
-Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'resolvedOptions', {
-  get: function() {
-    var fromPattern = fromLDMLString(this.__formatter__.pattern);
-    var userCalendar = ICU_CALENDAR_MAP[this.__formatter__.calendar];
-    if (userCalendar === undefined) {
-      // Use ICU name if we don't have a match. It shouldn't happen, but
-      // it would be too strict to throw for this.
-      userCalendar = this.__formatter__.calendar;
-    }
+v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
+  var fromPattern = fromLDMLString(this.__formatter__.pattern);
+  var userCalendar = ICU_CALENDAR_MAP[this.__formatter__.calendar];
+  if (userCalendar === undefined) {
+    // Use ICU name if we don't have a match. It shouldn't happen, but
+    // it would be too strict to throw for this.
+    userCalendar = this.__formatter__.calendar;
+  }
 
-    return {
-      locale: this.__formatter__.locale,
-      numberingSystem: this.__formatter__.numberingSystem,
-      calendar: userCalendar,
-      timeZone: this.__formatter__.tz,
-      timeZoneName: fromPattern.timeZoneName,
-      era: fromPattern.era,
-      year: fromPattern.year,
-      month: fromPattern.month,
-      day: fromPattern.day,
-      weekday: fromPattern.weekday,
-      hour12: fromPattern.hour12,
-      hour: fromPattern.hour,
-      minute: fromPattern.minute,
-      second: fromPattern.second
-    };
-  },
-  enumerable: false,
-  configurable: true
-});
+  return {
+    locale: this.__formatter__.locale,
+    numberingSystem: this.__formatter__.numberingSystem,
+    calendar: userCalendar,
+    timeZone: this.__formatter__.tz,
+    timeZoneName: fromPattern.timeZoneName,
+    era: fromPattern.era,
+    year: fromPattern.year,
+    month: fromPattern.month,
+    day: fromPattern.day,
+    weekday: fromPattern.weekday,
+    hour12: fromPattern.hour12,
+    hour: fromPattern.hour,
+    minute: fromPattern.minute,
+    second: fromPattern.second
+  };
+};
 
 
 /**
