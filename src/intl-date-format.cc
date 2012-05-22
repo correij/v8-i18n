@@ -134,15 +134,18 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(
 
   // Convert BCP47 into ICU locale format.
   UErrorCode status = U_ZERO_ERROR;
+  icu::Locale icu_locale;
   char icu_result[ULOC_FULLNAME_CAPACITY];
   int icu_length = 0;
   v8::String::AsciiValue bcp47_locale(locale);
-  uloc_forLanguageTag(*bcp47_locale, icu_result, ULOC_FULLNAME_CAPACITY,
-                      &icu_length, &status);
-  if (U_FAILURE(status) || icu_length == 0) {
-    return NULL;
+  if (bcp47_locale.length() != 0) {
+    uloc_forLanguageTag(*bcp47_locale, icu_result, ULOC_FULLNAME_CAPACITY,
+                        &icu_length, &status);
+    if (U_FAILURE(status) || icu_length == 0) {
+      return NULL;
+    }
+    icu_locale = icu::Locale(icu_result);
   }
-  icu::Locale icu_locale(icu_result);
 
   icu::SimpleDateFormat* date_format = CreateICUDateFormat(icu_locale, options);
   if (!date_format) {
@@ -237,6 +240,18 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
     wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
   delete numbering_system;
+
+  // Set the locale
+  char result[ULOC_FULLNAME_CAPACITY];
+  status = U_ZERO_ERROR;
+  uloc_toLanguageTag(
+      icu_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
+  if (U_SUCCESS(status)) {
+    wrapper->Set(v8::String::New("locale"), v8::String::New(result));
+  } else {
+    // This would never happen, since we got the locale from ICU.
+    wrapper->Set(v8::String::New("locale"), v8::String::New("und"));
+  }
 }
 
 }  // namespace v8_i18n

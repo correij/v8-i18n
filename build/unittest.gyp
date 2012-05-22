@@ -29,6 +29,7 @@
       ],
       'dependencies': [
         'all.gyp:v8-i18n',
+        '<(icu_path)/icu.gyp:*',
         '<(v8_path)/v8/tools/gyp/v8.gyp:v8',
       ],
       'direct_dependent_settings': {
