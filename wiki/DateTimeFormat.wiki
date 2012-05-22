@@ -55,6 +55,12 @@ var dtf = v8Intl.DateTimeFormat(['sr-rs', 'fr-CA', 'de-de'], {hour:'2-digit', mi
 dtf.format(new Date(1974, 7, 29, 12, 15, 0));
 }}}
 
+== !DateTimeFormat with default locale and user settings ==
+{{{
+var dtf = v8Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
+dtf.format(new Date(1974, 7, 29, 12, 15, 0));
+}}}
+
 == !DateTimeFormat with user locale and Unicode extension ==
 {{{
 var dtf = v8Intl.DateTimeFormat(['th-u-nu-thai']);
