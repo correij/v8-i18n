@@ -50,6 +50,12 @@ var nf = v8Intl.NumberFormat(['sr', 'de', 'fr'], {style:'currency', currency:'RS
 nf.format(12345.67);
 }}}
 
+== !NumberFormat with default locale and user settings ==
+{{{
+var nf = v8Intl.NumberFormat([], {style:'currency', currency:'RSD', currencyDisplay:'code'});
+nf.format(12345.67);
+}}}
+
 == !NumberFormat with user locale and Unicode extension ==
 {{{
 var nf = v8Intl.NumberFormat(['th-u-nu-thai']);
