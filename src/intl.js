@@ -857,6 +857,7 @@ function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
   for (var i = 0; i < requestedLocales.length; ++i) {
     // Remove -u- extension.
     var locale = requestedLocales[i].replace(UNICODE_EXTENSION_RE, '');
+    locale = renameUnsupportedLocale(locale);
     do {
       if (availableLocales[locale] !== undefined) {
         // Push requested locale not the resolved one.
@@ -977,6 +978,7 @@ function lookupMatcher(service, requestedLocales) {
   for (var i = 0; i < requestedLocales.length; ++i) {
     // Remove all extensions.
     var locale = requestedLocales[i].replace(ANY_EXTENSION_RE, '');
+    locale = renameUnsupportedLocale(locale);
     do {
       if (AVAILABLE_LOCALES[service][locale] !== undefined) {
         // Return the resolved locale and extension.
@@ -1042,6 +1044,17 @@ function parseExtension(extension) {
   }
 
   return extensionMap;
+}
+
+
+/**
+ * Converts unsupported locale into full form. For example, zh-TW becomes
+ * zh-Hant-TW so it can be properly matched using the Lookup algorithm.
+ */
+function renameUnsupportedLocale(locale) {
+  if (locale === 'zh-TW') return 'zh-Hant-TW';
+
+  return locale;
 }
 
 
