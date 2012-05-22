@@ -21,14 +21,15 @@
 #include <stdlib.h>
 
 #include "include/extension.h"
+#include "unicode/locid.h"
 #include "v8/include/v8.h"
-
 
 v8::Persistent<v8::Context> CreateContext();
 bool ExecuteString(v8::Handle<v8::String> source, v8::Handle<v8::Value> name);
 void ReportException(v8::TryCatch* handler);
 v8::Handle<v8::String> ReadFile(const char* name);
 const char* ToCString(const v8::String::Utf8Value& value);
+v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args);
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -73,14 +74,17 @@ int main(int argc, char* argv[]) {
 
 // Creates global javascript context with our extension loaded.
 v8::Persistent<v8::Context> CreateContext() {
-  v8::Handle<v8::ObjectTemplate> global_template = v8::ObjectTemplate::New();
+  v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
+
+  global->Set(v8::String::New("getDefaultLocale"),
+              v8::FunctionTemplate::New(GetDefaultLocale));
 
   v8::Extension* extension = v8_i18n::Extension::get();
   v8::RegisterExtension(extension);
   const char* extension_names[] = {extension->name()};
   v8::ExtensionConfiguration extensions(1, extension_names);
 
-  return v8::Context::New(&extensions, global_template);
+  return v8::Context::New(&extensions, global);
 }
 
 // Executes a string within the current v8 context.
@@ -176,4 +180,20 @@ v8::Handle<v8::String> ReadFile(const char* name) {
 // Extracts a C string from a V8 Utf8Value.
 const char* ToCString(const v8::String::Utf8Value& value) {
   return *value ? *value : "<string conversion failed>";
+}
+
+// Returns default ICU locale. For testing only.
+v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args) {
+  icu::Locale default_locale;
+
+  // Set the locale
+  char result[ULOC_FULLNAME_CAPACITY];
+  UErrorCode status = U_ZERO_ERROR;
+  uloc_toLanguageTag(
+      default_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
+  if (U_SUCCESS(status)) {
+    return v8::String::New(result);
+  }
+
+  return v8::String::New("und");
 }
