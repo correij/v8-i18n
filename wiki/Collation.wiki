@@ -54,6 +54,15 @@ var coll = v8Intl.Collator(['sr-rs', 'de-u-co-phonebk'], {sensitivity:'accent'})
 array.sort(coll.compare);
 }}}
 
+== Collator with default locale and user settings ==
+{{{
+var array = ['d', 'a', 'b', 'c'];
+// Create collator sensitive to difference in base letters, a != b,
+// and to accents, a != á.
+var coll = v8Intl.Collator([], {sensitivity:'accent'});
+array.sort(coll.compare);
+}}}
+
 == Collator with user locale and Unicode extension ==
 {{{
 var array = ['d', 'a', 'b', 'c'];
