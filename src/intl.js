@@ -485,11 +485,27 @@ v8Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
  * according to the effective locale and the formatting options of this
  * NumberFormat.
  */
-v8Intl.NumberFormat.prototype.format = function (value) {
+function formatNumber(formatter, value) {
   native function NativeJSInternalNumberFormat();
 
-  return NativeJSInternalNumberFormat(this.__formatter__, Number(value));
-};
+  return NativeJSInternalNumberFormat(formatter.__formatter__, Number(value));
+}
+
+
+Object.defineProperty(v8Intl.NumberFormat.prototype, 'format', {
+  get: function() {
+      if (this.__boundFormat__ === undefined) {
+        var that = this;
+        var boundFormat = function(x) {
+          return formatNumber(that, x);
+        }
+        this.__boundFormat__ = boundFormat;
+      }
+      return this.__boundFormat__;
+    },
+  enumerable: false,
+  configurable: true
+});
 
 
 /**
@@ -812,7 +828,7 @@ v8Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
  * according to the effective locale and the formatting options of this
  * DateTimeFormat.
  */
-v8Intl.DateTimeFormat.prototype.format = function(dateValue) {
+function formatDate(formatter, dateValue) {
   native function NativeJSInternalDateFormat();
 
   var dateMs;
@@ -826,8 +842,24 @@ v8Intl.DateTimeFormat.prototype.format = function(dateValue) {
     throw new RangeException('Provided date is not in valid range.');
   }
 
-  return NativeJSInternalDateFormat(this.__formatter__, new Date(dateMs));
+  return NativeJSInternalDateFormat(formatter.__formatter__, new Date(dateMs));
 };
+
+
+Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'format', {
+  get: function() {
+      if (this.__boundFormat__ === undefined) {
+        var that = this;
+        var boundFormat = function(x) {
+          return formatDate(that, x);
+        }
+        this.__boundFormat__ = boundFormat;
+      }
+      return this.__boundFormat__;
+    },
+  enumerable: false,
+  configurable: true
+});
 
 
 /**

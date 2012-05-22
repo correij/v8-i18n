@@ -41,7 +41,7 @@ def main(argv):
     print 'Usage:\n\tpython run-tests.py path/to/test-runner'
     return
 
-  script_dir = os.path.dirname(__file__)
+  script_dir = os.path.normpath(os.path.dirname(__file__))
 
   tests = ListTests(script_dir)
 
