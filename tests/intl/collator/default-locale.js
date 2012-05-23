@@ -29,3 +29,7 @@ assertEquals(options.locale, getDefaultLocale());
 
 var collatorNone = new Intl.Collator();
 assertEquals(options.locale, collatorNone.resolvedOptions().locale);
+
+// TODO(cira): remove support for {} to mean empty list.
+var collatorBraket = new Intl.Collator({});
+assertEquals(options.locale, collatorBraket.resolvedOptions().locale);
