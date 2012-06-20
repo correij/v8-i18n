@@ -28,7 +28,10 @@ native function NativeJSAvailableLocalesOf();
 /**
  * List of available services.
  */
-var AVAILABLE_SERVICES = ['collator', 'numberformat', 'dateformat'];
+var AVAILABLE_SERVICES = ['collator',
+			  'numberformat',
+			  'dateformat',
+			  'breakiterator'];
 
 /**
  * Caches available locales for each service.
@@ -36,7 +39,8 @@ var AVAILABLE_SERVICES = ['collator', 'numberformat', 'dateformat'];
 var AVAILABLE_LOCALES = {
   'collator': undefined,
   'numberformat': undefined,
-  'dateformat': undefined
+  'dateformat': undefined,
+  'breakiterator': undefined
 };
 
 /**
@@ -57,7 +61,8 @@ var QUOTED_STRING_RE = new RegExp("'[^']+'", 'g');
 /**
  * Matches valid service name.
  */
-var SERVICE_RE = new RegExp('^(collator|numberformat|dateformat)$');
+var SERVICE_RE =
+    new RegExp('^(collator|numberformat|dateformat|breakiterator)$');
 
 /**
  * Maps ICU calendar names into LDML type.
@@ -212,10 +217,13 @@ function initializeCollator(collator, locales, options) {
     extension = '-u-co-search';
   }
 
-  collator.__collator__ = NativeJSCreateCollator(locale.locale + extension,
-                                                 internalOptions);
-  collator.__collator__.usage = internalOptions.usage;
-  collator.__collator__.collation = internalOptions.collation;
+  var internalCollator = NativeJSCreateCollator(locale.locale + extension,
+						internalOptions);
+  internalCollator.usage = internalOptions.usage;
+  internalCollator.collation = internalOptions.collation;
+
+  // Writable, configurable and enumerable are set to false by default.
+  Object.defineProperty(collator, 'collator', {value: internalCollator});
 
   return collator;
 }
@@ -242,14 +250,14 @@ v8Intl.Collator = function(locales, options) {
  */
 v8Intl.Collator.prototype.resolvedOptions = function() {
   return {
-    locale: this.__collator__.locale,
-    usage: this.__collator__.usage,
-    sensitivity: this.__collator__.sensitivity,
-    ignorePunctuation: this.__collator__.ignorePunctuation,
-    numeric: this.__collator__.numeric,
-    normalization: this.__collator__.normalization,
-    caseFirst: this.__collator__.caseFirst,
-    collation: this.__collator__.collation
+    locale: this.collator.locale,
+    usage: this.collator.usage,
+    sensitivity: this.collator.sensitivity,
+    ignorePunctuation: this.collator.ignorePunctuation,
+    numeric: this.collator.numeric,
+    normalization: this.collator.normalization,
+    caseFirst: this.collator.caseFirst,
+    collation: this.collator.collation
   };
 };
 
@@ -276,24 +284,11 @@ v8Intl.Collator.supportedLocalesOf = function(locales, options) {
  */
 function compare(collator, x, y) {
   native function NativeJSInternalCompare();
-  return NativeJSInternalCompare(collator.__collator__, String(x), String(y));
+  return NativeJSInternalCompare(collator.collator, String(x), String(y));
 };
 
 
-Object.defineProperty(v8Intl.Collator.prototype, 'compare', {
- get: function() {
-      if (this.__boundCompare__ === undefined) {
-        var that = this;
-        var boundCompare = function(x, y) {
-          return compare(that, x, y);
-        }
-        this.__boundCompare__ = boundCompare;
-      }
-      return this.__boundCompare__;
-    },
- enumerable: false,
- configurable: true
-});
+addBoundMethod(v8Intl.Collator, 'compare', compare);
 
 
 /**
@@ -380,7 +375,7 @@ function initializeNumberFormat(numberFormat, locales, options) {
     formatter.currencyDisplay = currencyDisplay;
   }
 
-  numberFormat.__formatter__ = formatter;
+  Object.defineProperty(numberFormat, 'formatter', {value: formatter});
 
   return numberFormat;
 }
@@ -407,17 +402,17 @@ v8Intl.NumberFormat = function(locales, options) {
  */
 v8Intl.NumberFormat.prototype.resolvedOptions = function() {
   return {
-    locale: this.__formatter__.locale,
-    numberingSystem: this.__formatter__.numberingSystem,
-    style: this.__formatter__.style,
-    currency: this.__formatter__.currency,
-    currencyDisplay: this.__formatter__.currencyDisplay,
-    useGrouping: this.__formatter__.useGrouping,
-    minimumIntegerDigits: this.__formatter__.minimumIntegerDigits,
-    minimumFractionDigits: this.__formatter__.minimumFractionDigits,
-    maximumFractionDigits: this.__formatter__.maximumFractionDigits,
-    minimumSignificantDigits: this.__formatter__.minimumSignificantDigits,
-    maximumSignificantDigits: this.__formatter__.maximumSignificantDigits
+    locale: this.formatter.locale,
+    numberingSystem: this.formatter.numberingSystem,
+    style: this.formatter.style,
+    currency: this.formatter.currency,
+    currencyDisplay: this.formatter.currencyDisplay,
+    useGrouping: this.formatter.useGrouping,
+    minimumIntegerDigits: this.formatter.minimumIntegerDigits,
+    minimumFractionDigits: this.formatter.minimumFractionDigits,
+    maximumFractionDigits: this.formatter.maximumFractionDigits,
+    minimumSignificantDigits: this.formatter.minimumSignificantDigits,
+    maximumSignificantDigits: this.formatter.maximumSignificantDigits
   };
 };
 
@@ -440,24 +435,11 @@ v8Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
 function formatNumber(formatter, value) {
   native function NativeJSInternalNumberFormat();
 
-  return NativeJSInternalNumberFormat(formatter.__formatter__, Number(value));
+  return NativeJSInternalNumberFormat(formatter.formatter, Number(value));
 }
 
 
-Object.defineProperty(v8Intl.NumberFormat.prototype, 'format', {
-  get: function() {
-      if (this.__boundFormat__ === undefined) {
-        var that = this;
-        var boundFormat = function(x) {
-          return formatNumber(that, x);
-        }
-        this.__boundFormat__ = boundFormat;
-      }
-      return this.__boundFormat__;
-    },
-  enumerable: false,
-  configurable: true
-});
+addBoundMethod(v8Intl.NumberFormat, 'format', formatNumber);
 
 
 /**
@@ -707,7 +689,8 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
       locale.locale + extension, {skeleton: ldmlString, timeZone: tz});
 
   formatter.tz = tz;
-  dateFormat.__formatter__ = formatter;
+
+  Object.defineProperty(dateFormat, 'formatter', {value: formatter});
 
   return dateFormat;
 }
@@ -733,19 +716,19 @@ v8Intl.DateTimeFormat = function(locales, options) {
  * DateTimeFormat resolvedOptions method.
  */
 v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
-  var fromPattern = fromLDMLString(this.__formatter__.pattern);
-  var userCalendar = ICU_CALENDAR_MAP[this.__formatter__.calendar];
+  var fromPattern = fromLDMLString(this.formatter.pattern);
+  var userCalendar = ICU_CALENDAR_MAP[this.formatter.calendar];
   if (userCalendar === undefined) {
     // Use ICU name if we don't have a match. It shouldn't happen, but
     // it would be too strict to throw for this.
-    userCalendar = this.__formatter__.calendar;
+    userCalendar = this.formatter.calendar;
   }
 
   return {
-    locale: this.__formatter__.locale,
-    numberingSystem: this.__formatter__.numberingSystem,
+    locale: this.formatter.locale,
+    numberingSystem: this.formatter.numberingSystem,
     calendar: userCalendar,
-    timeZone: this.__formatter__.tz,
+    timeZone: this.formatter.tz,
     timeZoneName: fromPattern.timeZoneName,
     era: fromPattern.era,
     year: fromPattern.year,
@@ -789,24 +772,154 @@ function formatDate(formatter, dateValue) {
     throw new RangeException('Provided date is not in valid range.');
   }
 
-  return NativeJSInternalDateFormat(formatter.__formatter__, new Date(dateMs));
+  return NativeJSInternalDateFormat(formatter.formatter, new Date(dateMs));
 };
 
 
-Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'format', {
-  get: function() {
-      if (this.__boundFormat__ === undefined) {
-        var that = this;
-        var boundFormat = function(x) {
-          return formatDate(that, x);
+addBoundMethod(v8Intl.DateTimeFormat, 'format', formatDate);
+
+
+/**
+ * Initializes the given object so it's a valid BreakIterator instance.
+ * Useful for subclassing.
+ */
+function initializeBreakIterator(iterator, locales, options) {
+  native function NativeJSCreateBreakIterator();
+
+  if (options === undefined) {
+    options = {};
+  }
+
+  var getOption = getGetOption(options, 'breakiterator');
+
+  var internalOptions = {};
+
+  internalOptions.type = getOption('type', 'string',
+				   ['character', 'word', 'sentence', 'line'],
+				   'word');
+
+  var locale = resolveLocale('breakiterator', locales, options);
+
+  var internalIterator = NativeJSCreateBreakIterator(locale.locale,
+						     internalOptions);
+  internalIterator.type = internalOptions.type;
+
+  Object.defineProperty(iterator, 'iterator', {value: internalIterator});
+
+  return iterator;
+}
+
+
+/**
+ * Constructs v8Intl.BreakIterator object given optional locales and options
+ * parameters.
+ *
+ * @constructor
+ */
+v8Intl.BreakIterator = function(locales, options) {
+  if (!this || this === v8Intl) {
+    // Constructor is called as a function.
+    return new v8Intl.BreakIterator(locales, options);
+  }
+
+  return initializeBreakIterator(toObject(this), locales, options);
+};
+
+
+/**
+ * BreakIterator resolvedOptions method.
+ */
+v8Intl.BreakIterator.prototype.resolvedOptions = function() {
+  return {
+    locale: this.iterator.locale,
+    type: this.iterator.type
+  };
+};
+
+
+/**
+ * Returns the subset of the given locale list for which this locale list
+ * has a matching (possibly fallback) locale. Locales appear in the same
+ * order in the returned list as in the input list.
+ */
+v8Intl.BreakIterator.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('breakiterator', locales, options);
+};
+
+
+/**
+ * Adopts text to segment using the iterator. Old text, if present,
+ * gets discarded.
+ */
+function adoptText(iterator, text) {
+  native function NativeJSBreakIteratorAdoptText();
+  NativeJSBreakIteratorAdoptText(iterator.iterator, String(text));
+};
+
+
+/**
+ * Returns index of the first break in the string and moves current pointer.
+ */
+function first(iterator) {
+  native function NativeJSBreakIteratorFirst();
+  return NativeJSBreakIteratorFirst(iterator.iterator);
+};
+
+
+/**
+ * Returns the index of the next break and moves the pointer.
+ */
+function next(iterator) {
+  native function NativeJSBreakIteratorNext();
+  return NativeJSBreakIteratorNext(iterator.iterator);
+};
+
+
+/**
+ * Returns index of the current break.
+ */
+function current(iterator) {
+  native function NativeJSBreakIteratorCurrent();
+  return NativeJSBreakIteratorCurrent(iterator.iterator);
+};
+
+
+/**
+ * Returns type of the current break.
+ */
+function breakType(iterator) {
+  native function NativeJSBreakIteratorBreakType();
+  return NativeJSBreakIteratorBreakType(iterator.iterator);
+};
+
+
+addBoundMethod(v8Intl.BreakIterator, 'adoptText', adoptText);
+addBoundMethod(v8Intl.BreakIterator, 'first', first);
+addBoundMethod(v8Intl.BreakIterator, 'next', next);
+addBoundMethod(v8Intl.BreakIterator, 'current', current);
+addBoundMethod(v8Intl.BreakIterator, 'breakType', breakType);
+
+
+/**
+ * Adds bound method to the prototype of the given object.
+ */
+function addBoundMethod(obj, methodName, implementation) {
+  Object.defineProperty(obj.prototype, methodName, {
+    get: function() {
+	var internalName = '__bound' + methodName + '__';
+        if (this[internalName] === undefined) {
+          var that = this;
+          var boundMethod = function(x, y) {
+	      return implementation(that, x, y);
+          }
+          this[internalName] = boundMethod;
         }
-        this.__boundFormat__ = boundFormat;
-      }
-      return this.__boundFormat__;
-    },
-  enumerable: false,
-  configurable: true
-});
+        return this[internalName];
+      },
+    enumerable: false,
+    configurable: true
+  });
+}
 
 
 /**

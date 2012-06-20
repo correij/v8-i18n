@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+#include "unicode/brkiter.h"
 #include "unicode/coll.h"
 #include "unicode/datefmt.h"
 #include "unicode/numfmt.h"
@@ -80,6 +81,8 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
     available_locales = icu::NumberFormat::getAvailableLocales(count);
   } else if (strcmp(*service, "dateformat") == 0) {
     available_locales = icu::DateFormat::getAvailableLocales(count);
+  } else if (strcmp(*service, "breakiterator") == 0) {
+    available_locales = icu::BreakIterator::getAvailableLocales(count);
   }
 
   UErrorCode error = U_ZERO_ERROR;

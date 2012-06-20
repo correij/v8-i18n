@@ -132,4 +132,24 @@ v8::Persistent<v8::ObjectTemplate> Utils::GetTemplate() {
   return icu_template;
 }
 
+// static
+// Chrome Linux doesn't like static initializers in class, so we create
+// template on demand. This one has 2 internal fields.
+v8::Persistent<v8::ObjectTemplate> Utils::GetTemplate2() {
+  v8::HandleScope handle_scope;
+
+  static v8::Persistent<v8::ObjectTemplate> icu_template_2;
+
+  if (icu_template_2.IsEmpty()) {
+    v8::Local<v8::ObjectTemplate> raw_template(v8::ObjectTemplate::New());
+
+    // Set aside internal field for ICU class and additional data.
+    raw_template->SetInternalFieldCount(2);
+
+    icu_template_2 = v8::Persistent<v8::ObjectTemplate>::New(raw_template);
+  }
+
+  return icu_template_2;
+}
+
 }  // namespace v8_i18n
