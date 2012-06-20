@@ -34,6 +34,8 @@
         '../src/datetime-format.cc',
         '../src/datetime-format.h',
         '../src/extension.cc',
+	'../src/intl-break-iterator.cc',
+	'../src/intl-break-iterator.h',
         '../src/intl-collator.cc',
         '../src/intl-collator.h',
         '../src/intl-date-format.cc',

@@ -17,6 +17,7 @@
 #include "src/break-iterator.h"
 #include "src/collator.h"
 #include "src/datetime-format.h"
+#include "src/intl-break-iterator.h"
 #include "src/intl-collator.h"
 #include "src/intl-date-format.h"
 #include "src/intl-number-format.h"
@@ -61,6 +62,23 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(IntlCollator::JSCreateCollator);
   } else if (name->Equals(v8::String::New("NativeJSInternalCompare"))) {
     return v8::FunctionTemplate::New(IntlCollator::JSInternalCompare);
+  } else if (name->Equals(v8::String::New("NativeJSCreateBreakIterator"))) {
+    return v8::FunctionTemplate::New(IntlBreakIterator::JSCreateBreakIterator);
+  } else if (name->Equals(v8::String::New("NativeJSBreakIteratorAdoptText"))) {
+    return v8::FunctionTemplate::New(
+	IntlBreakIterator::JSInternalBreakIteratorAdoptText);
+  } else if (name->Equals(v8::String::New("NativeJSBreakIteratorFirst"))) {
+    return v8::FunctionTemplate::New(
+        IntlBreakIterator::JSInternalBreakIteratorFirst);
+  } else if (name->Equals(v8::String::New("NativeJSBreakIteratorNext"))) {
+    return v8::FunctionTemplate::New(
+        IntlBreakIterator::JSInternalBreakIteratorNext);
+  } else if (name->Equals(v8::String::New("NativeJSBreakIteratorCurrent"))) {
+    return v8::FunctionTemplate::New(
+        IntlBreakIterator::JSInternalBreakIteratorCurrent);
+  } else if (name->Equals(v8::String::New("NativeJSBreakIteratorBreakType"))) {
+    return v8::FunctionTemplate::New(
+	IntlBreakIterator::JSInternalBreakIteratorBreakType);
   }
 
   return v8::Handle<v8::FunctionTemplate>();

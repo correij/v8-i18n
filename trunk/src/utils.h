@@ -60,6 +60,9 @@ class Utils {
   // Creates an ObjectTemplate with one internal field.
   static v8::Persistent<v8::ObjectTemplate> GetTemplate();
 
+  // Creates an ObjectTemplate with two internal fields.
+  static v8::Persistent<v8::ObjectTemplate> GetTemplate2();
+
  private:
   Utils() {}
 };
