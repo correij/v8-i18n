@@ -65,11 +65,13 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(IntlDateFormat::JSInternalParse);
   }
 
-  // Number format.
+  // Number format and parse.
   if (name->Equals(v8::String::New("NativeJSCreateNumberFormat"))) {
     return v8::FunctionTemplate::New(IntlNumberFormat::JSCreateNumberFormat);
   } else if (name->Equals(v8::String::New("NativeJSInternalNumberFormat"))) {
     return v8::FunctionTemplate::New(IntlNumberFormat::JSInternalFormat);
+  } else if (name->Equals(v8::String::New("NativeJSInternalNumberParse"))) {
+    return v8::FunctionTemplate::New(IntlNumberFormat::JSInternalParse);
   }
 
   // Collator.

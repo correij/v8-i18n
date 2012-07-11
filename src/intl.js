@@ -439,7 +439,18 @@ function formatNumber(formatter, value) {
 }
 
 
+/**
+ * Returns a Number that represents string value that was passed in.
+ */
+function parseNumber(formatter, value) {
+  native function NativeJSInternalNumberParse();
+
+  return NativeJSInternalNumberParse(formatter.formatter, String(value));
+}
+
+
 addBoundMethod(v8Intl.NumberFormat, 'format', formatNumber);
+addBoundMethod(v8Intl.NumberFormat, 'parse', parseNumber);
 
 
 /**

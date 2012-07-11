@@ -43,6 +43,9 @@ class IntlNumberFormat {
   // Formats number and returns corresponding string.
   static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
 
+  // Parses a string and returns a number.
+  static v8::Handle<v8::Value> JSInternalParse(const v8::Arguments& args);
+
  private:
   IntlNumberFormat();
 };
