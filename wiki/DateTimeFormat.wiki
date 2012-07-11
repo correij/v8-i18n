@@ -37,6 +37,23 @@ year: 'numeric'
 
 Other options are locale specific. For example, hour12 is set by locale to either true or false.
 
+== Methods ==
+{{{
+/**
+ * Returns a string that represents dateValue given the pattern and
+ * locale data.
+ */
+format(dateValue)
+
+/**
+ * This method is not part of the ECMAScript 402 specification, and it
+ * can change in the future.
+ * Returns Date object that represents dateString, or
+ * undefined in case of failure.
+ */
+parse(dateString) 
+}}}
+
 == !DateTimeFormat with default locale and settings ==
 {{{
 var dtf = v8Intl.DateTimeFormat();
@@ -65,4 +82,10 @@ dtf.format(new Date(1974, 7, 29, 12, 15, 0));
 {{{
 var dtf = v8Intl.DateTimeFormat(['th-u-nu-thai']);
 dtf.format();
+}}}
+
+== !DateTimeFormat used for parsing ==
+{{{
+var dtf = v8Intl.DateTimeFormat(['en']);
+dtf.parse('4/5/74');
 }}}
