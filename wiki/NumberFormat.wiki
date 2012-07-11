@@ -32,6 +32,23 @@ style: 'decimal'
 
 Other options are locale specific.
 
+== Methods ==
+{{{
+/**
+ * Returns a string given the number. String is formatted using
+ * the pattern and locale data provided in the constructor.
+ */
+format(number)
+
+/**
+ * This method is not part of the ECMAScript 402 specification and can change at any time.
+ * Returns the number given the string representation of that number, or
+ * it returns undefined if the string can't be parsed.
+ * Due to limitation of the underlying library we don't support currency parsing at this time.
+ */
+parse(string)
+}}}
+
 == !NumberFormat with default locale and settings ==
 {{{
 var nf = v8Intl.NumberFormat();
@@ -60,4 +77,10 @@ nf.format(12345.67);
 {{{
 var nf = v8Intl.NumberFormat(['th-u-nu-thai']);
 nf.format(12345.67);
+}}}
+
+== !NumberFormat used to parse ==
+{{{
+var nf = v8Intl.NumberFormat(['en']);
+nf.parse('123,45.67');
 }}}
