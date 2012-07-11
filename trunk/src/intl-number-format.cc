@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "src/utils.h"
+#include "unicode/curramt.h"
 #include "unicode/dcfmtsym.h"
 #include "unicode/decimfmt.h"
 #include "unicode/locid.h"
@@ -92,6 +93,60 @@ v8::Handle<v8::Value> IntlNumberFormat::JSInternalFormat(
 
   return v8::String::New(
       reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length());
+}
+
+v8::Handle<v8::Value> IntlNumberFormat::JSInternalParse(
+    const v8::Arguments& args) {
+  v8::HandleScope handle_scope;
+
+  if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsString()) {
+    return v8::ThrowException(v8::Exception::Error(
+        v8::String::New("Formatter and string have to be specified.")));
+  }
+
+  icu::DecimalFormat* number_format =
+      UnpackIntlNumberFormat(args[0]->ToObject());
+  if (!number_format) {
+    return v8::ThrowException(v8::Exception::Error(
+        v8::String::New("NumberFormat method called on an object "
+                        "that is not a NumberFormat.")));
+  }
+
+  // ICU will handle actual NaN value properly and return NaN string.
+  icu::UnicodeString string_number;
+  if (!Utils::V8StringToUnicodeString(args[1]->ToString(), &string_number)) {
+    string_number = "";
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  icu::Formattable result;
+  // ICU 4.6 doesn't support parseCurrency call. We need to wait for ICU49
+  // to be part of Chrome.
+  // TODO(cira): Include currency parsing code using parseCurrency call.
+  // We need to check if the formatter parses all currencies or only the
+  // one it was constructed with (it will impact the API - how to return ISO
+  // code and the value).
+  number_format->parse(string_number, result, status);
+  if (U_FAILURE(status)) {
+    return v8::Undefined();
+  }
+
+  switch (result.getType()) {
+  case icu::Formattable::kDouble:
+    return v8::Number::New(result.getDouble());
+    break;
+  case icu::Formattable::kLong:
+    return v8::Number::New(result.getLong());
+    break;
+  case icu::Formattable::kInt64:
+    return v8::Number::New(result.getInt64());
+    break;
+  default:
+    return v8::Undefined();
+  }
+
+  // To make compiler happy.
+  return v8::Undefined();
 }
 
 v8::Handle<v8::Value> IntlNumberFormat::JSCreateNumberFormat(
