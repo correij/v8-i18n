@@ -773,10 +773,23 @@ function formatDate(formatter, dateValue) {
   }
 
   return NativeJSInternalDateFormat(formatter.formatter, new Date(dateMs));
-};
+}
+
+
+/**
+ * Returns a Date object representing the result of calling ToString(value)
+ * according to the effective locale and the formatting options of this
+ * DateTimeFormat.
+ * Returns undefined if date string cannot be parsed.
+ */
+function parseDate(formatter, value) {
+  native function NativeJSInternalDateParse();
+  return NativeJSInternalDateParse(formatter.formatter, String(value));
+}
 
 
 addBoundMethod(v8Intl.DateTimeFormat, 'format', formatDate);
+addBoundMethod(v8Intl.DateTimeFormat, 'parse', parseDate);
 
 
 /**
@@ -854,7 +867,7 @@ v8Intl.BreakIterator.supportedLocalesOf = function(locales, options) {
 function adoptText(iterator, text) {
   native function NativeJSBreakIteratorAdoptText();
   NativeJSBreakIteratorAdoptText(iterator.iterator, String(text));
-};
+}
 
 
 /**
@@ -863,7 +876,7 @@ function adoptText(iterator, text) {
 function first(iterator) {
   native function NativeJSBreakIteratorFirst();
   return NativeJSBreakIteratorFirst(iterator.iterator);
-};
+}
 
 
 /**
@@ -872,7 +885,7 @@ function first(iterator) {
 function next(iterator) {
   native function NativeJSBreakIteratorNext();
   return NativeJSBreakIteratorNext(iterator.iterator);
-};
+}
 
 
 /**
@@ -881,7 +894,7 @@ function next(iterator) {
 function current(iterator) {
   native function NativeJSBreakIteratorCurrent();
   return NativeJSBreakIteratorCurrent(iterator.iterator);
-};
+}
 
 
 /**
@@ -890,7 +903,7 @@ function current(iterator) {
 function breakType(iterator) {
   native function NativeJSBreakIteratorBreakType();
   return NativeJSBreakIteratorBreakType(iterator.iterator);
-};
+}
 
 
 addBoundMethod(v8Intl.BreakIterator, 'adoptText', adoptText);

@@ -43,6 +43,10 @@ class IntlDateFormat {
   // Formats date and returns corresponding string.
   static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
 
+  // Parses date and returns corresponding Date object or undefined if parse
+  // failed.
+  static v8::Handle<v8::Value> JSInternalParse(const v8::Arguments& args);
+
  private:
   IntlDateFormat();
 };
