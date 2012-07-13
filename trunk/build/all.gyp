@@ -76,8 +76,16 @@
       'toolsets': ['host'],
       'variables': {
         'js_files': [
-          '../src/api.js',
-          '../src/intl.js'
+	  '../src/header.js',
+	  '../src/globals.js',
+	  '../src/locale.js',
+	  '../src/collator.js',
+	  '../src/number-format.js',
+	  '../src/date-format.js',
+	  '../src/break-iterator.js',
+	  '../src/utils.js',
+	  '../src/footer.js',
+          '../src/api.js'
         ],
       },
       'actions': [
