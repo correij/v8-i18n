@@ -22,8 +22,8 @@ var dtf = new Intl.DateTimeFormat(['en'],
 // Make sure we have pattern we expect (may change in the future).
 assertEquals('MMM d, y', dtf.formatter.pattern);
 
-assertEquals('Sat May 04 1974 00:00:00 GMT+0100 (CEST)',
-	     String(dtf.parse('May 4, 1974')));
+assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
+	     usePDT(String(dtf.parse('May 4, 1974'))));
 
 // Missing , in the pattern.
 assertEquals(undefined, dtf.parse('May 4 1974'));

@@ -19,18 +19,18 @@ var dtf = new Intl.DateTimeFormat(['en']);
 // Make sure we have pattern we expect (may change in the future).
 assertEquals('M/d/y', dtf.formatter.pattern);
 
-assertEquals('Sat May 04 1974 00:00:00 GMT+0100 (CEST)',
-	     String(dtf.parse('5/4/74')));
-assertEquals('Sat May 04 1974 00:00:00 GMT+0100 (CEST)',
-	     String(dtf.parse('05/04/74')));
-assertEquals('Sat May 04 1974 00:00:00 GMT+0100 (CEST)',
-	     String(dtf.parse('5/04/74')));
-assertEquals('Sat May 04 1974 00:00:00 GMT+0100 (CEST)',
-	     String(dtf.parse('5/4/1974')));
+assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
+	     usePDT(String(dtf.parse('5/4/74'))));
+assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
+             usePDT(String(dtf.parse('05/04/74'))));
+assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
+             usePDT(String(dtf.parse('5/04/74'))));
+assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
+             usePDT(String(dtf.parse('5/4/1974'))));
 
 // Month is numeric, so it fails on "May".
 assertEquals(undefined, dtf.parse('May 4th 1974'));
 
 // Time is ignored from the input, since the pattern doesn't have it.
-assertEquals('Sat May 04 1974 00:00:00 GMT+0100 (CEST)',
-	     String(dtf.parse('5/4/74 12:30:12')));
+assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
+             usePDT(String(dtf.parse('5/4/74 12:30:12'))));
