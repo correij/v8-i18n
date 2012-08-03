@@ -98,18 +98,21 @@ v8Intl.Collator = function(locales, options) {
 /**
  * Collator resolvedOptions method.
  */
-v8Intl.Collator.prototype.resolvedOptions = function() {
+function resolvedCollatorOptions(coll) {
   return {
-    locale: this.collator.locale,
-    usage: this.collator.usage,
-    sensitivity: this.collator.sensitivity,
-    ignorePunctuation: this.collator.ignorePunctuation,
-    numeric: this.collator.numeric,
-    normalization: this.collator.normalization,
-    caseFirst: this.collator.caseFirst,
-    collation: this.collator.collation
+    locale: coll.collator.locale,
+    usage: coll.collator.usage,
+    sensitivity: coll.collator.sensitivity,
+    ignorePunctuation: coll.collator.ignorePunctuation,
+    numeric: coll.collator.numeric,
+    normalization: coll.collator.normalization,
+    caseFirst: coll.collator.caseFirst,
+    collation: coll.collator.collation
   };
-};
+}
+
+
+addBoundMethod(v8Intl.Collator, 'resolvedOptions', resolvedCollatorOptions);
 
 
 /**

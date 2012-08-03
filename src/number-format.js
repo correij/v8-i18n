@@ -125,21 +125,24 @@ v8Intl.NumberFormat = function(locales, options) {
 /**
  * NumberFormat resolvedOptions method.
  */
-v8Intl.NumberFormat.prototype.resolvedOptions = function() {
+function resolvedNumberOptions(format) {
   return {
-    locale: this.formatter.locale,
-    numberingSystem: this.formatter.numberingSystem,
-    style: this.formatter.style,
-    currency: this.formatter.currency,
-    currencyDisplay: this.formatter.currencyDisplay,
-    useGrouping: this.formatter.useGrouping,
-    minimumIntegerDigits: this.formatter.minimumIntegerDigits,
-    minimumFractionDigits: this.formatter.minimumFractionDigits,
-    maximumFractionDigits: this.formatter.maximumFractionDigits,
-    minimumSignificantDigits: this.formatter.minimumSignificantDigits,
-    maximumSignificantDigits: this.formatter.maximumSignificantDigits
+    locale: format.formatter.locale,
+    numberingSystem: format.formatter.numberingSystem,
+    style: format.formatter.style,
+    currency: format.formatter.currency,
+    currencyDisplay: format.formatter.currencyDisplay,
+    useGrouping: format.formatter.useGrouping,
+    minimumIntegerDigits: format.formatter.minimumIntegerDigits,
+    minimumFractionDigits: format.formatter.minimumFractionDigits,
+    maximumFractionDigits: format.formatter.maximumFractionDigits,
+    minimumSignificantDigits: format.formatter.minimumSignificantDigits,
+    maximumSignificantDigits: format.formatter.maximumSignificantDigits
   };
 };
+
+
+addBoundMethod(v8Intl.NumberFormat, 'resolvedOptions', resolvedNumberOptions);
 
 
 /**
