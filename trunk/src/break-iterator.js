@@ -74,15 +74,18 @@ function resolvedBreakOptions(segmenter) {
 };
 
 
-addBoundMethod(v8Intl.BreakIterator, 'resolvedOptions', resolvedBreakOptions);
+addBoundMethod(v8Intl.BreakIterator, 'resolvedOptions',
+	       resolvedBreakOptions, 0);
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
+ * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.BreakIterator.supportedLocalesOf = function(locales, options) {
+v8Intl.BreakIterator.supportedLocalesOf = function(locales) {
+  var options = arguments.length >= 2 ? arguments[1] : undefined;
   return supportedLocalesOf('breakiterator', locales, options);
 };
 
@@ -133,8 +136,8 @@ function breakType(iterator) {
 }
 
 
-addBoundMethod(v8Intl.BreakIterator, 'adoptText', adoptText);
-addBoundMethod(v8Intl.BreakIterator, 'first', first);
-addBoundMethod(v8Intl.BreakIterator, 'next', next);
-addBoundMethod(v8Intl.BreakIterator, 'current', current);
-addBoundMethod(v8Intl.BreakIterator, 'breakType', breakType);
+addBoundMethod(v8Intl.BreakIterator, 'adoptText', adoptText, 1);
+addBoundMethod(v8Intl.BreakIterator, 'first', first, 0);
+addBoundMethod(v8Intl.BreakIterator, 'next', next, 0);
+addBoundMethod(v8Intl.BreakIterator, 'current', current, 0);
+addBoundMethod(v8Intl.BreakIterator, 'breakType', breakType, 0);

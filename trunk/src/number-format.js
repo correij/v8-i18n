@@ -145,15 +145,18 @@ function resolvedNumberOptions(format) {
 };
 
 
-addBoundMethod(v8Intl.NumberFormat, 'resolvedOptions', resolvedNumberOptions);
+addBoundMethod(v8Intl.NumberFormat, 'resolvedOptions',
+	       resolvedNumberOptions, 0);
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
+ * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
+v8Intl.NumberFormat.supportedLocalesOf = function(locales) {
+  var options = arguments.length >= 2 ? arguments[1] : undefined;
   return supportedLocalesOf('numberformat', locales, options);
 };
 
@@ -180,5 +183,5 @@ function parseNumber(formatter, value) {
 }
 
 
-addBoundMethod(v8Intl.NumberFormat, 'format', formatNumber);
-addBoundMethod(v8Intl.NumberFormat, 'parse', parseNumber);
+addBoundMethod(v8Intl.NumberFormat, 'format', formatNumber, 1);
+addBoundMethod(v8Intl.NumberFormat, 'parse', parseNumber, 1);

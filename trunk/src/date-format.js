@@ -317,15 +317,18 @@ function resolvedDateOptions(format) {
 };
 
 
-addBoundMethod(v8Intl.DateTimeFormat, 'resolvedOptions', resolvedDateOptions);
+addBoundMethod(v8Intl.DateTimeFormat, 'resolvedOptions',
+	       resolvedDateOptions, 0);
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
+ * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
+v8Intl.DateTimeFormat.supportedLocalesOf = function(locales) {
+  var options = arguments.length >= 2 ? arguments[1] : undefined;
   return supportedLocalesOf('dateformat', locales, options);
 };
 
@@ -365,5 +368,6 @@ function parseDate(formatter, value) {
 }
 
 
-addBoundMethod(v8Intl.DateTimeFormat, 'format', formatDate);
-addBoundMethod(v8Intl.DateTimeFormat, 'parse', parseDate);
+// 0 because date is optional argument.
+addBoundMethod(v8Intl.DateTimeFormat, 'format', formatDate, 0);
+addBoundMethod(v8Intl.DateTimeFormat, 'parse', parseDate, 1);
