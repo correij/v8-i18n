@@ -66,12 +66,15 @@ v8Intl.BreakIterator = function(locales, options) {
 /**
  * BreakIterator resolvedOptions method.
  */
-v8Intl.BreakIterator.prototype.resolvedOptions = function() {
+function resolvedBreakOptions(segmenter) {
   return {
-    locale: this.iterator.locale,
-    type: this.iterator.type
+    locale: segmenter.iterator.locale,
+    type: segmenter.iterator.type
   };
 };
+
+
+addBoundMethod(v8Intl.BreakIterator, 'resolvedOptions', resolvedBreakOptions);
 
 
 /**

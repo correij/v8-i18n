@@ -289,20 +289,20 @@ v8Intl.DateTimeFormat = function(locales, options) {
 /**
  * DateTimeFormat resolvedOptions method.
  */
-v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
-  var fromPattern = fromLDMLString(this.formatter.pattern);
-  var userCalendar = ICU_CALENDAR_MAP[this.formatter.calendar];
+function resolvedDateOptions(format) {
+  var fromPattern = fromLDMLString(format.formatter.pattern);
+  var userCalendar = ICU_CALENDAR_MAP[format.formatter.calendar];
   if (userCalendar === undefined) {
     // Use ICU name if we don't have a match. It shouldn't happen, but
     // it would be too strict to throw for this.
-    userCalendar = this.formatter.calendar;
+    userCalendar = format.formatter.calendar;
   }
 
   return {
-    locale: this.formatter.locale,
-    numberingSystem: this.formatter.numberingSystem,
+    locale: format.formatter.locale,
+    numberingSystem: format.formatter.numberingSystem,
     calendar: userCalendar,
-    timeZone: this.formatter.tz,
+    timeZone: format.formatter.tz,
     timeZoneName: fromPattern.timeZoneName,
     era: fromPattern.era,
     year: fromPattern.year,
@@ -315,6 +315,9 @@ v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
     second: fromPattern.second
   };
 };
+
+
+addBoundMethod(v8Intl.DateTimeFormat, 'resolvedOptions', resolvedDateOptions);
 
 
 /**
