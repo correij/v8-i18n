@@ -112,15 +112,17 @@ function resolvedCollatorOptions(coll) {
 }
 
 
-addBoundMethod(v8Intl.Collator, 'resolvedOptions', resolvedCollatorOptions);
+addBoundMethod(v8Intl.Collator, 'resolvedOptions', resolvedCollatorOptions, 0);
 
 
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
+ * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.Collator.supportedLocalesOf = function(locales, options) {
+v8Intl.Collator.supportedLocalesOf = function(locales) {
+  var options = arguments.length >= 2 ? arguments[1] : undefined;
   return supportedLocalesOf('collator', locales, options);
 };
 
@@ -141,4 +143,4 @@ function compare(collator, x, y) {
 };
 
 
-addBoundMethod(v8Intl.Collator, 'compare', compare);
+addBoundMethod(v8Intl.Collator, 'compare', compare, 2);

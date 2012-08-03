@@ -19,19 +19,30 @@
 /**
  * Adds bound method to the prototype of the given object.
  */
-function addBoundMethod(obj, methodName, implementation) {
+function addBoundMethod(obj, methodName, implementation, length) {
   Object.defineProperty(obj.prototype, methodName, {
     get: function() {
 	var internalName = '__bound' + methodName + '__';
         if (this[internalName] === undefined) {
           var that = this;
-          var boundMethod = function(x, y) {
+          var boundMethod;
+          if (length === undefined || length === 2) {
+            boundMethod = function(x, y) {
 	      return implementation(that, x, y);
-          }
+	    }
+          } else if (length === 1) {
+            boundMethod = function(x) {
+	      return implementation(that, x);
+	    }
+	  } else {
+            boundMethod = function() {
+	      return implementation(that);
+	    }
+	  }
           this[internalName] = boundMethod;
         }
         return this[internalName];
-      },
+    },
     enumerable: false,
     configurable: true
   });
