@@ -54,9 +54,15 @@ function supportedLocalesOf(service, locales, options) {
     options = toObject(options);
   }
 
-  var getOption = getGetOption(options, service);
-  var matcher = getOption(options, 'localeMatcher', 'string',
-                          ['lookup', 'best fit'], 'best fit');
+  var matcher = options.localeMatcher;
+  if (matcher !== undefined) {
+    matcher = String(matcher);
+    if (matcher !== 'lookup' && matcher !== 'best fit') {
+      throw new RangeError('Illegal value for localeMatcher:' + matcher);
+    }
+  } else {
+    matcher = 'best fit';
+  }
 
   var requestedLocales = initializeLocaleList(locales);
 

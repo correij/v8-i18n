@@ -50,6 +50,9 @@ def main(argv):
   tests = ListTests(script_dir)
 
   harness = os.path.join(script_dir, 'data', 'test', 'harness', 'sta.js')
+  intl = os.path.join(script_dir, 'data', 'test', 'harness', 'testIntl.js')
+  builtin = os.path.join(script_dir,
+                         'data', 'test', 'harness', 'testBuiltInObject.js')
   adapter = os.path.join(script_dir, '..', 'adapter.js')
 
   failed = []
@@ -57,7 +60,7 @@ def main(argv):
   expect_fail = []
   for test in tests:
     print 'Testing: ', test
-    status = subprocess.call([argv[1], adapter, harness, test])
+    status = subprocess.call([argv[1], adapter, harness, intl, builtin, test])
     if status == 0:
       passed.append(test)
       print 'PASS'

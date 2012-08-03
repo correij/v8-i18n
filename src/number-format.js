@@ -24,14 +24,17 @@ function isWellFormedCurrencyCode(currency) {
     return false;
   }
 
-  var code = String(currency).toUpperCase();
+  var code = String(currency);
   if (code.length !== 3) {
     return false;
   }
 
-  if (code.match(/[^A-Z]/) !== null) {
+  // Don't uppercase to test. It could convert invalid code into a valid one.
+  // For example \u00DFP (Eszett+P) becomes SSP.
+  if (code.match(/[^A-Za-z]/) !== null) {
     return false;
   }
+
   return true;
 }
 
