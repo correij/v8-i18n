@@ -22,17 +22,26 @@
 function canonicalizeLanguageTag(localeID) {
   native function NativeJSCanonicalizeLanguageTag();
 
-  if (typeof localeID !== 'string' && typeof localeID !== 'object') {
+  // null is typeof 'object' so we have to do extra check.
+  if (typeof localeID !== 'string' && typeof localeID !== 'object' ||
+      localeID === null) {
     throw new TypeError('Language ID should be string or object.');
+  }
+
+  var localeString = String(localeID);
+
+  // Throw if there is '_' in the string. Spec only allows '-'.
+  if (localeString.search(/_/) !== -1) {
+    throw new RangeError('Invalid language tag: ' + localeString);
   }
 
   // This call will strip -kn but not -kn-true extensions.
   // ICU bug filled - http://bugs.icu-project.org/trac/ticket/9265.
   // TODO(cira): check if -u-kn-true-kc-true-kh-true still throws after
   // upgrade to ICU 4.9.
-  var tag = NativeJSCanonicalizeLanguageTag(String(localeID));
+  var tag = NativeJSCanonicalizeLanguageTag(localeString);
   if (tag === 'invalid-tag') {
-    throw new RangeError('Invalid language tag: ' + localeID);
+    throw new RangeError('Invalid language tag: ' + localeString);
   }
 
   return tag;
@@ -49,6 +58,12 @@ function initializeLocaleList(locales) {
     // Constructor is called without arguments.
     seen = [];
   } else {
+    // We allow single string localeID.
+    if (typeof locales === 'string') {
+      seen.push(canonicalizeLanguageTag(locales));
+      return seen;
+    }
+
     var o = toObject(locales);
     // Converts it to UInt32 (>>> is shr on 32bit integers).
     var len = o.length >>> 0;
