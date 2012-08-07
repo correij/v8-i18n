@@ -27,12 +27,6 @@
       'type': 'static_library',
       'sources': [
         '../include/extension.h',
-        '../src/break-iterator.cc',
-        '../src/break-iterator.h',
-        '../src/collator.cc',
-        '../src/collator.h',
-        '../src/datetime-format.cc',
-        '../src/datetime-format.h',
         '../src/extension.cc',
 	'../src/intl-break-iterator.cc',
 	'../src/intl-break-iterator.h',
@@ -42,15 +36,9 @@
         '../src/intl-date-format.h',
         '../src/intl-number-format.cc',
         '../src/intl-number-format.h',
-        '../src/language-matcher.cc',
-        '../src/language-matcher.h',
         '../src/locale-list.cc',
         '../src/locale-list.h',
-        '../src/locale.cc',
-        '../src/locale.h',
         '../src/natives.h',
-        '../src/number-format.cc',
-        '../src/number-format.h',
         '../src/utils.cc',
         '../src/utils.h',
         '<(SHARED_INTERMEDIATE_DIR)/v8-i18n-js.cc',
@@ -84,8 +72,7 @@
 	  '../src/date-format.js',
 	  '../src/break-iterator.js',
 	  '../src/utils.js',
-	  '../src/footer.js',
-          '../src/api.js'
+	  '../src/footer.js'
         ],
       },
       'actions': [
