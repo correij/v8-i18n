@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/intl-collator.h"
+#include "src/collator.h"
 
 #include "src/utils.h"
 #include "unicode/coll.h"
@@ -36,7 +36,7 @@ static void SetResolvedSettings(
 static void SetBooleanSetting(
     UColAttribute, icu::Collator*, const char*, v8::Handle<v8::Object>);
 
-icu::Collator* IntlCollator::UnpackIntlCollator(v8::Handle<v8::Object> obj) {
+icu::Collator* Collator::UnpackCollator(v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
   if (obj->HasOwnProperty(v8::String::New("usage"))) {
@@ -46,8 +46,7 @@ icu::Collator* IntlCollator::UnpackIntlCollator(v8::Handle<v8::Object> obj) {
   return NULL;
 }
 
-void IntlCollator::DeleteIntlCollator(v8::Persistent<v8::Value> object,
-                                      void* param) {
+void Collator::DeleteCollator(v8::Persistent<v8::Value> object, void* param) {
   v8::Persistent<v8::Object> persistent_object =
       v8::Persistent<v8::Object>::Cast(object);
 
@@ -55,7 +54,7 @@ void IntlCollator::DeleteIntlCollator(v8::Persistent<v8::Value> object,
   // Unpacking should never return NULL here. That would only happen if
   // this method is used as the weak callback for persistent handles not
   // pointing to a collator.
-  delete UnpackIntlCollator(persistent_object);
+  delete UnpackCollator(persistent_object);
 
   // Then dispose of the persistent handle to JS object.
   persistent_object.Dispose();
@@ -75,7 +74,7 @@ static v8::Handle<v8::Value> ThrowExceptionForICUError(const char* message) {
 }
 
 // static
-v8::Handle<v8::Value> IntlCollator::JSInternalCompare(
+v8::Handle<v8::Value> Collator::JSInternalCompare(
     const v8::Arguments& args) {
   if (args.Length() != 3 || !args[0]->IsObject() ||
       !args[1]->IsString() || !args[2]->IsString()) {
@@ -83,7 +82,7 @@ v8::Handle<v8::Value> IntlCollator::JSInternalCompare(
         v8::String::New("Collator and two string arguments are required.")));
   }
 
-  icu::Collator* collator = UnpackIntlCollator(args[0]->ToObject());
+  icu::Collator* collator = UnpackCollator(args[0]->ToObject());
   if (!collator) {
     return ThrowUnexpectedObjectError();
   }
@@ -104,7 +103,7 @@ v8::Handle<v8::Value> IntlCollator::JSInternalCompare(
   return v8::Int32::New(result);
 }
 
-v8::Handle<v8::Value> IntlCollator::JSCreateCollator(
+v8::Handle<v8::Value> Collator::JSCreateCollator(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -133,7 +132,7 @@ v8::Handle<v8::Value> IntlCollator::JSCreateCollator(
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak(NULL, DeleteIntlCollator);
+  wrapper.MakeWeak(NULL, DeleteCollator);
 
   return wrapper;
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/intl-number-format.h"
+#include "src/number-format.h"
 
 #include <string.h>
 
@@ -39,7 +39,7 @@ static void SetResolvedSettings(const icu::Locale&,
                                 icu::DecimalFormat*,
                                 v8::Handle<v8::Object>);
 
-icu::DecimalFormat* IntlNumberFormat::UnpackIntlNumberFormat(
+icu::DecimalFormat* NumberFormat::UnpackNumberFormat(
     v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
@@ -55,8 +55,8 @@ icu::DecimalFormat* IntlNumberFormat::UnpackIntlNumberFormat(
   return NULL;
 }
 
-void IntlNumberFormat::DeleteIntlNumberFormat(v8::Persistent<v8::Value> object,
-                                              void* param) {
+void NumberFormat::DeleteNumberFormat(v8::Persistent<v8::Value> object,
+                                      void* param) {
   v8::Persistent<v8::Object> persistent_object =
       v8::Persistent<v8::Object>::Cast(object);
 
@@ -64,13 +64,13 @@ void IntlNumberFormat::DeleteIntlNumberFormat(v8::Persistent<v8::Value> object,
   // Unpacking should never return NULL here. That would only happen if
   // this method is used as the weak callback for persistent handles not
   // pointing to a date time formatter.
-  delete UnpackIntlNumberFormat(persistent_object);
+  delete UnpackNumberFormat(persistent_object);
 
   // Then dispose of the persistent handle to JS object.
   persistent_object.Dispose();
 }
 
-v8::Handle<v8::Value> IntlNumberFormat::JSInternalFormat(
+v8::Handle<v8::Value> NumberFormat::JSInternalFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -79,8 +79,7 @@ v8::Handle<v8::Value> IntlNumberFormat::JSInternalFormat(
         v8::String::New("Formatter and numeric value have to be specified.")));
   }
 
-  icu::DecimalFormat* number_format =
-      UnpackIntlNumberFormat(args[0]->ToObject());
+  icu::DecimalFormat* number_format = UnpackNumberFormat(args[0]->ToObject());
   if (!number_format) {
     return v8::ThrowException(v8::Exception::Error(
         v8::String::New("NumberFormat method called on an object "
@@ -95,7 +94,7 @@ v8::Handle<v8::Value> IntlNumberFormat::JSInternalFormat(
       reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length());
 }
 
-v8::Handle<v8::Value> IntlNumberFormat::JSInternalParse(
+v8::Handle<v8::Value> NumberFormat::JSInternalParse(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -104,8 +103,7 @@ v8::Handle<v8::Value> IntlNumberFormat::JSInternalParse(
         v8::String::New("Formatter and string have to be specified.")));
   }
 
-  icu::DecimalFormat* number_format =
-      UnpackIntlNumberFormat(args[0]->ToObject());
+  icu::DecimalFormat* number_format = UnpackNumberFormat(args[0]->ToObject());
   if (!number_format) {
     return v8::ThrowException(v8::Exception::Error(
         v8::String::New("NumberFormat method called on an object "
@@ -149,7 +147,7 @@ v8::Handle<v8::Value> IntlNumberFormat::JSInternalParse(
   return v8::Undefined();
 }
 
-v8::Handle<v8::Value> IntlNumberFormat::JSCreateNumberFormat(
+v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -179,7 +177,7 @@ v8::Handle<v8::Value> IntlNumberFormat::JSCreateNumberFormat(
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak(NULL, DeleteIntlNumberFormat);
+  wrapper.MakeWeak(NULL, DeleteNumberFormat);
 
   return wrapper;
 }

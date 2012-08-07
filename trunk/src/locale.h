@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef V8_I18N_SRC_LOCALE_LIST_H_
-#define V8_I18N_SRC_LOCALE_LIST_H_
+#ifndef V8_I18N_SRC_LOCALE_H_
+#define V8_I18N_SRC_LOCALE_H_
 
 #include "unicode/uversion.h"
 #include "v8/include/v8.h"
@@ -29,4 +29,4 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args);
 
 }  // namespace v8_i18n
 
-#endif  // V8_I18N_SRC_LOCALE_LIST_H_
+#endif  // V8_I18N_SRC_LOCALE_H_
