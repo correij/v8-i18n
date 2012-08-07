@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/intl-date-format.h"
+#include "src/date-format.h"
 
 #include <string.h>
 
@@ -36,7 +36,7 @@ static void SetResolvedSettings(const icu::Locale&,
                                 icu::SimpleDateFormat*,
                                 v8::Handle<v8::Object>);
 
-icu::SimpleDateFormat* IntlDateFormat::UnpackIntlDateFormat(
+icu::SimpleDateFormat* DateFormat::UnpackDateFormat(
     v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
@@ -48,8 +48,8 @@ icu::SimpleDateFormat* IntlDateFormat::UnpackIntlDateFormat(
   return NULL;
 }
 
-void IntlDateFormat::DeleteIntlDateFormat(v8::Persistent<v8::Value> object,
-                                          void* param) {
+void DateFormat::DeleteDateFormat(v8::Persistent<v8::Value> object,
+                                  void* param) {
   v8::Persistent<v8::Object> persistent_object =
       v8::Persistent<v8::Object>::Cast(object);
 
@@ -57,13 +57,13 @@ void IntlDateFormat::DeleteIntlDateFormat(v8::Persistent<v8::Value> object,
   // Unpacking should never return NULL here. That would only happen if
   // this method is used as the weak callback for persistent handles not
   // pointing to a date time formatter.
-  delete UnpackIntlDateFormat(persistent_object);
+  delete UnpackDateFormat(persistent_object);
 
   // Then dispose of the persistent handle to JS object.
   persistent_object.Dispose();
 }
 
-v8::Handle<v8::Value> IntlDateFormat::JSInternalFormat(
+v8::Handle<v8::Value> DateFormat::JSInternalFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -76,8 +76,7 @@ v8::Handle<v8::Value> IntlDateFormat::JSInternalFormat(
     millis = v8::Date::Cast(*args[1])->NumberValue();
   }
 
-  icu::SimpleDateFormat* date_format =
-      UnpackIntlDateFormat(args[0]->ToObject());
+  icu::SimpleDateFormat* date_format = UnpackDateFormat(args[0]->ToObject());
   if (!date_format) {
     return v8::ThrowException(v8::Exception::Error(
         v8::String::New("DateTimeFormat method called on an object "
@@ -91,7 +90,7 @@ v8::Handle<v8::Value> IntlDateFormat::JSInternalFormat(
       reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length());
 }
 
-v8::Handle<v8::Value> IntlDateFormat::JSInternalParse(
+v8::Handle<v8::Value> DateFormat::JSInternalParse(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -106,8 +105,7 @@ v8::Handle<v8::Value> IntlDateFormat::JSInternalParse(
     }
   }
 
-  icu::SimpleDateFormat* date_format =
-      UnpackIntlDateFormat(args[0]->ToObject());
+  icu::SimpleDateFormat* date_format = UnpackDateFormat(args[0]->ToObject());
   if (!date_format) {
     return v8::ThrowException(v8::Exception::Error(
         v8::String::New("DateTimeFormat method called on an object "
@@ -123,7 +121,7 @@ v8::Handle<v8::Value> IntlDateFormat::JSInternalParse(
   return v8::Date::New(static_cast<double>(date));
 }
 
-v8::Handle<v8::Value> IntlDateFormat::JSCreateDateTimeFormat(
+v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -153,7 +151,7 @@ v8::Handle<v8::Value> IntlDateFormat::JSCreateDateTimeFormat(
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak(NULL, DeleteIntlDateFormat);
+  wrapper.MakeWeak(NULL, DeleteDateFormat);
 
   return wrapper;
 }

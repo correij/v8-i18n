@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef V8_I18N_SRC_INTL_BREAK_ITERATOR_H
-#define V8_I18N_SRC_INTL_BREAK_ITERATOR_H_
+#ifndef V8_I18N_SRC_BREAK_ITERATOR_H
+#define V8_I18N_SRC_BREAK_ITERATOR_H_
 
 #include "unicode/uversion.h"
 #include "v8/include/v8.h"
@@ -25,20 +25,20 @@ class UnicodeString;
 
 namespace v8_i18n {
 
-class IntlBreakIterator {
+class BreakIterator {
  public:
   static v8::Handle<v8::Value> JSCreateBreakIterator(const v8::Arguments& args);
 
   // Helper methods for various bindings.
 
   // Unpacks iterator object from corresponding JavaScript object.
-  static icu::BreakIterator* UnpackIntlBreakIterator(
+  static icu::BreakIterator* UnpackBreakIterator(
       v8::Handle<v8::Object> obj);
 
   // Release memory we allocated for the BreakIterator once the JS object that
   // holds the pointer gets garbage collected.
-  static void DeleteIntlBreakIterator(v8::Persistent<v8::Value> object,
-				      void* param);
+  static void DeleteBreakIterator(v8::Persistent<v8::Value> object,
+				  void* param);
 
   // Assigns new text to the iterator.
   static v8::Handle<v8::Value> JSInternalBreakIteratorAdoptText(
@@ -62,9 +62,9 @@ class IntlBreakIterator {
       const v8::Arguments& args);
 
  private:
-  IntlBreakIterator() {}
+  BreakIterator() {}
 };
 
 }  // namespace v8_i18n
 
-#endif  // V8_I18N_SRC_INTL_BREAK_ITERATOR
+#endif  // V8_I18N_SRC_BREAK_ITERATOR

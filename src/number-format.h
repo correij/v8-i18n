@@ -12,40 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef V8_I18N_SRC_INTL_COLLATOR_H
-#define V8_I18N_SRC_INTL_COLLATOR_H_
+#ifndef V8_I18N_SRC_NUMBER_FORMAT_H_
+#define V8_I18N_SRC_NUMBER_FORMAT_H_
 
 #include "unicode/uversion.h"
 #include "v8/include/v8.h"
 
 namespace U_ICU_NAMESPACE {
-class Collator;
-class UnicodeString;
+class DecimalFormat;
 }
 
 namespace v8_i18n {
 
-class IntlCollator {
+class NumberFormat {
  public:
-  static v8::Handle<v8::Value> JSCreateCollator(const v8::Arguments& args);
+  static v8::Handle<v8::Value> JSCreateNumberFormat(const v8::Arguments& args);
 
   // Helper methods for various bindings.
 
-  // Unpacks collator object from corresponding JavaScript object.
-  static icu::Collator* UnpackIntlCollator(v8::Handle<v8::Object> obj);
+  // Unpacks date format object from corresponding JavaScript object.
+  static icu::DecimalFormat* UnpackNumberFormat(v8::Handle<v8::Object> obj);
 
-  // Release memory we allocated for the Collator once the JS object that
+  // Release memory we allocated for the NumberFormat once the JS object that
   // holds the pointer gets garbage collected.
-  static void DeleteIntlCollator(v8::Persistent<v8::Value> object, void* param);
+  static void DeleteNumberFormat(v8::Persistent<v8::Value> object, void* param);
 
-  // Compare two strings and returns -1, 0 and 1 depending on
-  // whether string1 is smaller than, equal to or larger than string2.
-  static v8::Handle<v8::Value> JSInternalCompare(const v8::Arguments& args);
+  // Formats number and returns corresponding string.
+  static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
+
+  // Parses a string and returns a number.
+  static v8::Handle<v8::Value> JSInternalParse(const v8::Arguments& args);
 
  private:
-  IntlCollator() {}
+  NumberFormat();
 };
 
 }  // namespace v8_i18n
 
-#endif  // V8_I18N_SRC_INTL_COLLATOR
+#endif  // V8_I18N_SRC_NUMBER_FORMAT_H_

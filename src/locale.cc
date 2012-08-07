@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/locale-list.h"
+#include "src/locale.h"
 
 #include <string.h>
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/intl-break-iterator.h"
+#include "src/break-iterator.h"
 
 #include <string.h>
 
@@ -35,7 +35,7 @@ static void SetResolvedSettings(const icu::Locale&,
                                 icu::BreakIterator*,
                                 v8::Handle<v8::Object>);
 
-icu::BreakIterator* IntlBreakIterator::UnpackIntlBreakIterator(
+icu::BreakIterator* BreakIterator::UnpackBreakIterator(
     v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
@@ -51,7 +51,7 @@ icu::BreakIterator* IntlBreakIterator::UnpackIntlBreakIterator(
   return NULL;
 }
 
-void IntlBreakIterator::DeleteIntlBreakIterator(
+void BreakIterator::DeleteBreakIterator(
     v8::Persistent<v8::Value> object, void* param) {
   v8::Persistent<v8::Object> persistent_object =
       v8::Persistent<v8::Object>::Cast(object);
@@ -60,7 +60,7 @@ void IntlBreakIterator::DeleteIntlBreakIterator(
   // Unpacking should never return NULL here. That would only happen if
   // this method is used as the weak callback for persistent handles not
   // pointing to a break iterator.
-  delete UnpackIntlBreakIterator(persistent_object);
+  delete UnpackBreakIterator(persistent_object);
 
   delete static_cast<icu::UnicodeString*>(
       persistent_object->GetPointerFromInternalField(1));
@@ -96,7 +96,7 @@ icu::UnicodeString* ResetAdoptedText(
   return text;
 }
 
-v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorAdoptText(
+v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorAdoptText(
     const v8::Arguments& args) {
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsString()) {
     return v8::ThrowException(v8::Exception::Error(
@@ -104,8 +104,7 @@ v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorAdoptText(
             "Internal error. Iterator and text have to be specified.")));
   }
 
-  icu::BreakIterator* break_iterator =
-    UnpackIntlBreakIterator(args[0]->ToObject());
+  icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
     return ThrowUnexpectedObjectError();
   }
@@ -115,10 +114,9 @@ v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorAdoptText(
   return v8::Undefined();
 }
 
-v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorFirst(
+v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorFirst(
     const v8::Arguments& args) {
-  icu::BreakIterator* break_iterator =
-    UnpackIntlBreakIterator(args[0]->ToObject());
+  icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
     return ThrowUnexpectedObjectError();
   }
@@ -126,10 +124,9 @@ v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorFirst(
   return v8::Int32::New(break_iterator->first());
 }
 
-v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorNext(
+v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorNext(
     const v8::Arguments& args) {
-  icu::BreakIterator* break_iterator =
-    UnpackIntlBreakIterator(args[0]->ToObject());
+  icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
     return ThrowUnexpectedObjectError();
   }
@@ -137,10 +134,9 @@ v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorNext(
   return v8::Int32::New(break_iterator->next());
 }
 
-v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorCurrent(
+v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorCurrent(
     const v8::Arguments& args) {
-  icu::BreakIterator* break_iterator =
-    UnpackIntlBreakIterator(args[0]->ToObject());
+  icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
     return ThrowUnexpectedObjectError();
   }
@@ -148,10 +144,9 @@ v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorCurrent(
   return v8::Int32::New(break_iterator->current());
 }
 
-v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorBreakType(
+v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorBreakType(
     const v8::Arguments& args) {
-  icu::BreakIterator* break_iterator =
-    UnpackIntlBreakIterator(args[0]->ToObject());
+  icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
     return ThrowUnexpectedObjectError();
   }
@@ -176,7 +171,7 @@ v8::Handle<v8::Value> IntlBreakIterator::JSInternalBreakIteratorBreakType(
   }
 }
 
-v8::Handle<v8::Value> IntlBreakIterator::JSCreateBreakIterator(
+v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
@@ -208,7 +203,7 @@ v8::Handle<v8::Value> IntlBreakIterator::JSCreateBreakIterator(
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak(NULL, DeleteIntlBreakIterator);
+  wrapper.MakeWeak(NULL, DeleteBreakIterator);
 
   return wrapper;
 }
