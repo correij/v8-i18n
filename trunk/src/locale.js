@@ -61,7 +61,7 @@ function initializeLocaleList(locales) {
     // We allow single string localeID.
     if (typeof locales === 'string') {
       seen.push(canonicalizeLanguageTag(locales));
-      return seen;
+      return freezeArray(seen);
     }
 
     var o = toObject(locales);
@@ -81,5 +81,5 @@ function initializeLocaleList(locales) {
     }
   }
 
-  return seen;
+  return freezeArray(seen);
 }

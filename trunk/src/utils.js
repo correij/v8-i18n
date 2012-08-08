@@ -377,3 +377,22 @@ function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
 
   return extension === ''? '' : '-u' + extension;
 }
+
+
+/**
+ * Converts all OwnProperties into
+ * configurable: false, writable: false, enumerable: true.
+ */
+function freezeArray(array) {
+  array.forEach(function(element, index) {
+    Object.defineProperty(array, index, {value: element,
+	                                 configurable: false,
+		                         writable: false,
+                                         enumerable: true});
+  });
+
+  Object.defineProperty(array, 'length', {value: array.length,
+                                          writable: false});
+
+  return array;
+}
