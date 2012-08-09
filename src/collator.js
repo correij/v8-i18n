@@ -80,19 +80,31 @@ function initializeCollator(collator, locales, options) {
 
 
 /**
- * Constructs v8Intl.Collator object given optional locales and options
- * parameters.
- *
- * @constructor
+ * Implements collator constructor.
  */
-v8Intl.Collator = function(locales, options) {
+function collatorConstructor() {
+  var locales = arguments[0];
+  var options = arguments[1];
+
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.Collator(locales, options);
   }
 
   return initializeCollator(toObject(this), locales, options);
-};
+}
+
+
+/**
+ * Constructs v8Intl.Collator object given optional locales and options
+ * parameters.
+ *
+ * @constructor
+ */
+Object.defineProperty(v8Intl, 'Collator', {value: collatorConstructor,
+	                                   writable: true,
+	                                   enumerable: false,
+                                           configurable: true});
 
 
 /**
