@@ -48,19 +48,31 @@ function initializeBreakIterator(iterator, locales, options) {
 
 
 /**
- * Constructs v8Intl.BreakIterator object given optional locales and options
- * parameters.
- *
- * @constructor
+ * Implements Intl.BreakIterator constructor.
  */
-v8Intl.BreakIterator = function(locales, options) {
+function iteratorConstructor() {
+  var locales = arguments[0];
+  var options = arguments[1];
+
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.BreakIterator(locales, options);
   }
 
   return initializeBreakIterator(toObject(this), locales, options);
-};
+}
+
+
+/**
+ * Constructs v8Intl.BreakIterator object given optional locales and options
+ * parameters.
+ *
+ * @constructor
+ */
+Object.defineProperty(v8Intl, 'BreakIterator', {value: iteratorConstructor,
+	                                        writable: true,
+	                                        enumerable: false,
+                                                configurable: true});
 
 
 /**

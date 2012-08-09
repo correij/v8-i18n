@@ -110,19 +110,31 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
 
 /**
- * Constructs v8Intl.NumberFormat object given optional locales and options
- * parameters.
- *
- * @constructor
+ * Implements Intl.NumberFormat constructor.
  */
-v8Intl.NumberFormat = function(locales, options) {
+function numberConstructor() {
+  var locales = arguments[0];
+  var options = arguments[1];
+
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.NumberFormat(locales, options);
   }
 
   return initializeNumberFormat(toObject(this), locales, options);
-};
+}
+
+
+/**
+ * Constructs v8Intl.NumberFormat object given optional locales and options
+ * parameters.
+ *
+ * @constructor
+ */
+Object.defineProperty(v8Intl, 'NumberFormat', {value: numberConstructor,
+	                                       writable: true,
+	                                       enumerable: false,
+                                               configurable: true});
 
 
 /**

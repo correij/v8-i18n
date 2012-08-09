@@ -271,19 +271,31 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
 
 /**
- * Constructs v8Intl.DateTimeFormat object given optional locales and options
- * parameters.
- *
- * @constructor
+ * Implements Intl.DateTimeFormat constructor.
  */
-v8Intl.DateTimeFormat = function(locales, options) {
+function datetimeConstructor() {
+  var locales = arguments[0];
+  var options = arguments[1];
+
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.DateTimeFormat(locales, options);
   }
 
   return initializeDateTimeFormat(toObject(this), locales, options);
-};
+}
+
+
+/**
+ * Constructs v8Intl.DateTimeFormat object given optional locales and options
+ * parameters.
+ *
+ * @constructor
+ */
+Object.defineProperty(v8Intl, 'DateTimeFormat', {value: datetimeConstructor,
+	                                         writable: true,
+	                                         enumerable: false,
+                                                 configurable: true});
 
 
 /**
