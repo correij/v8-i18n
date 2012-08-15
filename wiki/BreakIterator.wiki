@@ -1,5 +1,5 @@
 =Introduction=
-*Intl.BreakIterator class is not a part of Ecma 402 standard, and it can change in the future.*
+*Intl.v8BreakIterator class is not a part of Ecma 402 standard, and it can change in the future.*
 
 Break iterator segments text into words given the rules of current locale.
 
@@ -7,7 +7,7 @@ For most Western languages breaks occur at white space or interpunction
 characters, but some Eastern languages don't have those. In those cases segmenter uses dictionaries and rules to break text into parts.
 
 =Settings=
-BreakIterator constructor accepts optional locale array and optional settings object.
+v8BreakIterator constructor accepts optional locale array and optional settings object.
 Settings object and valid values for all the keys:
 {{{
 type: {'character', 'word', 'sentence', 'line'}
@@ -36,7 +36,7 @@ breakType()  // Returns the type of the break - 'none', 'number', 'letter', 'kan
 
 ==How to use==
 {{{
-var iterator = v8Intl.BreakIterator(['en']);
+var iterator = v8Intl.v8BreakIterator(['en']);
 
 var text = 'Jack and Jill, went over hill!';
 iterator.adoptText(text);
