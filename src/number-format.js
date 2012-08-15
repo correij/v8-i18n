@@ -167,10 +167,7 @@ addBoundMethod(v8Intl.NumberFormat, 'resolvedOptions',
  * order in the returned list as in the input list.
  * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.NumberFormat.supportedLocalesOf = function(locales) {
-  var options = arguments.length >= 2 ? arguments[1] : undefined;
-  return supportedLocalesOf('numberformat', locales, options);
-};
+addSupportedLocalesOf('numberformat', v8Intl.NumberFormat);
 
 
 /**
