@@ -14,6 +14,6 @@
 
 // Passing a well formed but unsupported locale falls back to default.
 
-var iterator = Intl.BreakIterator(['xx']);
+var iterator = Intl.v8BreakIterator(['xx']);
 
 assertEquals(iterator.resolvedOptions().locale, getDefaultLocale());

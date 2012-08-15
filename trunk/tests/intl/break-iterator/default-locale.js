@@ -15,7 +15,7 @@
 // Constructing BreakIterator with no locale arguments or with []
 // creates one with default locale.
 
-var iterator = new Intl.BreakIterator([]);
+var iterator = new Intl.v8BreakIterator([]);
 
 var options = iterator.resolvedOptions();
 
@@ -27,9 +27,9 @@ assertFalse(options.locale === undefined);
 // Then check for equality.
 assertEquals(options.locale, getDefaultLocale());
 
-var iteratorNone = new Intl.BreakIterator();
+var iteratorNone = new Intl.v8BreakIterator();
 assertEquals(options.locale, iteratorNone.resolvedOptions().locale);
 
 // TODO(cira): remove support for {} to mean empty list.
-var iteratorBraket = new Intl.BreakIterator({});
+var iteratorBraket = new Intl.v8BreakIterator({});
 assertEquals(options.locale, iteratorBraket.resolvedOptions().locale);

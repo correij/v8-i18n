@@ -14,7 +14,7 @@
 
 // Segment plain English sentence and check results.
 
-var iterator = new Intl.BreakIterator(['en']);
+var iterator = new Intl.v8BreakIterator(['en']);
 
 var textToSegment = 'Jack and Jill, went over hill, and got lost. Alert!';
 iterator.adoptText(textToSegment);

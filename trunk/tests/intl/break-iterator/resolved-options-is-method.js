@@ -15,7 +15,7 @@
 // Test that resolvedOptions is a method, not a property getter and that
 // the result is mutable.
 
-var iterator = new Intl.BreakIterator();
+var iterator = new Intl.v8BreakIterator();
 
 var result = iterator.resolvedOptions();
 
