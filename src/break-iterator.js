@@ -48,7 +48,7 @@ function initializeBreakIterator(iterator, locales, options) {
 
 
 /**
- * Implements Intl.BreakIterator constructor.
+ * Implements Intl.v8BreakIterator constructor.
  */
 function iteratorConstructor() {
   var locales = arguments[0];
@@ -56,7 +56,7 @@ function iteratorConstructor() {
 
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
-    return new v8Intl.BreakIterator(locales, options);
+    return new v8Intl.v8BreakIterator(locales, options);
   }
 
   return initializeBreakIterator(toObject(this), locales, options);
@@ -64,15 +64,15 @@ function iteratorConstructor() {
 
 
 /**
- * Constructs v8Intl.BreakIterator object given optional locales and options
+ * Constructs Intl.v8BreakIterator object given optional locales and options
  * parameters.
  *
  * @constructor
  */
-Object.defineProperty(v8Intl, 'BreakIterator', {value: iteratorConstructor,
-	                                        writable: true,
-	                                        enumerable: false,
-                                                configurable: true});
+Object.defineProperty(v8Intl, 'v8BreakIterator', {value: iteratorConstructor,
+                                                  writable: true,
+                                                  enumerable: false,
+                                                  configurable: true});
 
 
 /**
@@ -86,7 +86,7 @@ function resolvedBreakOptions(segmenter) {
 };
 
 
-addBoundMethod(v8Intl.BreakIterator, 'resolvedOptions',
+addBoundMethod(v8Intl.v8BreakIterator, 'resolvedOptions',
 	       resolvedBreakOptions, 0);
 
 
@@ -96,7 +96,7 @@ addBoundMethod(v8Intl.BreakIterator, 'resolvedOptions',
  * order in the returned list as in the input list.
  * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.BreakIterator.supportedLocalesOf = function(locales) {
+v8Intl.v8BreakIterator.supportedLocalesOf = function(locales) {
   var options = arguments.length >= 2 ? arguments[1] : undefined;
   return supportedLocalesOf('breakiterator', locales, options);
 };
@@ -148,8 +148,8 @@ function breakType(iterator) {
 }
 
 
-addBoundMethod(v8Intl.BreakIterator, 'adoptText', adoptText, 1);
-addBoundMethod(v8Intl.BreakIterator, 'first', first, 0);
-addBoundMethod(v8Intl.BreakIterator, 'next', next, 0);
-addBoundMethod(v8Intl.BreakIterator, 'current', current, 0);
-addBoundMethod(v8Intl.BreakIterator, 'breakType', breakType, 0);
+addBoundMethod(v8Intl.v8BreakIterator, 'adoptText', adoptText, 1);
+addBoundMethod(v8Intl.v8BreakIterator, 'first', first, 0);
+addBoundMethod(v8Intl.v8BreakIterator, 'next', next, 0);
+addBoundMethod(v8Intl.v8BreakIterator, 'current', current, 0);
+addBoundMethod(v8Intl.v8BreakIterator, 'breakType', breakType, 0);

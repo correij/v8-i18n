@@ -14,7 +14,7 @@
 
 // Segment plain Chinese sentence and check results.
 
-var iterator = new Intl.BreakIterator(['zh']);
+var iterator = new Intl.v8BreakIterator(['zh']);
 
 var textToSegment = '\u56FD\u52A1\u9662\u5173\u4E8E\u300A\u571F\u5730' +
                     '\u623F\u5C4B\u7BA1\u7406\u6761\u4F8B\u300B';

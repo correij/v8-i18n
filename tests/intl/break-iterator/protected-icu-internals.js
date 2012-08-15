@@ -16,7 +16,7 @@
 // configurable or enumerable. One can still change its public properties, but
 // we don't use them to do actual work.
 
-var iterator = new Intl.BreakIterator([]);
+var iterator = new Intl.v8BreakIterator([]);
 
 // Direct write should fail.
 iterator.iterator = {'zzz':'some random object'};
