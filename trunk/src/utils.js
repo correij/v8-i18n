@@ -396,3 +396,20 @@ function freezeArray(array) {
 
   return array;
 }
+
+
+/**
+ * Adds supportedLocalesOf to the object, and sets descriptors to match
+ * the spec.
+ */
+function addSupportedLocalesOf(service, object) {
+  Object.defineProperty(
+      object, 'supportedLocalesOf', {value: function(locales) {
+        var options = arguments.length >= 2 ? arguments[1] : undefined;
+        return supportedLocalesOf(service, locales, options);
+      },
+    enumerable: false,
+    writable: true,
+    configurable: true}
+  );
+}

@@ -96,10 +96,7 @@ addBoundMethod(v8Intl.v8BreakIterator, 'resolvedOptions',
  * order in the returned list as in the input list.
  * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-v8Intl.v8BreakIterator.supportedLocalesOf = function(locales) {
-  var options = arguments.length >= 2 ? arguments[1] : undefined;
-  return supportedLocalesOf('breakiterator', locales, options);
-};
+addSupportedLocalesOf('breakiterator', v8Intl.v8BreakIterator);
 
 
 /**
