@@ -147,7 +147,7 @@ function getGetOption(options, caller) {
   }
 
   function getOption(property, type, values, defaultValue) {
-    if (options[property] !== undefined && options[property] !== null) {
+    if (options[property] !== undefined) {
       var value = options[property];
       switch (type) {
         case 'boolean':
