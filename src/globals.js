@@ -108,3 +108,12 @@ var DATETIME_FORMAT_KEY_MAP = {
   'ca': {'property': undefined, 'type': 'string'},
   'nu': {'property': undefined, 'type': 'string'}
 };
+
+/**
+ * Allowed -u-co- values. List taken from:
+ * http://unicode.org/repos/cldr/trunk/common/bcp47/collation.xml
+ */
+var ALLOWED_CO_VALUES = [
+  'big5han', 'dict', 'direct', 'ducet', 'gb2312', 'phonebk', 'phonetic',
+  'pinyin', 'reformed', 'searchjl', 'stroke', 'trad', 'unihan', 'zhuyin'
+];
