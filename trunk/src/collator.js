@@ -61,8 +61,7 @@ function initializeCollator(collator, locales, options) {
   internalOptions.collation = 'default';
   var extension = '';
   if (extensionMap.hasOwnProperty('co') && internalOptions.usage === 'sort') {
-    if (extensionMap.co &&
-        extensionMap.co !== 'standard' && extensionMap.co !== 'search') {
+    if (ALLOWED_CO_VALUES.indexOf(extensionMap.co) !== -1) {
       extension = '-u-co-' + extensionMap.co;
       // ICU can't tell us what the collation is, so save user's input.
       internalOptions.collation = extensionMap.co;
