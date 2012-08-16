@@ -110,4 +110,19 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
   return handle_scope.Close(locales);
 }
 
+v8::Handle<v8::Value> JSGetDefaultICULocale(const v8::Arguments& args) {
+  icu::Locale default_locale;
+
+  // Set the locale
+  char result[ULOC_FULLNAME_CAPACITY];
+  UErrorCode status = U_ZERO_ERROR;
+  uloc_toLanguageTag(
+      default_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
+  if (U_SUCCESS(status)) {
+    return v8::String::New(result);
+  }
+
+  return v8::String::New("und");
+}
+
 }  // namespace v8_i18n

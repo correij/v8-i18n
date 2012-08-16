@@ -16,6 +16,7 @@
  * Global native (C++) methods.
  */
 native function NativeJSAvailableLocalesOf();
+native function NativeJSGetDefaultICULocale();
 
 /**
  * List of available services.
@@ -34,6 +35,11 @@ var AVAILABLE_LOCALES = {
   'dateformat': undefined,
   'breakiterator': undefined
 };
+
+/**
+ * Caches default ICU locale.
+ */
+var DEFAULT_ICU_LOCALE = undefined;
 
 /**
  * Unicode extension regular expression.

@@ -27,6 +27,9 @@ v8::Handle<v8::Value> JSCanonicalizeLanguageTag(const v8::Arguments& args);
 // Returns a list of available locales for collator, date or number formatter.
 v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args);
 
+// Returns default ICU locale.
+v8::Handle<v8::Value> JSGetDefaultICULocale(const v8::Arguments& args);
+
 }  // namespace v8_i18n
 
 #endif  // V8_I18N_SRC_LOCALE_H_

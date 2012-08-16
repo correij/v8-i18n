@@ -241,8 +241,12 @@ function lookupMatcher(service, requestedLocales) {
     } while (true);
   }
 
-  // Didn't find a match, return empty.
-  return {'locale': '', 'extension': '', 'position': -1};
+  // Didn't find a match, return default.
+  if (DEFAULT_ICU_LOCALE === undefined) {
+    DEFAULT_ICU_LOCALE = NativeJSGetDefaultICULocale();
+  }
+
+  return {'locale': DEFAULT_ICU_LOCALE, 'extension': '', 'position': -1};
 }
 
 
