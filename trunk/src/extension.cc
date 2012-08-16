@@ -36,6 +36,8 @@ v8::Handle<v8::FunctionTemplate> Extension::GetNativeFunction(
     return v8::FunctionTemplate::New(JSCanonicalizeLanguageTag);
   } else if (name->Equals(v8::String::New("NativeJSAvailableLocalesOf"))) {
     return v8::FunctionTemplate::New(JSAvailableLocalesOf);
+  } else if (name->Equals(v8::String::New("NativeJSGetDefaultICULocale"))) {
+    return v8::FunctionTemplate::New(JSGetDefaultICULocale);
   }
 
   // Date format and parse.
