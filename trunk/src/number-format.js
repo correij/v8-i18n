@@ -178,7 +178,13 @@ addSupportedLocalesOf('numberformat', v8Intl.NumberFormat);
 function formatNumber(formatter, value) {
   native function NativeJSInternalNumberFormat();
 
-  return NativeJSInternalNumberFormat(formatter.formatter, Number(value));
+  // Spec treats -0 and +0 as 0.
+  var number = Number(value);
+  if (number === -0) {
+    number = 0;
+  }
+
+  return NativeJSInternalNumberFormat(formatter.formatter, number);
 }
 
 
