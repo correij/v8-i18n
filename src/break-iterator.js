@@ -23,6 +23,10 @@
 function initializeBreakIterator(iterator, locales, options) {
   native function NativeJSCreateBreakIterator();
 
+  if (iterator.hasOwnProperty('__initializedIntlObject')) {
+    throw new TypeError('Trying to re-initialize v8BreakIterator object.');
+  }
+
   if (options === undefined) {
     options = {};
   }
@@ -42,6 +46,8 @@ function initializeBreakIterator(iterator, locales, options) {
   internalIterator.type = internalOptions.type;
 
   Object.defineProperty(iterator, 'iterator', {value: internalIterator});
+  Object.defineProperty(iterator, '__initializedIntlObject',
+                        {value: 'breakiterator'});
 
   return iterator;
 }
