@@ -258,6 +258,8 @@ static icu::DecimalFormat* CreateICUNumberFormat(
     } else if (style == UNICODE_STRING_SIMPLE("percent")) {
       number_format = static_cast<icu::DecimalFormat*>(
           icu::NumberFormat::createPercentInstance(icu_locale, status));
+      // Make sure 1.1% doesn't go into 2%.
+      number_format->setMinimumFractionDigits(1);
     } else {
       // Make a decimal instance by default.
       number_format = static_cast<icu::DecimalFormat*>(
