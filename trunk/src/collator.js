@@ -23,6 +23,10 @@
 function initializeCollator(collator, locales, options) {
   native function NativeJSCreateCollator();
 
+  if (collator.hasOwnProperty('__initializedIntlObject')) {
+    throw new TypeError('Trying to re-initialize Collator object.');
+  }
+
   if (options === undefined) {
     options = {};
   }
@@ -74,6 +78,8 @@ function initializeCollator(collator, locales, options) {
 
   // Writable, configurable and enumerable are set to false by default.
   Object.defineProperty(collator, 'collator', {value: internalCollator});
+  Object.defineProperty(collator, '__initializedIntlObject',
+                        {value: 'collator'});
 
   return collator;
 }

@@ -223,6 +223,10 @@ function toDateTimeOptions(options, required, defaults) {
 function initializeDateTimeFormat(dateFormat, locales, options) {
   native function NativeJSCreateDateTimeFormat();
 
+  if (dateFormat.hasOwnProperty('__initializedIntlObject')) {
+    throw new TypeError('Trying to re-initialize DateTimeFormat object.');
+  }
+
   if (options === undefined) {
     options = {};
   }
@@ -265,6 +269,8 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   formatter.tz = tz;
 
   Object.defineProperty(dateFormat, 'formatter', {value: formatter});
+  Object.defineProperty(dateFormat, '__initializedIntlObject',
+                        {value: 'dateformat'});
 
   return dateFormat;
 }

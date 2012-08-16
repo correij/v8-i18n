@@ -46,6 +46,10 @@ function isWellFormedCurrencyCode(currency) {
 function initializeNumberFormat(numberFormat, locales, options) {
   native function NativeJSCreateNumberFormat();
 
+  if (numberFormat.hasOwnProperty('__initializedIntlObject')) {
+    throw new TypeError('Trying to re-initialize NumberFormat object.');
+  }
+
   if (options === undefined) {
     options = {};
   }
@@ -104,6 +108,8 @@ function initializeNumberFormat(numberFormat, locales, options) {
   }
 
   Object.defineProperty(numberFormat, 'formatter', {value: formatter});
+  Object.defineProperty(numberFormat, '__initializedIntlObject',
+                        {value: 'numberformat'});
 
   return numberFormat;
 }
