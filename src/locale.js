@@ -30,8 +30,7 @@ function canonicalizeLanguageTag(localeID) {
 
   var localeString = String(localeID);
 
-  // Throw if there is '_' in the string. Spec only allows '-'.
-  if (localeString.search(/_/) !== -1) {
+  if (isValidLanguageTag(localeString) === false) {
     throw new RangeError('Invalid language tag: ' + localeString);
   }
 
@@ -83,3 +82,92 @@ function initializeLocaleList(locales) {
 
   return freezeArray(seen);
 }
+
+
+/**
+ * Validates the language tag. Section 2.2.9 of the bcp47 spec 
+ * defines a valid tag. 
+ * 
+ * ICU is too permissible and lets invalid tags, like 
+ * hant-cmn-cn, through. 
+ *  
+ * Returns false if the language tag is invalid.
+ */
+function isValidLanguageTag(locale) {
+  // Check if it's well-formed, including grandfadered tags.
+  if (LANGUAGE_TAG_RE.test(locale) === false) {
+    return false;
+  }
+
+  // Check if there are any duplicate variants or singletons (extensions).
+ 
+  // Remove private use section.
+  locale = locale.split(/-x-/)[0];
+
+  // Skip language since it can match variant regex, so we start from 1.
+  // We are matching i-klingon here, but that's ok, since i-klingon-klingon
+  // is not valid and would fail LANGUAGE_TAG_RE test.
+  var variants = [];
+  var extensions = [];
+  var parts = locale.split(/-/);
+  for (var i = 1; i < parts.length; i++) {
+    var value = parts[i];
+    if (LANGUAGE_VARIANT_RE.test(value) === true && extensions.length === 0) {
+      if (variants.indexOf(value) === -1) {
+        variants.push(value);
+      } else {
+        return false;
+      }
+    }
+
+    if (LANGUAGE_SINGLETON_RE.test(value) === true) {
+      if (extensions.indexOf(value) === -1) {
+        extensions.push(value);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
+ }
+
+
+/**
+ * Builds a regular expresion that validates the language tag 
+ * against bcp47 spec. 
+ * Uses http://tools.ietf.org/html/bcp47, section 2.1, ABNF. 
+ * Runs on load and initializes the global REs. 
+ */
+(function() {
+  var alpha = '[a-zA-Z]';
+  var digit = '[0-9]';
+  var alphanum = '(' + alpha + '|' + digit + ')';
+  var regular = '(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|' +
+                'zh-min|zh-min-nan|zh-xiang)';
+  var irregular = '(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|' +
+                  'i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|' +
+                  'i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)';
+  var grandfathered = '(' + irregular + '|' + regular + ')';
+  var privateUse = '(x(-' + alphanum + '{1,8})+)';
+
+  var singleton = '(' + digit + '|[A-WY-Za-wy-z])';
+  LANGUAGE_SINGLETON_RE = new RegExp('^' + singleton + '$', 'i');
+
+  var extension = '(' + singleton + '(-' + alphanum + '{2,8})+)';
+
+  var variant = '(' + alphanum + '{5,8}|(' + digit + alphanum + '{3}))';
+  LANGUAGE_VARIANT_RE = new RegExp('^' + variant + '$', 'i');
+
+  var region = '(' + alpha + '{2}|' + digit + '{3})';
+  var script = '(' + alpha + '{4})';
+  var extLang = '(' + alpha + '{3}(-' + alpha + '{3}){0,2})';
+  var language = '(' + alpha + '{2,3}(-' + extLang + ')?|' + alpha + '{4}|' +
+                 alpha + '{5,8})';
+  var langTag = language + '(-' + script + ')?(-' + region + ')?(-' +
+                variant + ')*(-' + extension + ')*(-' + privateUse + ')?';
+
+  var languageTag =
+      '^(' + langTag + '|' + privateUse + '|' + grandfathered + ')$';
+  LANGUAGE_TAG_RE = new RegExp(languageTag, 'i');
+})();
