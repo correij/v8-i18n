@@ -63,6 +63,22 @@ var SERVICE_RE =
     new RegExp('^(collator|numberformat|dateformat|breakiterator)$');
 
 /**
+ * Validates a language tag against bcp47 spec. 
+ * Actual value is assigned on first run. 
+ */
+var LANGUAGE_TAG_RE = undefined;
+
+/**
+ * Hepls find duplicate variants in the language tag. 
+ */
+var LANGUAGE_VARIANT_RE = undefined;
+
+/**
+ * Hepls find duplicate singletons in the language tag. 
+ */
+var LANGUAGE_SINGLETON_RE = undefined;
+
+/**
  * Maps ICU calendar names into LDML type.
  */
 var ICU_CALENDAR_MAP = {
