@@ -70,8 +70,10 @@ function initializeCollator(collator, locales, options) {
     extension = '-u-co-search';
   }
 
-  var internalCollator = NativeJSCreateCollator(locale.locale + extension,
+  var requestedLocale = locale.locale + extension;
+  var internalCollator = NativeJSCreateCollator(requestedLocale,
 						internalOptions);
+  internalCollator.requestedLocale = requestedLocale;
   internalCollator.usage = internalOptions.usage;
   internalCollator.collation = internalOptions.collation;
 
@@ -116,8 +118,11 @@ Object.defineProperty(v8Intl, 'Collator', {value: collatorConstructor,
  * Collator resolvedOptions method.
  */
 function resolvedCollatorOptions(coll) {
+  var locale = getOptimalLanguageTag(coll.collator.requestedLocale,
+				     coll.collator.locale);
+
   return {
-    locale: coll.collator.locale,
+    locale: locale,
     usage: coll.collator.usage,
     sensitivity: coll.collator.sensitivity,
     ignorePunctuation: coll.collator.ignorePunctuation,

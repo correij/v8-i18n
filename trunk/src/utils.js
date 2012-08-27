@@ -79,7 +79,7 @@ function supportedLocalesOf(service, locales, options) {
 
   // Cache these, they don't ever change per service.
   if (AVAILABLE_LOCALES[service] === undefined) {
-    AVAILABLE_LOCALES[service] = NativeJSAvailableLocalesOf(service);
+    AVAILABLE_LOCALES[service] = getAvailableLocalesOf(service);
   }
 
   // Use either best fit or lookup algorithm to match locales.
@@ -103,7 +103,6 @@ function lookupSupportedLocalesOf(requestedLocales, availableLocales) {
   for (var i = 0; i < requestedLocales.length; ++i) {
     // Remove -u- extension.
     var locale = requestedLocales[i].replace(UNICODE_EXTENSION_RE, '');
-    locale = renameUnsupportedLocale(locale);
     do {
       if (availableLocales[locale] !== undefined) {
         // Push requested locale not the resolved one.
@@ -212,19 +211,20 @@ function resolveLocale(service, requestedLocales, options) {
  * lookup algorithm.
  */
 function lookupMatcher(service, requestedLocales) {
+  native function NativeJSGetDefaultICULocale();
+
   if (service.match(SERVICE_RE) === null) {
     throw new Error('Internal error, wrong service type: ' + service);
   }
 
   // Cache these, they don't ever change per service.
   if (AVAILABLE_LOCALES[service] === undefined) {
-    AVAILABLE_LOCALES[service] = NativeJSAvailableLocalesOf(service);
+    AVAILABLE_LOCALES[service] = getAvailableLocalesOf(service);
   }
 
   for (var i = 0; i < requestedLocales.length; ++i) {
     // Remove all extensions.
     var locale = requestedLocales[i].replace(ANY_EXTENSION_RE, '');
-    locale = renameUnsupportedLocale(locale);
     do {
       if (AVAILABLE_LOCALES[service][locale] !== undefined) {
         // Return the resolved locale and extension.
@@ -294,17 +294,6 @@ function parseExtension(extension) {
   }
 
   return extensionMap;
-}
-
-
-/**
- * Converts unsupported locale into full form. For example, zh-TW becomes
- * zh-Hant-TW so it can be properly matched using the Lookup algorithm.
- */
-function renameUnsupportedLocale(locale) {
-  if (locale === 'zh-TW') return 'zh-Hant-TW';
-
-  return locale;
 }
 
 
@@ -416,4 +405,58 @@ function addSupportedLocalesOf(service, object) {
     writable: true,
     configurable: true}
   );
+}
+
+
+/**
+ * It's sometimes desireable to leave user requested locale instead of ICU
+ * supported one (zh-TW is equivalent to zh-Hant-TW, so we should keep shorter
+ * one, if that was what user requested).
+ * This function returns user specified tag if its maximized form matches ICU
+ * resolved locale. If not we return ICU result.
+ */
+function getOptimalLanguageTag(original, resolved) {
+  // Returns Array<Object>, where each object has maximized and base properties.
+  // Maximized: zh -> zh-Hans-CN
+  // Base: zh-CN-u-ca-gregory -> zh-CN
+  native function NativeJSGetLanguageTagVariants();
+
+  // Take care of grandfathered or simple cases.
+  if (original === resolved) {
+    return original;
+  }
+
+  var locales = NativeJSGetLanguageTagVariants([original, resolved]);
+  if (locales[0].maximized !== locales[1].maximized) {
+    return resolved;
+  }
+
+  // Preserve extensions of resolved locale, but swap base tags with original.
+  var resolvedBase = new RegExp('^' + locales[1].base);
+  return resolved.replace(resolvedBase, locales[0].base);
+}
+
+
+/**
+ * Returns an Object that contains all of supported locales for a given
+ * service.
+ * In addition to the supported locales we add xx-ZZ locale for each xx-Yyyy-ZZ
+ * that is supported. This is required by the spec.
+ */
+function getAvailableLocalesOf(service) {
+  native function NativeJSAvailableLocalesOf();
+  var available = NativeJSAvailableLocalesOf(service);
+
+  for (var i in available) {
+    if (available.hasOwnProperty(i)) {
+      var parts = i.match(/^([a-z]{2,3})-([A-Z][a-z]{3})-([A-Z]{2})$/);
+      if (parts !== null) {
+	// Build xx-ZZ. We don't care about the actual value,
+	// as long it's not undefined.
+	available[parts[1] + '-' + parts[3]] = null;
+      }
+    }
+  }
+
+  return available;
 }

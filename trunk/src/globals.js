@@ -12,11 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Global native (C++) methods.
- */
-native function NativeJSAvailableLocalesOf();
-native function NativeJSGetDefaultICULocale();
 
 /**
  * List of available services.
