@@ -30,6 +30,7 @@ void ReportException(v8::TryCatch* handler);
 v8::Handle<v8::String> ReadFile(const char* name);
 const char* ToCString(const v8::String::Utf8Value& value);
 v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args);
+v8::Handle<v8::Value> Print(const v8::Arguments& args);
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -78,6 +79,8 @@ v8::Persistent<v8::Context> CreateContext() {
 
   global->Set(v8::String::New("getDefaultLocale"),
               v8::FunctionTemplate::New(GetDefaultLocale));
+  global->Set(v8::String::New("print"),
+              v8::FunctionTemplate::New(Print));
 
   v8::Extension* extension = v8_i18n::Extension::get();
   v8::RegisterExtension(extension);
@@ -196,4 +199,39 @@ v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args) {
   }
 
   return v8::String::New("und");
+}
+
+// Prints string, array or hasOwnProperty values of an object.
+// All other values get coerced into a string.
+v8::Handle<v8::Value> Print(const v8::Arguments& args) {
+  if (args.Length() != 2 || !args[0]->IsString()) {
+    return v8::ThrowException(v8::Exception::SyntaxError(
+        v8::String::New("Test runner: title and print value are required.")));
+  }
+
+  v8::String::Utf8Value title(args[0]->ToString());
+  printf("Printing info for: %s\n", *title);
+
+  if (args[1]->IsObject()) {
+    v8::Local<v8::Object> object = args[1]->ToObject();
+    v8::Local<v8::Array> properties = object->GetOwnPropertyNames();
+    for (unsigned int i = 0; i < properties->Length(); ++i) {
+      v8::Local<v8::Value> v8_value = object->Get(properties->Get(i));
+      v8::String::Utf8Value value(v8_value->ToString());
+      v8::String::Utf8Value key(properties->Get(i)->ToString());
+      printf("\t[%s]\t%s\n", *key, *value);
+    }
+  } else if (args[1]->IsArray()) {
+    v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(args[1]);
+    for (unsigned int i = 0; i < array->Length(); ++i) {
+      v8::Local<v8::Value> v8_value = array->Get(i);
+      v8::String::Utf8Value value(v8_value->ToString());
+      printf("\t[%u]\t%s\n", i, *value);
+    }
+  } else {
+    v8::String::Utf8Value value(args[1]->ToString());
+    printf("\t%s\n", *value);
+  }
+
+  return v8::Undefined();
 }

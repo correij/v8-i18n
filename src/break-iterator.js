@@ -43,6 +43,7 @@ function initializeBreakIterator(iterator, locales, options) {
 
   var internalIterator = NativeJSCreateBreakIterator(locale.locale,
 						     internalOptions);
+  internalIterator.requestedLocale = locale.locale;
   internalIterator.type = internalOptions.type;
 
   Object.defineProperty(iterator, 'iterator', {value: internalIterator});
@@ -85,8 +86,11 @@ Object.defineProperty(v8Intl, 'v8BreakIterator', {value: iteratorConstructor,
  * BreakIterator resolvedOptions method.
  */
 function resolvedBreakOptions(segmenter) {
+  var locale = getOptimalLanguageTag(segmenter.iterator.requestedLocale,
+				     segmenter.iterator.locale);
+
   return {
-    locale: segmenter.iterator.locale,
+    locale: locale,
     type: segmenter.iterator.type
   };
 };

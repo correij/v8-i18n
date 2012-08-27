@@ -30,6 +30,13 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args);
 // Returns default ICU locale.
 v8::Handle<v8::Value> JSGetDefaultICULocale(const v8::Arguments& args);
 
+// Returns an array of objects, that have maximized and base names of inputs.
+// Unicode extensions are dropped from both.
+// Input: ['zh-TW-u-nu-thai', 'sr']
+// Output: [{maximized: 'zh-Hant-TW', base: 'zh-TW'},
+//          {maximized: 'sr-Cyrl-RS', base: 'sr'}]
+v8::Handle<v8::Value> JSGetLanguageTagVariants(const v8::Arguments& args);
+
 }  // namespace v8_i18n
 
 #endif  // V8_I18N_SRC_LOCALE_H_

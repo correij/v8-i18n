@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Some locales should be mapped into full form, like zh-TW into zh-Hant-TW,
-// when used with lookup algorithm.
+// Make sure that zh locales map properly, i.e. don't map zh-TW to zh.
 
 var nf = Intl.NumberFormat(['zh-TW'], {localeMatcher: 'lookup'});
+assertEquals('zh-TW', nf.resolvedOptions().locale);
+
+var nf = Intl.NumberFormat(['zh-Hant-TW'], {localeMatcher: 'lookup'});
 assertEquals('zh-Hant-TW', nf.resolvedOptions().locale);
 
-// Don't map zh-CN, zh already represents it.
-nf = Intl.NumberFormat(['zh-CN'], {localeMatcher: 'lookup'});
+var nf = Intl.NumberFormat(['zh-Hant'], {localeMatcher: 'lookup'});
+assertEquals('zh-Hant', nf.resolvedOptions().locale);
+
+nf = Intl.NumberFormat(['zh'], {localeMatcher: 'lookup'});
 assertEquals('zh', nf.resolvedOptions().locale);
 
-// Make sure en-US still maps to proper locale.
+nf = Intl.NumberFormat(['zh-CN'], {localeMatcher: 'lookup'});
+assertEquals('zh-CN', nf.resolvedOptions().locale);
+
+nf = Intl.NumberFormat(['zh-Hans-CN'], {localeMatcher: 'lookup'});
+assertEquals('zh-Hans-CN', nf.resolvedOptions().locale);
+
+nf = Intl.NumberFormat(['zh-Hans'], {localeMatcher: 'lookup'});
+assertEquals('zh-Hans', nf.resolvedOptions().locale);
+
 nf = Intl.NumberFormat(['en-US'], {localeMatcher: 'lookup'});
 assertEquals('en-US', nf.resolvedOptions().locale);

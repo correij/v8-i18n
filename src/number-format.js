@@ -97,8 +97,11 @@ function initializeNumberFormat(numberFormat, locales, options) {
   var extension = setOptions(options, extensionMap, NUMBER_FORMAT_KEY_MAP,
                              getOption, internalOptions);
 
-  var formatter = NativeJSCreateNumberFormat(locale.locale + extension,
+  var requestedLocale = locale.locale + extension;
+  var formatter = NativeJSCreateNumberFormat(requestedLocale,
                                              internalOptions);
+
+  formatter.requestedLocale = requestedLocale;
 
   // We can't get information about number or currency style from ICU, so we
   // assume user request was fulfilled.
@@ -147,8 +150,11 @@ Object.defineProperty(v8Intl, 'NumberFormat', {value: numberConstructor,
  * NumberFormat resolvedOptions method.
  */
 function resolvedNumberOptions(format) {
+  var locale = getOptimalLanguageTag(format.formatter.requestedLocale,
+				     format.formatter.locale);
+
   return {
-    locale: format.formatter.locale,
+    locale: locale,
     numberingSystem: format.formatter.numberingSystem,
     style: format.formatter.style,
     currency: format.formatter.currency,

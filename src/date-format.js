@@ -263,9 +263,11 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   var extension = setOptions(options, extensionMap, DATETIME_FORMAT_KEY_MAP,
                              getOption, internalOptions);
 
+  var requestedLocale = locale.locale + extension;
   var formatter = NativeJSCreateDateTimeFormat(
-      locale.locale + extension, {skeleton: ldmlString, timeZone: tz});
+      requestedLocale, {skeleton: ldmlString, timeZone: tz});
 
+  formatter.requestedLocale = requestedLocale;
   formatter.tz = tz;
 
   Object.defineProperty(dateFormat, 'formatter', {value: formatter});
@@ -316,8 +318,11 @@ function resolvedDateOptions(format) {
     userCalendar = format.formatter.calendar;
   }
 
+  var locale = getOptimalLanguageTag(format.formatter.requestedLocale,
+				     format.formatter.locale);
+
   return {
-    locale: format.formatter.locale,
+    locale: locale,
     numberingSystem: format.formatter.numberingSystem,
     calendar: userCalendar,
     timeZone: format.formatter.tz,
