@@ -40,7 +40,7 @@ icu::SimpleDateFormat* DateFormat::UnpackDateFormat(
     v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
-  if (obj->HasOwnProperty(v8::String::New("locale"))) {
+  if (obj->HasOwnProperty(v8::String::New("dateFormat"))) {
     return static_cast<icu::SimpleDateFormat*>(
         obj->GetPointerFromInternalField(0));
   }
@@ -125,10 +125,12 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsObject()) {
+  if (args.Length() != 3 ||
+      !args[0]->IsString() ||
+      !args[1]->IsObject() ||
+      !args[2]->IsObject()) {
     return v8::ThrowException(v8::Exception::Error(
-        v8::String::New(
-            "Internal error. Locale and options are required.")));
+        v8::String::New("Internal error, wrong parameters.")));
   }
 
   v8::Persistent<v8::ObjectTemplate> date_format_template =
@@ -141,13 +143,14 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
 
   // Set date time formatter as internal field of the resulting JS object.
   icu::SimpleDateFormat* date_format = InitializeDateTimeFormat(
-      args[0]->ToString(), args[1]->ToObject(), wrapper);
+      args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!date_format) {
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU date time formatter.")));
   } else {
     wrapper->SetPointerInInternalField(0, date_format);
+    wrapper->Set(v8::String::New("dateFormat"), v8::String::New("valid"));
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
@@ -159,7 +162,7 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
 static icu::SimpleDateFormat* InitializeDateTimeFormat(
     v8::Handle<v8::String> locale,
     v8::Handle<v8::Object> options,
-    v8::Handle<v8::Object> wrapper) {
+    v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   // Convert BCP47 into ICU locale format.
@@ -184,9 +187,9 @@ static icu::SimpleDateFormat* InitializeDateTimeFormat(
     date_format = CreateICUDateFormat(no_extension_locale, options);
 
     // Set resolved settings (pattern, numbering system, calendar).
-    SetResolvedSettings(no_extension_locale, date_format, wrapper);
+    SetResolvedSettings(no_extension_locale, date_format, resolved);
   } else {
-    SetResolvedSettings(icu_locale, date_format, wrapper);
+    SetResolvedSettings(icu_locale, date_format, resolved);
   }
 
   return date_format;
@@ -242,19 +245,19 @@ static icu::SimpleDateFormat* CreateICUDateFormat(
 
 static void SetResolvedSettings(const icu::Locale& icu_locale,
                                 icu::SimpleDateFormat* date_format,
-                                v8::Handle<v8::Object> wrapper) {
+                                v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   icu::UnicodeString pattern;
   date_format->toPattern(pattern);
-  wrapper->Set(v8::String::New("pattern"),
-               v8::String::New(reinterpret_cast<const uint16_t*>(
-                   pattern.getBuffer()), pattern.length()));
+  resolved->Set(v8::String::New("pattern"),
+                v8::String::New(reinterpret_cast<const uint16_t*>(
+                    pattern.getBuffer()), pattern.length()));
 
   if (date_format) {
     const icu::Calendar* calendar = date_format->getCalendar();
     const char* calendar_name = calendar->getType();
-    wrapper->Set(v8::String::New("calendar"), v8::String::New(calendar_name));
+    resolved->Set(v8::String::New("calendar"), v8::String::New(calendar_name));
   }
 
   // Ugly hack. ICU doesn't expose numbering system in any way, so we have
@@ -265,9 +268,9 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
       icu::NumberingSystem::createInstance(icu_locale, status);
   if (U_SUCCESS(status)) {
     const char* ns = numbering_system->getName();
-    wrapper->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
+    resolved->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
   } else {
-    wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
+    resolved->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
   delete numbering_system;
 
@@ -277,10 +280,10 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   uloc_toLanguageTag(
       icu_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
   if (U_SUCCESS(status)) {
-    wrapper->Set(v8::String::New("locale"), v8::String::New(result));
+    resolved->Set(v8::String::New("locale"), v8::String::New(result));
   } else {
     // This would never happen, since we got the locale from ICU.
-    wrapper->Set(v8::String::New("locale"), v8::String::New("und"));
+    resolved->Set(v8::String::New("locale"), v8::String::New("und"));
   }
 }
 

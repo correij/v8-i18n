@@ -39,7 +39,7 @@ static void SetBooleanSetting(
 icu::Collator* Collator::UnpackCollator(v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
-  if (obj->HasOwnProperty(v8::String::New("usage"))) {
+  if (obj->HasOwnProperty(v8::String::New("collator"))) {
     return static_cast<icu::Collator*>(obj->GetPointerFromInternalField(0));
   }
 
@@ -107,9 +107,12 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsObject()) {
+  if (args.Length() != 3 ||
+      !args[0]->IsString() ||
+      !args[1]->IsObject() ||
+      !args[2]->IsObject()) {
     return v8::ThrowException(v8::Exception::SyntaxError(
-        v8::String::New("Locale and collation options are required.")));
+        v8::String::New("Internal error, wrong parameters.")));
   }
 
   v8::Persistent<v8::ObjectTemplate> intl_collator_template =
@@ -122,13 +125,15 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
 
   // Set collator as internal field of the resulting JS object.
   icu::Collator* collator = InitializeCollator(
-      args[0]->ToString(), args[1]->ToObject(), wrapper);
+      args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!collator) {
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU collator.")));
   } else {
     wrapper->SetPointerInInternalField(0, collator);
+    // Make it safer to unpack later on.
+    wrapper->Set(v8::String::New("collator"), v8::String::New("valid"));
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
@@ -139,7 +144,7 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
 
 static icu::Collator* InitializeCollator(v8::Handle<v8::String> locale,
                                          v8::Handle<v8::Object> options,
-                                         v8::Handle<v8::Object> wrapper) {
+                                         v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   // Convert BCP47 into ICU locale format.
@@ -164,9 +169,9 @@ static icu::Collator* InitializeCollator(v8::Handle<v8::String> locale,
     collator = CreateICUCollator(no_extension_locale, options);
 
     // Set resolved settings (pattern, numbering system).
-    SetResolvedSettings(no_extension_locale, collator, wrapper);
+    SetResolvedSettings(no_extension_locale, collator, resolved);
   } else {
-    SetResolvedSettings(icu_locale, collator, wrapper);
+    SetResolvedSettings(icu_locale, collator, resolved);
   }
 
   return collator;
@@ -244,61 +249,63 @@ static bool SetBooleanAttribute(UColAttribute attribute,
 
 static void SetResolvedSettings(const icu::Locale& icu_locale,
                                 icu::Collator* collator,
-                                v8::Handle<v8::Object> wrapper) {
+                                v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
-  SetBooleanSetting(UCOL_NUMERIC_COLLATION, collator, "numeric", wrapper);
+  SetBooleanSetting(UCOL_NUMERIC_COLLATION, collator, "numeric", resolved);
   SetBooleanSetting(
-      UCOL_NORMALIZATION_MODE, collator, "normalization", wrapper);
+      UCOL_NORMALIZATION_MODE, collator, "normalization", resolved);
 
   UErrorCode status = U_ZERO_ERROR;
 
   switch (collator->getAttribute(UCOL_CASE_FIRST, status)) {
     case UCOL_LOWER_FIRST:
-      wrapper->Set(v8::String::New("caseFirst"), v8::String::New("lower"));
+      resolved->Set(v8::String::New("caseFirst"), v8::String::New("lower"));
       break;
     case UCOL_UPPER_FIRST:
-      wrapper->Set(v8::String::New("caseFirst"), v8::String::New("upper"));
+      resolved->Set(v8::String::New("caseFirst"), v8::String::New("upper"));
       break;
     default:
-      wrapper->Set(v8::String::New("caseFirst"), v8::String::New("false"));
+      resolved->Set(v8::String::New("caseFirst"), v8::String::New("false"));
   }
 
   switch (collator->getAttribute(UCOL_STRENGTH, status)) {
     case UCOL_PRIMARY: {
-      wrapper->Set(v8::String::New("strength"), v8::String::New("primary"));
+      resolved->Set(v8::String::New("strength"), v8::String::New("primary"));
 
       // case level: true + s1 -> case, s1 -> base.
       if (UCOL_ON == collator->getAttribute(UCOL_CASE_LEVEL, status)) {
-        wrapper->Set(v8::String::New("sensitivity"), v8::String::New("case"));
+        resolved->Set(v8::String::New("sensitivity"), v8::String::New("case"));
       } else {
-        wrapper->Set(v8::String::New("sensitivity"), v8::String::New("base"));
+        resolved->Set(v8::String::New("sensitivity"), v8::String::New("base"));
       }
       break;
     }
     case UCOL_SECONDARY:
-      wrapper->Set(v8::String::New("strength"), v8::String::New("secondary"));
-      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("accent"));
+      resolved->Set(v8::String::New("strength"), v8::String::New("secondary"));
+      resolved->Set(v8::String::New("sensitivity"), v8::String::New("accent"));
       break;
     case UCOL_TERTIARY:
-      wrapper->Set(v8::String::New("strength"), v8::String::New("tertiary"));
-      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
+      resolved->Set(v8::String::New("strength"), v8::String::New("tertiary"));
+      resolved->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
       break;
     case UCOL_QUATERNARY:
       // We shouldn't get quaternary and identical from ICU, but if we do
       // put them into variant.
-      wrapper->Set(v8::String::New("strength"), v8::String::New("quaternary"));
-      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
+      resolved->Set(v8::String::New("strength"), v8::String::New("quaternary"));
+      resolved->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
       break;
     default:
-      wrapper->Set(v8::String::New("strength"), v8::String::New("identical"));
-      wrapper->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
+      resolved->Set(v8::String::New("strength"), v8::String::New("identical"));
+      resolved->Set(v8::String::New("sensitivity"), v8::String::New("variant"));
   }
 
   if (UCOL_SHIFTED == collator->getAttribute(UCOL_ALTERNATE_HANDLING, status)) {
-    wrapper->Set(v8::String::New("ignorePunctuation"), v8::Boolean::New(true));
+    resolved->Set(v8::String::New("ignorePunctuation"),
+                  v8::Boolean::New(true));
   } else {
-    wrapper->Set(v8::String::New("ignorePunctuation"), v8::Boolean::New(false));
+    resolved->Set(v8::String::New("ignorePunctuation"),
+                  v8::Boolean::New(false));
   }
 
   // Set the locale
@@ -307,22 +314,22 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   uloc_toLanguageTag(
       icu_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
   if (U_SUCCESS(status)) {
-    wrapper->Set(v8::String::New("locale"), v8::String::New(result));
+    resolved->Set(v8::String::New("locale"), v8::String::New(result));
   } else {
     // This would never happen, since we got the locale from ICU.
-    wrapper->Set(v8::String::New("locale"), v8::String::New("und"));
+    resolved->Set(v8::String::New("locale"), v8::String::New("und"));
   }
 }
 
 static void SetBooleanSetting(UColAttribute attribute,
                               icu::Collator* collator,
                               const char* property,
-                              v8::Handle<v8::Object> wrapper) {
+                              v8::Handle<v8::Object> resolved) {
   UErrorCode status = U_ZERO_ERROR;
   if (UCOL_ON == collator->getAttribute(attribute, status)) {
-    wrapper->Set(v8::String::New(property), v8::Boolean::New(true));
+    resolved->Set(v8::String::New(property), v8::Boolean::New(true));
   } else {
-    wrapper->Set(v8::String::New(property), v8::Boolean::New(false));
+    resolved->Set(v8::String::New(property), v8::Boolean::New(false));
   }
 }
 

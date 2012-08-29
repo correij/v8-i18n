@@ -43,7 +43,7 @@ icu::BreakIterator* BreakIterator::UnpackBreakIterator(
   // if obj is an instance of BreakIterator class. We'll check for a property
   // that has to be in the object. The same applies to other services, like
   // Collator and DateTimeFormat.
-  if (obj->HasOwnProperty(v8::String::New("type"))) {
+  if (obj->HasOwnProperty(v8::String::New("breakIterator"))) {
     return static_cast<icu::BreakIterator*>(
         obj->GetPointerFromInternalField(0));
   }
@@ -175,10 +175,12 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsObject()) {
+  if (args.Length() != 3 ||
+      !args[0]->IsString() ||
+      !args[1]->IsObject() ||
+      !args[2]->IsObject()) {
     return v8::ThrowException(v8::Exception::Error(
-        v8::String::New(
-            "Internal error. Locale and options are required.")));
+        v8::String::New("Internal error, wrong parameters.")));
   }
 
   v8::Persistent<v8::ObjectTemplate> break_iterator_template =
@@ -191,7 +193,7 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
 
   // Set break iterator as internal field of the resulting JS object.
   icu::BreakIterator* break_iterator = InitializeBreakIterator(
-      args[0]->ToString(), args[1]->ToObject(), wrapper);
+      args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!break_iterator) {
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
@@ -200,6 +202,7 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
     wrapper->SetPointerInInternalField(0, break_iterator);
     // Make sure that the pointer to adopted text is NULL.
     wrapper->SetPointerInInternalField(1, NULL);
+    wrapper->Set(v8::String::New("breakIterator"), v8::String::New("valid"));
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
@@ -211,7 +214,7 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
 static icu::BreakIterator* InitializeBreakIterator(
     v8::Handle<v8::String> locale,
     v8::Handle<v8::Object> options,
-    v8::Handle<v8::Object> wrapper) {
+    v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   // Convert BCP47 into ICU locale format.
@@ -237,9 +240,9 @@ static icu::BreakIterator* InitializeBreakIterator(
     break_iterator = CreateICUBreakIterator(no_extension_locale, options);
 
     // Set resolved settings (locale).
-    SetResolvedSettings(no_extension_locale, break_iterator, wrapper);
+    SetResolvedSettings(no_extension_locale, break_iterator, resolved);
   } else {
-    SetResolvedSettings(icu_locale, break_iterator, wrapper);
+    SetResolvedSettings(icu_locale, break_iterator, resolved);
   }
 
   return break_iterator;
@@ -280,7 +283,7 @@ static icu::BreakIterator* CreateICUBreakIterator(
 
 static void SetResolvedSettings(const icu::Locale& icu_locale,
                                 icu::BreakIterator* date_format,
-                                v8::Handle<v8::Object> wrapper) {
+                                v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   UErrorCode status = U_ZERO_ERROR;
@@ -291,10 +294,10 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   uloc_toLanguageTag(
       icu_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
   if (U_SUCCESS(status)) {
-    wrapper->Set(v8::String::New("locale"), v8::String::New(result));
+    resolved->Set(v8::String::New("locale"), v8::String::New(result));
   } else {
     // This would never happen, since we got the locale from ICU.
-    wrapper->Set(v8::String::New("locale"), v8::String::New("und"));
+    resolved->Set(v8::String::New("locale"), v8::String::New("und"));
   }
 }
 

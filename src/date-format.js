@@ -264,13 +264,31 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
                              getOption, internalOptions);
 
   var requestedLocale = locale.locale + extension;
-  var formatter = NativeJSCreateDateTimeFormat(
-      requestedLocale, {skeleton: ldmlString, timeZone: tz});
+  var resolved = Object.defineProperties({}, {
+    requestedLocale: {value: requestedLocale, writable: true},
+    tz: {value: tz, writable: true},
+    locale: {writable: true},
+    numberingSystem: {writable: true},
+    calendar: {writable: true},
+    timeZone: {writable: true},
+    timeZoneName: {writable: true},
+    era: {writable: true},
+    year: {writable: true},
+    month: {writable: true},
+    day: {writable: true},
+    weekday: {writable: true},
+    hour12: {writable: true},
+    hour: {writable: true},
+    minute: {writable: true},
+    second: {writable: true},
+    pattern: {writable: true}
+  });
 
-  formatter.requestedLocale = requestedLocale;
-  formatter.tz = tz;
+  var formatter = NativeJSCreateDateTimeFormat(
+    requestedLocale, {skeleton: ldmlString, timeZone: tz}, resolved);
 
   Object.defineProperty(dateFormat, 'formatter', {value: formatter});
+  Object.defineProperty(dateFormat, 'resolved', {value: resolved});
   Object.defineProperty(dateFormat, '__initializedIntlObject',
                         {value: 'dateformat'});
 
@@ -310,22 +328,22 @@ Object.defineProperty(v8Intl, 'DateTimeFormat', {value: datetimeConstructor,
  * DateTimeFormat resolvedOptions method.
  */
 function resolvedDateOptions(format) {
-  var fromPattern = fromLDMLString(format.formatter.pattern);
-  var userCalendar = ICU_CALENDAR_MAP[format.formatter.calendar];
+  var fromPattern = fromLDMLString(format.resolved.pattern);
+  var userCalendar = ICU_CALENDAR_MAP[format.resolved.calendar];
   if (userCalendar === undefined) {
     // Use ICU name if we don't have a match. It shouldn't happen, but
     // it would be too strict to throw for this.
-    userCalendar = format.formatter.calendar;
+    userCalendar = format.resolved.calendar;
   }
 
-  var locale = getOptimalLanguageTag(format.formatter.requestedLocale,
-				     format.formatter.locale);
+  var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
+                                     format.resolved.locale);
 
   return {
     locale: locale,
-    numberingSystem: format.formatter.numberingSystem,
+    numberingSystem: format.resolved.numberingSystem,
     calendar: userCalendar,
-    timeZone: format.formatter.tz,
+    timeZone: format.resolved.tz,
     timeZoneName: fromPattern.timeZoneName,
     era: fromPattern.era,
     year: fromPattern.year,

@@ -71,16 +71,34 @@ function initializeCollator(collator, locales, options) {
   }
 
   var requestedLocale = locale.locale + extension;
+
+  // We define all properties C++ code may produce, to prevent security
+  // problems. If malicious user decides to redefine Object.prototype.locale
+  // we can't just use plain x.locale = 'us' or in C++ Set("locale", "us").
+  // Object.defineProperties will either succeed defining or throw an error.
+  var resolved = Object.defineProperties({}, {
+    requestedLocale: {value: requestedLocale, writable: true},
+    usage: {value: internalOptions.usage, writable: true},
+    collation: {value: internalOptions.collation, writable: true},
+    locale: {writable: true},
+    usage: {writable: true},
+    sensitivity: {writable: true},
+    ignorePunctuation: {writable: true},
+    numeric: {writable: true},
+    normalization: {writable: true},
+    caseFirst: {writable: true},
+    collation: {writable: true}
+  });
+
   var internalCollator = NativeJSCreateCollator(requestedLocale,
-						internalOptions);
-  internalCollator.requestedLocale = requestedLocale;
-  internalCollator.usage = internalOptions.usage;
-  internalCollator.collation = internalOptions.collation;
+                                                internalOptions,
+                                                resolved);
 
   // Writable, configurable and enumerable are set to false by default.
   Object.defineProperty(collator, 'collator', {value: internalCollator});
   Object.defineProperty(collator, '__initializedIntlObject',
                         {value: 'collator'});
+  Object.defineProperty(collator, 'resolved', {value: resolved});
 
   return collator;
 }
@@ -118,18 +136,18 @@ Object.defineProperty(v8Intl, 'Collator', {value: collatorConstructor,
  * Collator resolvedOptions method.
  */
 function resolvedCollatorOptions(coll) {
-  var locale = getOptimalLanguageTag(coll.collator.requestedLocale,
-				     coll.collator.locale);
+  var locale = getOptimalLanguageTag(coll.resolved.requestedLocale,
+                                     coll.resolved.locale);
 
   return {
     locale: locale,
-    usage: coll.collator.usage,
-    sensitivity: coll.collator.sensitivity,
-    ignorePunctuation: coll.collator.ignorePunctuation,
-    numeric: coll.collator.numeric,
-    normalization: coll.collator.normalization,
-    caseFirst: coll.collator.caseFirst,
-    collation: coll.collator.collation
+    usage: coll.resolved.usage,
+    sensitivity: coll.resolved.sensitivity,
+    ignorePunctuation: coll.resolved.ignorePunctuation,
+    numeric: coll.resolved.numeric,
+    normalization: coll.resolved.normalization,
+    caseFirst: coll.resolved.caseFirst,
+    collation: coll.resolved.collation
   };
 }
 
