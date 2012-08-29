@@ -47,7 +47,7 @@ icu::DecimalFormat* NumberFormat::UnpackNumberFormat(
   // if obj is an instance of NumberFormat class. We'll check for a property
   // that has to be in the object. The same applies to other services, like
   // Collator and DateTimeFormat.
-  if (obj->HasOwnProperty(v8::String::New("style"))) {
+  if (obj->HasOwnProperty(v8::String::New("numberFormat"))) {
     return static_cast<icu::DecimalFormat*>(
         obj->GetPointerFromInternalField(0));
   }
@@ -151,10 +151,12 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
     const v8::Arguments& args) {
   v8::HandleScope handle_scope;
 
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsObject()) {
+  if (args.Length() != 3 ||
+      !args[0]->IsString() ||
+      !args[1]->IsObject() ||
+      !args[2]->IsObject()) {
     return v8::ThrowException(v8::Exception::Error(
-        v8::String::New(
-            "Internal error. Locale and options are required.")));
+        v8::String::New("Internal error, wrong parameters.")));
   }
 
   v8::Persistent<v8::ObjectTemplate> number_format_template =
@@ -167,13 +169,14 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
 
   // Set number formatter as internal field of the resulting JS object.
   icu::DecimalFormat* number_format = InitializeNumberFormat(
-      args[0]->ToString(), args[1]->ToObject(), wrapper);
+      args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!number_format) {
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU number formatter.")));
   } else {
     wrapper->SetPointerInInternalField(0, number_format);
+    wrapper->Set(v8::String::New("numberFormat"), v8::String::New("valid"));
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.
@@ -185,7 +188,7 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
 static icu::DecimalFormat* InitializeNumberFormat(
     v8::Handle<v8::String> locale,
     v8::Handle<v8::Object> options,
-    v8::Handle<v8::Object> wrapper) {
+    v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   // Convert BCP47 into ICU locale format.
@@ -211,9 +214,9 @@ static icu::DecimalFormat* InitializeNumberFormat(
     number_format = CreateICUNumberFormat(no_extension_locale, options);
 
     // Set resolved settings (pattern, numbering system).
-    SetResolvedSettings(no_extension_locale, number_format, wrapper);
+    SetResolvedSettings(no_extension_locale, number_format, resolved);
   } else {
-    SetResolvedSettings(icu_locale, number_format, wrapper);
+    SetResolvedSettings(icu_locale, number_format, resolved);
   }
 
   return number_format;
@@ -316,21 +319,21 @@ static icu::DecimalFormat* CreateICUNumberFormat(
 
 static void SetResolvedSettings(const icu::Locale& icu_locale,
                                 icu::DecimalFormat* number_format,
-                                v8::Handle<v8::Object> wrapper) {
+                                v8::Handle<v8::Object> resolved) {
   v8::HandleScope handle_scope;
 
   icu::UnicodeString pattern;
   number_format->toPattern(pattern);
-  wrapper->Set(v8::String::New("pattern"),
-               v8::String::New(reinterpret_cast<const uint16_t*>(
-                   pattern.getBuffer()), pattern.length()));
+  resolved->Set(v8::String::New("pattern"),
+                v8::String::New(reinterpret_cast<const uint16_t*>(
+                    pattern.getBuffer()), pattern.length()));
 
   // Set resolved currency code in options.currency if not empty.
   icu::UnicodeString currency(number_format->getCurrency());
   if (!currency.isEmpty()) {
-    wrapper->Set(v8::String::New("currency"),
-                 v8::String::New(reinterpret_cast<const uint16_t*>(
-                     currency.getBuffer()), currency.length()));
+    resolved->Set(v8::String::New("currency"),
+                  v8::String::New(reinterpret_cast<const uint16_t*>(
+                      currency.getBuffer()), currency.length()));
   }
 
   // Ugly hack. ICU doesn't expose numbering system in any way, so we have
@@ -341,29 +344,29 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
       icu::NumberingSystem::createInstance(icu_locale, status);
   if (U_SUCCESS(status)) {
     const char* ns = numbering_system->getName();
-    wrapper->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
+    resolved->Set(v8::String::New("numberingSystem"), v8::String::New(ns));
   } else {
-    wrapper->Set(v8::String::New("numberingSystem"), v8::Undefined());
+    resolved->Set(v8::String::New("numberingSystem"), v8::Undefined());
   }
   delete numbering_system;
 
-  wrapper->Set(v8::String::New("useGrouping"),
-               v8::Boolean::New(number_format->isGroupingUsed()));
+  resolved->Set(v8::String::New("useGrouping"),
+                v8::Boolean::New(number_format->isGroupingUsed()));
 
-  wrapper->Set(v8::String::New("minimumIntegerDigits"),
-               v8::Integer::New(number_format->getMinimumIntegerDigits()));
+  resolved->Set(v8::String::New("minimumIntegerDigits"),
+                v8::Integer::New(number_format->getMinimumIntegerDigits()));
 
-  wrapper->Set(v8::String::New("minimumFractionDigits"),
-               v8::Integer::New(number_format->getMinimumFractionDigits()));
+  resolved->Set(v8::String::New("minimumFractionDigits"),
+                v8::Integer::New(number_format->getMinimumFractionDigits()));
 
-  wrapper->Set(v8::String::New("maximumFractionDigits"),
-               v8::Integer::New(number_format->getMaximumFractionDigits()));
+  resolved->Set(v8::String::New("maximumFractionDigits"),
+                v8::Integer::New(number_format->getMaximumFractionDigits()));
 
-  wrapper->Set(v8::String::New("minimumSignificantDigits"),
-               v8::Integer::New(number_format->getMinimumSignificantDigits()));
+  resolved->Set(v8::String::New("minimumSignificantDigits"),
+                v8::Integer::New(number_format->getMinimumSignificantDigits()));
 
-  wrapper->Set(v8::String::New("maximumSignificantDigits"),
-               v8::Integer::New(number_format->getMaximumSignificantDigits()));
+  resolved->Set(v8::String::New("maximumSignificantDigits"),
+                v8::Integer::New(number_format->getMaximumSignificantDigits()));
 
   // Set the locale
   char result[ULOC_FULLNAME_CAPACITY];
@@ -371,10 +374,10 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   uloc_toLanguageTag(
       icu_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
   if (U_SUCCESS(status)) {
-    wrapper->Set(v8::String::New("locale"), v8::String::New(result));
+    resolved->Set(v8::String::New("locale"), v8::String::New(result));
   } else {
     // This would never happen, since we got the locale from ICU.
-    wrapper->Set(v8::String::New("locale"), v8::String::New("und"));
+    resolved->Set(v8::String::New("locale"), v8::String::New("und"));
   }
 }
 

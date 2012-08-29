@@ -20,7 +20,7 @@ var dtf = new Intl.DateTimeFormat(['en'],
 				   day: 'numeric'});
 
 // Make sure we have pattern we expect (may change in the future).
-assertEquals('MMM d, y', dtf.formatter.pattern);
+assertEquals('MMM d, y', dtf.resolved.pattern);
 
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
 	     usePDT(String(dtf.parse('May 4, 1974'))));

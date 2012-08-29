@@ -98,19 +98,35 @@ function initializeNumberFormat(numberFormat, locales, options) {
                              getOption, internalOptions);
 
   var requestedLocale = locale.locale + extension;
-  var formatter = NativeJSCreateNumberFormat(requestedLocale,
-                                             internalOptions);
+  var resolved = Object.defineProperties({}, {
+    requestedLocale: {value: requestedLocale, writable: true},
+    style: {value: internalOptions.style, writable: true},
+    locale: {writable: true},
+    numberingSystem: {writable: true},
+    style: {writable: true},
+    currency: {writable: true},
+    currencyDisplay: {writable: true},
+    useGrouping: {writable: true},
+    minimumIntegerDigits: {writable: true},
+    minimumFractionDigits: {writable: true},
+    maximumFractionDigits: {writable: true},
+    minimumSignificantDigits: {writable: true},
+    maximumSignificantDigits: {writable: true}
+  });
 
-  formatter.requestedLocale = requestedLocale;
+  var formatter = NativeJSCreateNumberFormat(requestedLocale,
+                                             internalOptions,
+                                             resolved);
 
   // We can't get information about number or currency style from ICU, so we
   // assume user request was fulfilled.
-  formatter.style = internalOptions.style;
   if (internalOptions.style === 'currency') {
-    formatter.currencyDisplay = currencyDisplay;
+    Object.defineProperty(resolved, 'currencyDisplay', {value: currencyDisplay,
+                                                        writable: true});
   }
 
   Object.defineProperty(numberFormat, 'formatter', {value: formatter});
+  Object.defineProperty(numberFormat, 'resolved', {value: resolved});
   Object.defineProperty(numberFormat, '__initializedIntlObject',
                         {value: 'numberformat'});
 
@@ -150,21 +166,21 @@ Object.defineProperty(v8Intl, 'NumberFormat', {value: numberConstructor,
  * NumberFormat resolvedOptions method.
  */
 function resolvedNumberOptions(format) {
-  var locale = getOptimalLanguageTag(format.formatter.requestedLocale,
-				     format.formatter.locale);
+  var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
+                                     format.resolved.locale);
 
   return {
     locale: locale,
-    numberingSystem: format.formatter.numberingSystem,
-    style: format.formatter.style,
-    currency: format.formatter.currency,
-    currencyDisplay: format.formatter.currencyDisplay,
-    useGrouping: format.formatter.useGrouping,
-    minimumIntegerDigits: format.formatter.minimumIntegerDigits,
-    minimumFractionDigits: format.formatter.minimumFractionDigits,
-    maximumFractionDigits: format.formatter.maximumFractionDigits,
-    minimumSignificantDigits: format.formatter.minimumSignificantDigits,
-    maximumSignificantDigits: format.formatter.maximumSignificantDigits
+    numberingSystem: format.resolved.numberingSystem,
+    style: format.resolved.style,
+    currency: format.resolved.currency,
+    currencyDisplay: format.resolved.currencyDisplay,
+    useGrouping: format.resolved.useGrouping,
+    minimumIntegerDigits: format.resolved.minimumIntegerDigits,
+    minimumFractionDigits: format.resolved.minimumFractionDigits,
+    maximumFractionDigits: format.resolved.maximumFractionDigits,
+    minimumSignificantDigits: format.resolved.minimumSignificantDigits,
+    maximumSignificantDigits: format.resolved.maximumSignificantDigits
   };
 };
 
