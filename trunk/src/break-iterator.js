@@ -35,14 +35,14 @@ function initializeBreakIterator(iterator, locales, options) {
 
   var internalOptions = {};
 
-  internalOptions.type = getOption('type', 'string',
-				   ['character', 'word', 'sentence', 'line'],
-				   'word');
+  defineWEProperty(internalOptions, 'type', getOption(
+    'type', 'string', ['character', 'word', 'sentence', 'line'], 'word'));
 
   var locale = resolveLocale('breakiterator', locales, options);
   var resolved = Object.defineProperties({}, {
     requestedLocale: {value: locale.locale, writable: true},
-    type: {value: internalOptions.type, writable: true}
+    type: {value: internalOptions.type, writable: true},
+    locale: {writable: true}
   });
 
   var internalIterator = NativeJSCreateBreakIterator(locale.locale,

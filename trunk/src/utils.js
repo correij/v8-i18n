@@ -323,7 +323,7 @@ function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
   var extension = '';
 
   function updateExtension(key, value) {
-    return '-' + key + '-' + String(value);
+    return ['-', key, '-', String(value)].join();
   }
 
   function updateProperty(property, type, value) {
@@ -332,7 +332,7 @@ function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
     }
 
     if (property !== undefined) {
-      outOptions[property] = value;
+      defineWEProperty(outOptions, property, value);
     }
   }
 
@@ -459,4 +459,14 @@ function getAvailableLocalesOf(service) {
   }
 
   return available;
+}
+
+
+/**
+ * Defines a property and sets writable and enumerable to true.
+ * Configurable is false by default.
+ */
+function defineWEProperty(object, property, value) {
+  Object.defineProperty(object, property,
+                        {value: value, writable: true, enumerable: true});
 }

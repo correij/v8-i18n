@@ -35,18 +35,18 @@ function initializeCollator(collator, locales, options) {
 
   var internalOptions = {};
 
-  internalOptions.usage =
-      getOption('usage', 'string', ['sort', 'search'], 'sort');
+  defineWEProperty(internalOptions, 'usage', getOption(
+    'usage', 'string', ['sort', 'search'], 'sort'));
 
-  internalOptions.sensitivity =
-      getOption('sensitivity', 'string', ['base', 'accent', 'case', 'variant']);
-  if (internalOptions.sensitivity === undefined &&
-      internalOptions.usage === 'sort') {
-    internalOptions.sensitivity = 'variant';
+  var sensitivity = getOption('sensitivity', 'string',
+                              ['base', 'accent', 'case', 'variant']);
+  if (sensitivity === undefined && internalOptions.usage === 'sort') {
+    sensitivity = 'variant';
   }
+  defineWEProperty(internalOptions, 'sensitivity', sensitivity);
 
-  internalOptions.ignorePunctuation =
-      getOption('ignorePunctuation', 'boolean', undefined, false);
+  defineWEProperty(internalOptions, 'ignorePunctuation', getOption(
+    'ignorePunctuation', 'boolean', undefined, false));
 
   var locale = resolveLocale('collator', locales, options);
 
@@ -58,17 +58,18 @@ function initializeCollator(collator, locales, options) {
   setOptions(
       options, extensionMap, COLLATOR_KEY_MAP, getOption, internalOptions);
 
-  internalOptions.collation = 'default';
+  var collation = 'default';
   var extension = '';
   if (extensionMap.hasOwnProperty('co') && internalOptions.usage === 'sort') {
     if (ALLOWED_CO_VALUES.indexOf(extensionMap.co) !== -1) {
       extension = '-u-co-' + extensionMap.co;
       // ICU can't tell us what the collation is, so save user's input.
-      internalOptions.collation = extensionMap.co;
+      collation = extensionMap.co;
     }
   } else if (internalOptions.usage === 'search') {
     extension = '-u-co-search';
   }
+  defineWEProperty(internalOptions, 'collation', collation);
 
   var requestedLocale = locale.locale + extension;
 
@@ -77,17 +78,16 @@ function initializeCollator(collator, locales, options) {
   // we can't just use plain x.locale = 'us' or in C++ Set("locale", "us").
   // Object.defineProperties will either succeed defining or throw an error.
   var resolved = Object.defineProperties({}, {
-    requestedLocale: {value: requestedLocale, writable: true},
-    usage: {value: internalOptions.usage, writable: true},
-    collation: {value: internalOptions.collation, writable: true},
-    locale: {writable: true},
-    usage: {writable: true},
-    sensitivity: {writable: true},
-    ignorePunctuation: {writable: true},
-    numeric: {writable: true},
-    normalization: {writable: true},
     caseFirst: {writable: true},
-    collation: {writable: true}
+    collation: {value: internalOptions.collation, writable: true},
+    ignorePunctuation: {writable: true},
+    locale: {writable: true},
+    normalization: {writable: true},
+    numeric: {writable: true},
+    requestedLocale: {value: requestedLocale, writable: true},
+    sensitivity: {writable: true},
+    strength: {writable: true},
+    usage: {value: internalOptions.usage, writable: true}
   });
 
   var internalCollator = NativeJSCreateCollator(requestedLocale,

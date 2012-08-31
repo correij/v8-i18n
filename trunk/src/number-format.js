@@ -59,8 +59,8 @@ function initializeNumberFormat(numberFormat, locales, options) {
   var locale = resolveLocale('numberformat', locales, options);
 
   var internalOptions = {};
-  internalOptions.style = getOption(
-      'style', 'string', ['decimal', 'percent', 'currency'], 'decimal');
+  defineWEProperty(internalOptions, 'style', getOption(
+    'style', 'string', ['decimal', 'percent', 'currency'], 'decimal'));
 
   var currency = getOption('currency', 'string');
   if (currency && !isWellFormedCurrencyCode(currency)) {
@@ -74,22 +74,23 @@ function initializeNumberFormat(numberFormat, locales, options) {
   var currencyDisplay = getOption(
       'currencyDisplay', 'string', ['code', 'symbol', 'name'], 'symbol');
   if (internalOptions.style === 'currency') {
-    internalOptions.currency = currency.toUpperCase();
-    internalOptions.currencyDisplay = currencyDisplay;
+    defineWEProperty(internalOptions, 'currency', currency.toUpperCase());
+    defineWEProperty(internalOptions, 'currencyDisplay', currencyDisplay);
   }
 
   var digitRanges = ['minimumIntegerDigits', 'minimumFractionDigits',
                      'maximumFractionDigits', 'minimumSignificantDigits',
                      'maximumSignificantDigits'];
-  for (var i = 0; i < digitRanges.length; ++i) {
-    var digits = options[digitRanges[i]];
+  for (var i = 0; i < digitRanges.length; i++) {
+    var range = digitRanges[i];
+    var digits = options[range];
     if (digits !== undefined && (digits >= 0 && digits <= 21)) {
-      internalOptions[digitRanges[i]] = Number(digits);
+      defineWEProperty(internalOptions, range, Number(digits));
     }
   }
 
-  internalOptions.useGrouping = getOption(
-      'useGrouping', 'boolean', undefined, true);
+  defineWEProperty(internalOptions, 'useGrouping', getOption(
+    'useGrouping', 'boolean', undefined, true));
 
   // ICU prefers options to be passed using -u- extension key/values for
   // number format, so we need to build that.
@@ -99,19 +100,18 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
   var requestedLocale = locale.locale + extension;
   var resolved = Object.defineProperties({}, {
-    requestedLocale: {value: requestedLocale, writable: true},
-    style: {value: internalOptions.style, writable: true},
-    locale: {writable: true},
-    numberingSystem: {writable: true},
-    style: {writable: true},
     currency: {writable: true},
     currencyDisplay: {writable: true},
-    useGrouping: {writable: true},
-    minimumIntegerDigits: {writable: true},
-    minimumFractionDigits: {writable: true},
+    locale: {writable: true},
     maximumFractionDigits: {writable: true},
+    maximumSignificantDigits: {writable: true},
+    minimumFractionDigits: {writable: true},
+    minimumIntegerDigits: {writable: true},
     minimumSignificantDigits: {writable: true},
-    maximumSignificantDigits: {writable: true}
+    numberingSystem: {writable: true},
+    requestedLocale: {value: requestedLocale, writable: true},
+    style: {value: internalOptions.style, writable: true},
+    useGrouping: {writable: true}
   });
 
   var formatter = NativeJSCreateNumberFormat(requestedLocale,

@@ -176,7 +176,13 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
         "Internal error. Couldn't create ICU number formatter.")));
   } else {
     wrapper->SetPointerInInternalField(0, number_format);
+
+    v8::TryCatch try_catch;
     wrapper->Set(v8::String::New("numberFormat"), v8::String::New("valid"));
+    if (try_catch.HasCaught()) {
+      return v8::ThrowException(v8::Exception::Error(
+          v8::String::New("Internal error, couldn't set property.")));
+    }
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.

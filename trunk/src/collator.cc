@@ -132,8 +132,14 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
         "Internal error. Couldn't create ICU collator.")));
   } else {
     wrapper->SetPointerInInternalField(0, collator);
+
     // Make it safer to unpack later on.
+    v8::TryCatch try_catch;
     wrapper->Set(v8::String::New("collator"), v8::String::New("valid"));
+    if (try_catch.HasCaught()) {
+      return v8::ThrowException(v8::Exception::Error(
+          v8::String::New("Internal error, couldn't set property.")));
+    }
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.

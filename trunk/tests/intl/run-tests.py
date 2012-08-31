@@ -47,6 +47,7 @@ def main(argv):
 
   adapter = os.path.join(script_dir, '..', 'adapter.js')
   asserter = os.path.join(script_dir, '..', 'assert.js')
+  utils = os.path.join(script_dir, '..', 'utils.js')
   date = os.path.join(script_dir, 'date-format', 'utils.js')
 
   failed = []
@@ -54,7 +55,7 @@ def main(argv):
   print
   for test in tests:
     print 'Testing: ', test
-    status = subprocess.call([argv[1], adapter, asserter, date, test])
+    status = subprocess.call([argv[1], adapter, asserter, utils, date, test])
     if status == 0:
       passed.append(test)
       print 'PASS'
