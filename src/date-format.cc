@@ -150,7 +150,13 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
         "Internal error. Couldn't create ICU date time formatter.")));
   } else {
     wrapper->SetPointerInInternalField(0, date_format);
+
+    v8::TryCatch try_catch;
     wrapper->Set(v8::String::New("dateFormat"), v8::String::New("valid"));
+    if (try_catch.HasCaught()) {
+      return v8::ThrowException(v8::Exception::Error(
+          v8::String::New("Internal error, couldn't set property.")));
+    }
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.

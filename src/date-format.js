@@ -145,13 +145,13 @@ function fromLDMLString(ldmlString) {
 function appendToDateTimeObject(options, option, match, pairs) {
   if (match === null) {
     if (!options.hasOwnProperty(option)) {
-      options[option] = undefined;
+      defineWEProperty(options, option, undefined);
     }
     return options;
   }
 
   var property = match[0];
-  options[option] = pairs[property];
+  defineWEProperty(options, option, pairs[property]);
 
   return options;
 }
@@ -265,23 +265,23 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
   var requestedLocale = locale.locale + extension;
   var resolved = Object.defineProperties({}, {
-    requestedLocale: {value: requestedLocale, writable: true},
-    tz: {value: tz, writable: true},
-    locale: {writable: true},
-    numberingSystem: {writable: true},
     calendar: {writable: true},
-    timeZone: {writable: true},
-    timeZoneName: {writable: true},
-    era: {writable: true},
-    year: {writable: true},
-    month: {writable: true},
     day: {writable: true},
-    weekday: {writable: true},
+    era: {writable: true},
     hour12: {writable: true},
     hour: {writable: true},
+    locale: {writable: true},
     minute: {writable: true},
+    month: {writable: true},
+    numberingSystem: {writable: true},
+    pattern: {writable: true},
+    requestedLocale: {value: requestedLocale, writable: true},
     second: {writable: true},
-    pattern: {writable: true}
+    timeZone: {writable: true},
+    timeZoneName: {writable: true},
+    tz: {value: tz, writable: true},
+    weekday: {writable: true},
+    year: {writable: true}
   });
 
   var formatter = NativeJSCreateDateTimeFormat(

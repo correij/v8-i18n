@@ -202,7 +202,13 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
     wrapper->SetPointerInInternalField(0, break_iterator);
     // Make sure that the pointer to adopted text is NULL.
     wrapper->SetPointerInInternalField(1, NULL);
+
+    v8::TryCatch try_catch;
     wrapper->Set(v8::String::New("breakIterator"), v8::String::New("valid"));
+    if (try_catch.HasCaught()) {
+      return v8::ThrowException(v8::Exception::Error(
+          v8::String::New("Internal error, couldn't set property.")));
+    }
   }
 
   // Make object handle weak so we can delete iterator once GC kicks in.

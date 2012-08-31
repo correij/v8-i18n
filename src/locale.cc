@@ -88,6 +88,7 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
     available_locales = icu::BreakIterator::getAvailableLocales(count);
   }
 
+  v8::TryCatch try_catch;
   UErrorCode error = U_ZERO_ERROR;
   char result[ULOC_FULLNAME_CAPACITY];
   v8::Handle<v8::Object> locales = v8::Object::New();
@@ -105,6 +106,10 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
 
     // Index is just a dummy value for the property value.
     locales->Set(v8::String::New(result, strlen(result)), v8::Integer::New(i));
+    if (try_catch.HasCaught()) {
+      // Ignore error, but stop processing and return.
+      break;
+    }
   }
 
   // Append 'und' to the list of supported locales.
@@ -130,6 +135,7 @@ v8::Handle<v8::Value> JSGetDefaultICULocale(const v8::Arguments& args) {
 
 v8::Handle<v8::Value> JSGetLanguageTagVariants(const v8::Arguments& args) {
   v8::HandleScope handle_scope;
+  v8::TryCatch try_catch;
 
   // Expect an array of strings.
   if (args.Length() != 1 || !args[0]->IsArray()) {
@@ -140,9 +146,12 @@ v8::Handle<v8::Value> JSGetLanguageTagVariants(const v8::Arguments& args) {
   v8::Local<v8::Array> input = v8::Local<v8::Array>::Cast(args[0]);
   v8::Handle<v8::Array> output = v8::Array::New(input->Length());
   for (unsigned int i = 0; i < input->Length(); ++i) {
-    v8::TryCatch try_catch;
     v8::Local<v8::Value> locale_id = input->Get(i);
-    if (try_catch.HasCaught() || !locale_id->IsString()) {
+    if (try_catch.HasCaught()) {
+      break;
+    }
+
+    if (!locale_id->IsString()) {
       return v8::ThrowException(v8::Exception::SyntaxError(
           v8::String::New("Internal error. Array element is missing "
                           "or it isn't a string.")));
@@ -205,8 +214,14 @@ v8::Handle<v8::Value> JSGetLanguageTagVariants(const v8::Arguments& args) {
     v8::Handle<v8::Object> result = v8::Object::New();
     result->Set(v8::String::New("maximized"), v8::String::New(base_max_locale));
     result->Set(v8::String::New("base"), v8::String::New(base_locale));
+    if (try_catch.HasCaught()) {
+      break;
+    }
 
     output->Set(i, result);
+    if (try_catch.HasCaught()) {
+      break;
+    }
   }
 
   return handle_scope.Close(output);
