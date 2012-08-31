@@ -143,7 +143,14 @@ Object.defineProperty(v8Intl.Collator, 'prototype', {writable: false,
 /**
  * Collator resolvedOptions method.
  */
-function resolvedCollatorOptions(coll) {
+function resolvedCollatorOptions() {
+  if (!this || typeof this !== 'object' ||
+      this.__initializedIntlObject !== 'collator') {
+    throw new TypeError(['resolvedOptions method called on a non-object',
+                         ' or on a object that is not Collator.'].join(''));
+  }
+
+  var coll = this;
   var locale = getOptimalLanguageTag(coll.resolved.requestedLocale,
                                      coll.resolved.locale);
 
@@ -157,10 +164,13 @@ function resolvedCollatorOptions(coll) {
     caseFirst: coll.resolved.caseFirst,
     collation: coll.resolved.collation
   };
-}
+};
 
 
-addBoundMethod(v8Intl.Collator, 'resolvedOptions', resolvedCollatorOptions, 0);
+Object.defineProperty(v8Intl.Collator.prototype, 'resolvedOptions',
+                      {value: resolvedCollatorOptions,
+                       writable: true,
+                       configurable: true});
 
 
 /**

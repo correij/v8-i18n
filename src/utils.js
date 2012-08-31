@@ -22,26 +22,31 @@
 function addBoundMethod(obj, methodName, implementation, length) {
   Object.defineProperty(obj.prototype, methodName, {
     get: function() {
-	var internalName = '__bound' + methodName + '__';
-        if (this[internalName] === undefined) {
-          var that = this;
-          var boundMethod;
-          if (length === undefined || length === 2) {
-            boundMethod = function(x, y) {
-	      return implementation(that, x, y);
-	    }
-          } else if (length === 1) {
-            boundMethod = function(x) {
-	      return implementation(that, x);
-	    }
-	  } else {
-            boundMethod = function() {
-	      return implementation(that);
-	    }
-	  }
-          this[internalName] = boundMethod;
+      if (!this || typeof this !== 'object' ||
+          this.__initializedIntlObject === undefined) {
+        throw new TypeError(['Method ', methodName, ' called on a non-object',
+                             ' or on a wrong type of object.'].join(''));
+      }
+      var internalName = ['__bound', methodName, '__'].join('');
+      if (this[internalName] === undefined) {
+        var that = this;
+        var boundMethod;
+        if (length === undefined || length === 2) {
+          boundMethod = function(x, y) {
+            return implementation(that, x, y);
+          }
+        } else if (length === 1) {
+          boundMethod = function(x) {
+            return implementation(that, x);
+          }
+        } else {
+          boundMethod = function() {
+            return implementation(that);
+          }
         }
-        return this[internalName];
+        this[internalName] = boundMethod;
+      }
+      return this[internalName];
     },
     enumerable: false,
     configurable: true
@@ -323,7 +328,7 @@ function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
   var extension = '';
 
   function updateExtension(key, value) {
-    return ['-', key, '-', String(value)].join();
+    return ['-', key, '-', String(value)].join('');
   }
 
   function updateProperty(property, type, value) {

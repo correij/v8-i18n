@@ -98,7 +98,14 @@ Object.defineProperty(v8Intl.v8BreakIterator, 'prototype',
 /**
  * BreakIterator resolvedOptions method.
  */
-function resolvedBreakOptions(segmenter) {
+function resolvedBreakOptions() {
+  if (!this || typeof this !== 'object' ||
+      this.__initializedIntlObject !== 'breakiterator') {
+    throw new TypeError(['resolvedOptions method called on a non-object or',
+                         ' on a object that is not v8BreakIterator.'].join(''));
+  }
+
+  var segmenter = this;
   var locale = getOptimalLanguageTag(segmenter.resolved.requestedLocale,
                                      segmenter.resolved.locale);
 
@@ -109,8 +116,10 @@ function resolvedBreakOptions(segmenter) {
 };
 
 
-addBoundMethod(v8Intl.v8BreakIterator, 'resolvedOptions',
-	       resolvedBreakOptions, 0);
+Object.defineProperty(v8Intl.v8BreakIterator.prototype, 'resolvedOptions',
+                      {value: resolvedBreakOptions,
+                       writable: true,
+                       configurable: true});
 
 
 /**

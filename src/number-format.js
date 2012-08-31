@@ -173,7 +173,14 @@ Object.defineProperty(v8Intl.NumberFormat, 'prototype', {writable: false,
 /**
  * NumberFormat resolvedOptions method.
  */
-function resolvedNumberOptions(format) {
+function resolvedNumberOptions() {
+  if (!this || typeof this !== 'object' ||
+      this.__initializedIntlObject !== 'numberformat') {
+    throw new TypeError(['resolvedOptions method called on a non-object',
+                         ' or on a object that is not NumberFormat.'].join(''));
+  }
+
+  var format = this;
   var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
                                      format.resolved.locale);
 
@@ -193,8 +200,10 @@ function resolvedNumberOptions(format) {
 };
 
 
-addBoundMethod(v8Intl.NumberFormat, 'resolvedOptions',
-	       resolvedNumberOptions, 0);
+Object.defineProperty(v8Intl.NumberFormat.prototype, 'resolvedOptions',
+                      {value: resolvedNumberOptions,
+                       writable: true,
+                       configurable: true});
 
 
 /**

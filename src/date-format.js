@@ -336,7 +336,14 @@ Object.defineProperty(v8Intl.DateTimeFormat, 'prototype',
 /**
  * DateTimeFormat resolvedOptions method.
  */
-function resolvedDateOptions(format) {
+function resolvedDateOptions() {
+  if (!this || typeof this !== 'object' ||
+      this.__initializedIntlObject !== 'dateformat') {
+    throw new TypeError(['resolvedOptions method called on a non-object or ',
+                         'on a object that is not DateTimeFormat.'].join(''));
+  }
+
+  var format = this;
   var fromPattern = fromLDMLString(format.resolved.pattern);
   var userCalendar = ICU_CALENDAR_MAP[format.resolved.calendar];
   if (userCalendar === undefined) {
@@ -367,8 +374,10 @@ function resolvedDateOptions(format) {
 };
 
 
-addBoundMethod(v8Intl.DateTimeFormat, 'resolvedOptions',
-	       resolvedDateOptions, 0);
+Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'resolvedOptions',
+                      {value: resolvedDateOptions,
+                       writable: true,
+                       configurable: true});
 
 
 /**
