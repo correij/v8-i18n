@@ -163,6 +163,14 @@ Object.defineProperty(v8Intl, 'NumberFormat', {value: numberConstructor,
 
 
 /**
+ * Prototype of each service shouldn't be writable, enumerable and configurable.
+ */
+Object.defineProperty(v8Intl.NumberFormat, 'prototype', {writable: false,
+                                                         enumerable: false,
+                                                         configurable: false});
+
+
+/**
  * NumberFormat resolvedOptions method.
  */
 function resolvedNumberOptions(format) {

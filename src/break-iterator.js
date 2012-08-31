@@ -87,6 +87,15 @@ Object.defineProperty(v8Intl, 'v8BreakIterator', {value: iteratorConstructor,
 
 
 /**
+ * Prototype of each service shouldn't be writable, enumerable and configurable.
+ */
+Object.defineProperty(v8Intl.v8BreakIterator, 'prototype',
+                      {writable: false,
+                       enumerable: false,
+                       configurable: false});
+
+
+/**
  * BreakIterator resolvedOptions method.
  */
 function resolvedBreakOptions(segmenter) {
