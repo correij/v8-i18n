@@ -84,6 +84,10 @@
           ],
           'outputs': [
             '<(SHARED_INTERMEDIATE_DIR)/v8-i18n-js.cc',
+            # Helps debugging when v8 complains about exact line number.
+            # Don't want to put it in ../src because build bots may have src
+            # as read-only.
+            '<(SHARED_INTERMEDIATE_DIR)/combined.js'
           ],
           'action': [
             'python',
