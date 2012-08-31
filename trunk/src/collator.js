@@ -133,6 +133,14 @@ Object.defineProperty(v8Intl, 'Collator', {value: collatorConstructor,
 
 
 /**
+ * Prototype of each service shouldn't be writable, enumerable and configurable.
+ */
+Object.defineProperty(v8Intl.Collator, 'prototype', {writable: false,
+                                                     enumerable: false,
+                                                     configurable: false});
+
+
+/**
  * Collator resolvedOptions method.
  */
 function resolvedCollatorOptions(coll) {

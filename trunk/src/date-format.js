@@ -325,6 +325,15 @@ Object.defineProperty(v8Intl, 'DateTimeFormat', {value: datetimeConstructor,
 
 
 /**
+ * Prototype of each service shouldn't be writable, enumerable and configurable.
+ */
+Object.defineProperty(v8Intl.DateTimeFormat, 'prototype',
+                      {writable: false,
+                       enumerable: false,
+                       configurable: false});
+
+
+/**
  * DateTimeFormat resolvedOptions method.
  */
 function resolvedDateOptions(format) {
