@@ -29,7 +29,13 @@
 
 // First get supported properties.
 var properties = [];
-var options = Intl.NumberFormat().resolvedOptions();
+// Some properties are optional and won't show up in resolvedOptions if
+// they were not requested - currency, currencyDisplay,
+// minimumSignificantDigits and maximumSignificantDigits - so we request them.
+var options = Intl.NumberFormat(
+  undefined, {style: 'currency', currency: 'USD', currencyDisplay: 'name',
+              minimumSignificantDigits: 0, maximumSignificantDigits: 0}).
+    resolvedOptions();
 for (var prop in options) {
   if (options.hasOwnProperty(prop)) {
     properties.push(prop);

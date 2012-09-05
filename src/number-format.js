@@ -79,8 +79,16 @@ function initializeNumberFormat(numberFormat, locales, options) {
   }
 
   var digitRanges = ['minimumIntegerDigits', 'minimumFractionDigits',
-                     'maximumFractionDigits', 'minimumSignificantDigits',
-                     'maximumSignificantDigits'];
+                     'maximumFractionDigits'];
+  // Skip significant digits if they are not specified.
+  if (getOption('minimumSignificantDigits', 'number', undefined, undefined) !==
+      undefined) {
+    digitRanges.push('minimumSignificantDigits');
+  }
+  if (getOption('maximumSignificantDigits', 'number', undefined, undefined) !==
+      undefined) {
+    digitRanges.push('maximumSignificantDigits');
+  }
   for (var i = 0; i < digitRanges.length; i++) {
     var range = digitRanges[i];
     var digits = options[range];
@@ -104,16 +112,19 @@ function initializeNumberFormat(numberFormat, locales, options) {
     currencyDisplay: {writable: true},
     locale: {writable: true},
     maximumFractionDigits: {writable: true},
-    maximumSignificantDigits: {writable: true},
     minimumFractionDigits: {writable: true},
     minimumIntegerDigits: {writable: true},
-    minimumSignificantDigits: {writable: true},
     numberingSystem: {writable: true},
     requestedLocale: {value: requestedLocale, writable: true},
     style: {value: internalOptions.style, writable: true},
     useGrouping: {writable: true}
   });
-
+  if (internalOptions.hasOwnProperty('minimumSignificantDigits')) {
+    defineWEProperty(resolved, 'minimumSignificantDigits', undefined);
+  }
+  if (internalOptions.hasOwnProperty('maximumSignificantDigits')) {
+    defineWEProperty(resolved, 'maximumSignificantDigits', undefined);
+  }
   var formatter = NativeJSCreateNumberFormat(requestedLocale,
                                              internalOptions,
                                              resolved);
@@ -184,19 +195,33 @@ function resolvedNumberOptions() {
   var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
                                      format.resolved.locale);
 
-  return {
+  var result = {
     locale: locale,
     numberingSystem: format.resolved.numberingSystem,
     style: format.resolved.style,
-    currency: format.resolved.currency,
-    currencyDisplay: format.resolved.currencyDisplay,
     useGrouping: format.resolved.useGrouping,
     minimumIntegerDigits: format.resolved.minimumIntegerDigits,
     minimumFractionDigits: format.resolved.minimumFractionDigits,
     maximumFractionDigits: format.resolved.maximumFractionDigits,
-    minimumSignificantDigits: format.resolved.minimumSignificantDigits,
-    maximumSignificantDigits: format.resolved.maximumSignificantDigits
   };
+
+  if (result.style === 'currency') {
+    defineWEProperty(result, 'currency', format.resolved.currency);
+    defineWEProperty(result, 'currencyDisplay',
+                     format.resolved.currencyDisplay);
+  }
+
+  if (format.resolved.hasOwnProperty('minimumSignificantDigits')) {
+    defineWEProperty(result, 'minimumSignificantDigits',
+                     format.resolved.minimumSignificantDigits);
+  }
+
+  if (format.resolved.hasOwnProperty('maximumSignificantDigits')) {
+    defineWEProperty(result, 'maximumSignificantDigits',
+                     format.resolved.maximumSignificantDigits);
+  }
+
+  return result;
 };
 
 

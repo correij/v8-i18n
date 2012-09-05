@@ -318,7 +318,7 @@ static icu::DecimalFormat* CreateICUNumberFormat(
   }
 
   // Set rounding mode.
-  number_format->setRoundingMode(icu::DecimalFormat::kRoundUp);
+  number_format->setRoundingMode(icu::DecimalFormat::kRoundHalfUp);
 
   return number_format;
 }
@@ -368,11 +368,15 @@ static void SetResolvedSettings(const icu::Locale& icu_locale,
   resolved->Set(v8::String::New("maximumFractionDigits"),
                 v8::Integer::New(number_format->getMaximumFractionDigits()));
 
-  resolved->Set(v8::String::New("minimumSignificantDigits"),
-                v8::Integer::New(number_format->getMinimumSignificantDigits()));
+  if (resolved->HasOwnProperty(v8::String::New("minimumSignificantDigits"))) {
+    resolved->Set(v8::String::New("minimumSignificantDigits"), v8::Integer::New(
+        number_format->getMinimumSignificantDigits()));
+  }
 
-  resolved->Set(v8::String::New("maximumSignificantDigits"),
-                v8::Integer::New(number_format->getMaximumSignificantDigits()));
+  if (resolved->HasOwnProperty(v8::String::New("maximumSignificantDigits"))) {
+    resolved->Set(v8::String::New("maximumSignificantDigits"), v8::Integer::New(
+        number_format->getMaximumSignificantDigits()));
+  }
 
   // Set the locale
   char result[ULOC_FULLNAME_CAPACITY];

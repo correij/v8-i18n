@@ -32,9 +32,9 @@ void Utils::StrNCopy(char* dest, int length, const char* src) {
 bool Utils::V8StringToUnicodeString(const v8::Handle<v8::Value>& input,
 				    icu::UnicodeString* output) {
   v8::String::Utf8Value utf8_value(input);
- 
+
   if (*utf8_value == NULL) return false;
- 
+
   output->setTo(icu::UnicodeString::fromUTF8(*utf8_value));
 
   return true;
