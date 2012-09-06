@@ -79,16 +79,8 @@ function initializeNumberFormat(numberFormat, locales, options) {
   }
 
   var digitRanges = ['minimumIntegerDigits', 'minimumFractionDigits',
-                     'maximumFractionDigits'];
-  // Skip significant digits if they are not specified.
-  if (getOption('minimumSignificantDigits', 'number', undefined, undefined) !==
-      undefined) {
-    digitRanges.push('minimumSignificantDigits');
-  }
-  if (getOption('maximumSignificantDigits', 'number', undefined, undefined) !==
-      undefined) {
-    digitRanges.push('maximumSignificantDigits');
-  }
+                     'maximumFractionDigits', 'minimumSignificantDigits',
+                     'maximumSignificantDigits'];
   for (var i = 0; i < digitRanges.length; i++) {
     var range = digitRanges[i];
     var digits = options[range];

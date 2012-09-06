@@ -58,6 +58,11 @@ function initializeCollator(collator, locales, options) {
   setOptions(
       options, extensionMap, COLLATOR_KEY_MAP, getOption, internalOptions);
 
+  // Set normalization to true if it wasn't specified by a user.
+  if (internalOptions.hasOwnProperty('normalization') === false) {
+    defineWEProperty(internalOptions, 'normalization', true);
+  }
+
   var collation = 'default';
   var extension = '';
   if (extensionMap.hasOwnProperty('co') && internalOptions.usage === 'sort') {
