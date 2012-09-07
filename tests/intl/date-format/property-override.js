@@ -28,8 +28,12 @@
 // properties.
 
 // First get supported properties.
+// Some of the properties are optional, so we request them.
 var properties = [];
-var options = Intl.DateTimeFormat().resolvedOptions();
+var options = Intl.DateTimeFormat(
+  'en-US', {weekday: 'short', era: 'short', year: 'numeric', month: 'short',
+            day: 'numeric', hour: 'numeric', minute: 'numeric',
+            second: 'numeric', timeZoneName: 'short'}).resolvedOptions();
 for (var prop in options) {
   if (options.hasOwnProperty(prop)) {
     properties.push(prop);

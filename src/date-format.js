@@ -355,22 +355,25 @@ function resolvedDateOptions() {
   var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
                                      format.resolved.locale);
 
-  return {
+  var result = {
     locale: locale,
     numberingSystem: format.resolved.numberingSystem,
     calendar: userCalendar,
-    timeZone: format.resolved.tz,
-    timeZoneName: fromPattern.timeZoneName,
-    era: fromPattern.era,
-    year: fromPattern.year,
-    month: fromPattern.month,
-    day: fromPattern.day,
-    weekday: fromPattern.weekday,
-    hour12: fromPattern.hour12,
-    hour: fromPattern.hour,
-    minute: fromPattern.minute,
-    second: fromPattern.second
+    timeZone: format.resolved.tz
   };
+
+  addWEPropertyIfDefined(result, 'timeZoneName', fromPattern.timeZoneName);
+  addWEPropertyIfDefined(result, 'era', fromPattern.era);
+  addWEPropertyIfDefined(result, 'year', fromPattern.year);
+  addWEPropertyIfDefined(result, 'month', fromPattern.month);
+  addWEPropertyIfDefined(result, 'day', fromPattern.day);
+  addWEPropertyIfDefined(result, 'weekday', fromPattern.weekday);
+  addWEPropertyIfDefined(result, 'hour12', fromPattern.hour12);
+  addWEPropertyIfDefined(result, 'hour', fromPattern.hour);
+  addWEPropertyIfDefined(result, 'minute', fromPattern.minute);
+  addWEPropertyIfDefined(result, 'second', fromPattern.second);
+
+  return result;
 };
 
 
