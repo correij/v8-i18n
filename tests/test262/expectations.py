@@ -44,6 +44,8 @@ expect_fail = {
   'data/test/suite/intl402/ch11/11.3/11.3.3_L15.js': 'FAIL',
   'data/test/suite/intl402/ch12/12.3/12.3.2_L15.js': 'FAIL',
   'data/test/suite/intl402/ch12/12.3/12.3.3_L15.js': 'FAIL',
+  # Hour12 shouldn't be used without hour field. Norbert is fixing test.
+  'data/test/suite/intl402/ch12/12.1/12.1.1_18.js': 'FAIL',
 }
 
 # Deliberate incompatibilities

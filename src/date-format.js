@@ -405,7 +405,7 @@ function formatDate(formatter, dateValue) {
   }
 
   if (!isFinite(dateMs)) {
-    throw new RangeException('Provided date is not in valid range.');
+    throw new RangeError('Provided date is not in valid range.');
   }
 
   return NativeJSInternalDateFormat(formatter.formatter, new Date(dateMs));

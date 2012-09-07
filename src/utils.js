@@ -41,7 +41,14 @@ function addBoundMethod(obj, methodName, implementation, length) {
           }
         } else {
           boundMethod = function() {
-            return implementation(that);
+	    // DateTimeFormat.format needs to be 0 arg method, but can still
+	    // receive optional dateValue param. If one was provided, pass it
+	    // along.
+	    if (arguments.length > 0) {
+              return implementation(that, arguments[0]);
+	    } else {
+	      return implementation(that);
+	    }
           }
         }
         this[internalName] = boundMethod;
