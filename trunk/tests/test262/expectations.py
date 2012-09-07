@@ -23,6 +23,7 @@ expect_fail = {
   # ICU bug http://bugs.icu-project.org/trac/ticket/9265
   'data/test/suite/intl402/ch09/9.2/9.2.5_11_g_ii_2.js': 'FAIL',
   # Not implemented yet (overrides for toLocaleDate...)
+  'data/test/suite/intl402/ch12/12.1/12.1.1_TDTO.js': 'FAIL',
   'data/test/suite/intl402/ch13/13.1/13.1.1_6.js': 'FAIL',
   'data/test/suite/intl402/ch13/13.1/13.1.1_7.js': 'FAIL',
   'data/test/suite/intl402/ch13/13.2/13.2.1_1.js': 'FAIL',
@@ -46,6 +47,7 @@ expect_fail = {
   'data/test/suite/intl402/ch12/12.3/12.3.3_L15.js': 'FAIL',
   # Hour12 shouldn't be used without hour field. Norbert is fixing test.
   'data/test/suite/intl402/ch12/12.1/12.1.1_18.js': 'FAIL',
+  'data/test/suite/intl402/ch12/12.3/12.3.3.js': 'FAIL',
 }
 
 # Deliberate incompatibilities

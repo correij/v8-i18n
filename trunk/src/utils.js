@@ -482,3 +482,13 @@ function defineWEProperty(object, property, value) {
   Object.defineProperty(object, property,
                         {value: value, writable: true, enumerable: true});
 }
+
+
+/**
+ * Adds property to an object if the value is not undefined.
+ */
+function addWEPropertyIfDefined(object, property, value) {
+  if (value !== undefined) {
+    defineWEProperty(object, property, value);
+  }
+}
