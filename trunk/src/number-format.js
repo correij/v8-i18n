@@ -198,19 +198,19 @@ function resolvedNumberOptions() {
   };
 
   if (result.style === 'currency') {
-    defineWEProperty(result, 'currency', format.resolved.currency);
-    defineWEProperty(result, 'currencyDisplay',
-                     format.resolved.currencyDisplay);
+    defineWECProperty(result, 'currency', format.resolved.currency);
+    defineWECProperty(result, 'currencyDisplay',
+                      format.resolved.currencyDisplay);
   }
 
   if (format.resolved.hasOwnProperty('minimumSignificantDigits')) {
-    defineWEProperty(result, 'minimumSignificantDigits',
-                     format.resolved.minimumSignificantDigits);
+    defineWECProperty(result, 'minimumSignificantDigits',
+                      format.resolved.minimumSignificantDigits);
   }
 
   if (format.resolved.hasOwnProperty('maximumSignificantDigits')) {
-    defineWEProperty(result, 'maximumSignificantDigits',
-                     format.resolved.maximumSignificantDigits);
+    defineWECProperty(result, 'maximumSignificantDigits',
+                      format.resolved.maximumSignificantDigits);
   }
 
   return result;
@@ -261,4 +261,4 @@ function parseNumber(formatter, value) {
 
 
 addBoundMethod(v8Intl.NumberFormat, 'format', formatNumber, 1);
-addBoundMethod(v8Intl.NumberFormat, 'parse', parseNumber, 1);
+addBoundMethod(v8Intl.NumberFormat, 'v8Parse', parseNumber, 1);

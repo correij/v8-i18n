@@ -112,9 +112,6 @@ v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {
     }
   }
 
-  // Append 'und' to the list of supported locales.
-  locales->Set(v8::String::New("und"), v8::Integer::New(count));
-
   return handle_scope.Close(locales);
 }
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Testing parse method for date and time pattern.
+// Testing v8Parse method for date and time pattern.
 
 var dtf = new Intl.DateTimeFormat(['en'],
 				  {year: 'numeric', month: 'numeric',
@@ -23,16 +23,16 @@ var dtf = new Intl.DateTimeFormat(['en'],
 assertEquals('M/d/y h:mm:ss a', dtf.resolved.pattern);
 
 assertEquals('Sat May 04 1974 12:30:12 GMT-0007 (PDT)',
-	     usePDT(String(dtf.parse('5/4/74 12:30:12 pm'))));
+	     usePDT(String(dtf.v8Parse('5/4/74 12:30:12 pm'))));
 
 // AM/PM were not specified.
-assertEquals(undefined, dtf.parse('5/4/74 12:30:12'));
+assertEquals(undefined, dtf.v8Parse('5/4/74 12:30:12'));
 
 // Time was not specified.
-assertEquals(undefined, dtf.parse('5/4/74'));
+assertEquals(undefined, dtf.v8Parse('5/4/74'));
 
 // Month is numeric, so it fails on "May".
-assertEquals(undefined, dtf.parse('May 4th 1974'));
+assertEquals(undefined, dtf.v8Parse('May 4th 1974'));
 
 // Wrong date delimiter.
-assertEquals(undefined, dtf.parse('5-4-74 12:30:12 am'));
+assertEquals(undefined, dtf.v8Parse('5-4-74 12:30:12 am'));

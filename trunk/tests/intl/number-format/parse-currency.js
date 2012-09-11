@@ -17,4 +17,4 @@
 
 var nf = new Intl.NumberFormat(['en'], {style: 'currency', currency: 'USD'});
 
-assertEquals(undefined, nf.parse('USD 123.43'));
+assertEquals(undefined, nf.v8Parse('USD 123.43'));

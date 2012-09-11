@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Testing parse method for date and time pattern.
+// Testing v8Parse method for date and time pattern.
 // Month is represented as a short name.
 
 var dtf = new Intl.DateTimeFormat(['en'],
@@ -23,13 +23,13 @@ var dtf = new Intl.DateTimeFormat(['en'],
 assertEquals('MMM d, y', dtf.resolved.pattern);
 
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
-	     usePDT(String(dtf.parse('May 4, 1974'))));
+	     usePDT(String(dtf.v8Parse('May 4, 1974'))));
 
 // Missing , in the pattern.
-assertEquals(undefined, dtf.parse('May 4 1974'));
+assertEquals(undefined, dtf.v8Parse('May 4 1974'));
 
 // Extra "th" after 4 in the pattern.
-assertEquals(undefined, dtf.parse('May 4th, 1974'));
+assertEquals(undefined, dtf.v8Parse('May 4th, 1974'));
 
 // Wrong pattern.
-assertEquals(undefined, dtf.parse('5/4/1974'));
+assertEquals(undefined, dtf.v8Parse('5/4/1974'));

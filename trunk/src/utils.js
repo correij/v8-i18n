@@ -486,9 +486,33 @@ function defineWEProperty(object, property, value) {
 
 /**
  * Adds property to an object if the value is not undefined.
+ * Sets configurable descriptor to false.
  */
 function addWEPropertyIfDefined(object, property, value) {
   if (value !== undefined) {
     defineWEProperty(object, property, value);
+  }
+}
+
+
+/**
+ * Defines a property and sets writable, enumerable and configurable to true.
+ */
+function defineWECProperty(object, property, value) {
+  Object.defineProperty(object, property,
+                        {value: value,
+                         writable: true,
+                         enumerable: true,
+                         configurable: true});
+}
+
+
+/**
+ * Adds property to an object if the value is not undefined.
+ * Sets all descriptors to true.
+ */
+function addWECPropertyIfDefined(object, property, value) {
+  if (value !== undefined) {
+    defineWECProperty(object, property, value);
   }
 }
