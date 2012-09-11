@@ -362,16 +362,16 @@ function resolvedDateOptions() {
     timeZone: format.resolved.tz
   };
 
-  addWEPropertyIfDefined(result, 'timeZoneName', fromPattern.timeZoneName);
-  addWEPropertyIfDefined(result, 'era', fromPattern.era);
-  addWEPropertyIfDefined(result, 'year', fromPattern.year);
-  addWEPropertyIfDefined(result, 'month', fromPattern.month);
-  addWEPropertyIfDefined(result, 'day', fromPattern.day);
-  addWEPropertyIfDefined(result, 'weekday', fromPattern.weekday);
-  addWEPropertyIfDefined(result, 'hour12', fromPattern.hour12);
-  addWEPropertyIfDefined(result, 'hour', fromPattern.hour);
-  addWEPropertyIfDefined(result, 'minute', fromPattern.minute);
-  addWEPropertyIfDefined(result, 'second', fromPattern.second);
+  addWECPropertyIfDefined(result, 'timeZoneName', fromPattern.timeZoneName);
+  addWECPropertyIfDefined(result, 'era', fromPattern.era);
+  addWECPropertyIfDefined(result, 'year', fromPattern.year);
+  addWECPropertyIfDefined(result, 'month', fromPattern.month);
+  addWECPropertyIfDefined(result, 'day', fromPattern.day);
+  addWECPropertyIfDefined(result, 'weekday', fromPattern.weekday);
+  addWECPropertyIfDefined(result, 'hour12', fromPattern.hour12);
+  addWECPropertyIfDefined(result, 'hour', fromPattern.hour);
+  addWECPropertyIfDefined(result, 'minute', fromPattern.minute);
+  addWECPropertyIfDefined(result, 'second', fromPattern.second);
 
   return result;
 };
@@ -429,4 +429,4 @@ function parseDate(formatter, value) {
 
 // 0 because date is optional argument.
 addBoundMethod(v8Intl.DateTimeFormat, 'format', formatDate, 0);
-addBoundMethod(v8Intl.DateTimeFormat, 'parse', parseDate, 1);
+addBoundMethod(v8Intl.DateTimeFormat, 'v8Parse', parseDate, 1);

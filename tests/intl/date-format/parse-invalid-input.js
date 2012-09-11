@@ -16,7 +16,7 @@
 
 var dtf = new Intl.DateTimeFormat(['en']);
 
-assertEquals(undefined, dtf.parse(''));
-assertEquals(undefined, dtf.parse('A'));
-assertEquals(undefined, dtf.parse(5));
-assertEquals(undefined, dtf.parse(new Date()));
+assertEquals(undefined, dtf.v8Parse(''));
+assertEquals(undefined, dtf.v8Parse('A'));
+assertEquals(undefined, dtf.v8Parse(5));
+assertEquals(undefined, dtf.v8Parse(new Date()));

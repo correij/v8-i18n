@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Testing parse method for date only.
+// Testing v8Parse method for date only.
 
 var dtf = new Intl.DateTimeFormat(['en']);
 
@@ -20,17 +20,17 @@ var dtf = new Intl.DateTimeFormat(['en']);
 assertEquals('M/d/y', dtf.resolved.pattern);
 
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
-	     usePDT(String(dtf.parse('5/4/74'))));
+	     usePDT(String(dtf.v8Parse('5/4/74'))));
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
-             usePDT(String(dtf.parse('05/04/74'))));
+             usePDT(String(dtf.v8Parse('05/04/74'))));
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
-             usePDT(String(dtf.parse('5/04/74'))));
+             usePDT(String(dtf.v8Parse('5/04/74'))));
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
-             usePDT(String(dtf.parse('5/4/1974'))));
+             usePDT(String(dtf.v8Parse('5/4/1974'))));
 
 // Month is numeric, so it fails on "May".
-assertEquals(undefined, dtf.parse('May 4th 1974'));
+assertEquals(undefined, dtf.v8Parse('May 4th 1974'));
 
 // Time is ignored from the input, since the pattern doesn't have it.
 assertEquals('Sat May 04 1974 00:00:00 GMT-0007 (PDT)',
-             usePDT(String(dtf.parse('5/4/74 12:30:12'))));
+             usePDT(String(dtf.v8Parse('5/4/74 12:30:12'))));

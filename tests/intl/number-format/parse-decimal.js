@@ -14,13 +14,13 @@
 
 var nf = new Intl.NumberFormat(['en'], {style: 'decimal'});
 
-assertEquals(123.43, nf.parse('123.43'));
-assertEquals(123, nf.parse('123'));
-assertEquals(NaN, nf.parse(NaN));
-assertEquals(12323, nf.parse('123,23'));
-assertEquals(12323.456, nf.parse('123,23.456'));
-assertEquals(12323.456, nf.parse('0000000123,23.456'));
-assertEquals(-12323.456, nf.parse('-123,23.456'));
+assertEquals(123.43, nf.v8Parse('123.43'));
+assertEquals(123, nf.v8Parse('123'));
+assertEquals(NaN, nf.v8Parse(NaN));
+assertEquals(12323, nf.v8Parse('123,23'));
+assertEquals(12323.456, nf.v8Parse('123,23.456'));
+assertEquals(12323.456, nf.v8Parse('0000000123,23.456'));
+assertEquals(-12323.456, nf.v8Parse('-123,23.456'));
 
 // Scientific notation gets ignored.
-assertEquals(123.456, nf.parse('123.456e-3'));
+assertEquals(123.456, nf.v8Parse('123.456e-3'));

@@ -16,11 +16,10 @@
 
 var nf = new Intl.NumberFormat(['en']);
 
-assertEquals(undefined, nf.parse(''));
-assertEquals(undefined, nf.parse('A'));
-assertEquals(undefined, nf.parse(new Date()));
-assertEquals(undefined, nf.parse(undefined));
-assertEquals(undefined, nf.parse(null));
-assertEquals(undefined, nf.parse());
-assertEquals(undefined, nf.parse('Text before 12345'));
-
+assertEquals(undefined, nf.v8Parse(''));
+assertEquals(undefined, nf.v8Parse('A'));
+assertEquals(undefined, nf.v8Parse(new Date()));
+assertEquals(undefined, nf.v8Parse(undefined));
+assertEquals(undefined, nf.v8Parse(null));
+assertEquals(undefined, nf.v8Parse());
+assertEquals(undefined, nf.v8Parse('Text before 12345'));
