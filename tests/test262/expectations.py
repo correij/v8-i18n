@@ -16,7 +16,7 @@
 
 # Bugs
 expect_fail = {
-  # ISO and CLDR data mismatch.
+  # ISO and CLDR data mismatch. http://unicode.org/cldr/trac/ticket/5302
   'data/test/suite/intl402/ch11/11.1/11.1.1_20_c.js': 'FAIL',
   # ICU bug http://bugs.icu-project.org/trac/ticket/9547
   'data/test/suite/intl402/ch11/11.3/11.3.2_TRP.js': 'FAIL',
