@@ -59,46 +59,25 @@ function initializeBreakIterator(iterator, locales, options) {
 
 
 /**
- * Implements Intl.v8BreakIterator constructor.
+ * Constructs Intl.v8BreakIterator object given optional locales and options
+ * parameters.
+ *
+ * @constructor
  */
-function iteratorConstructor() {
-  var locales = arguments[0];
-  var options = arguments[1];
-
+v8Intl.v8BreakIterator = function(locales, options) {
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.v8BreakIterator(locales, options);
   }
 
   return initializeBreakIterator(toObject(this), locales, options);
-}
-
-
-/**
- * Constructs Intl.v8BreakIterator object given optional locales and options
- * parameters.
- *
- * @constructor
- */
-Object.defineProperty(v8Intl, 'v8BreakIterator', {value: iteratorConstructor,
-                                                  writable: true,
-                                                  enumerable: false,
-                                                  configurable: true});
-
-
-/**
- * Prototype of each service shouldn't be writable, enumerable and configurable.
- */
-Object.defineProperty(v8Intl.v8BreakIterator, 'prototype',
-                      {writable: false,
-                       enumerable: false,
-                       configurable: false});
+};
 
 
 /**
  * BreakIterator resolvedOptions method.
  */
-function resolvedBreakOptions() {
+v8Intl.v8BreakIterator.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'breakiterator') {
     throw new TypeError(['resolvedOptions method called on a non-object or',
@@ -116,19 +95,14 @@ function resolvedBreakOptions() {
 };
 
 
-Object.defineProperty(v8Intl.v8BreakIterator.prototype, 'resolvedOptions',
-                      {value: resolvedBreakOptions,
-                       writable: true,
-                       configurable: true});
-
-
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-addSupportedLocalesOf('breakiterator', v8Intl.v8BreakIterator);
+v8Intl.v8BreakIterator.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('breakiterator', locales, options);
+};
 
 
 /**

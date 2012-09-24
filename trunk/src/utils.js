@@ -404,23 +404,6 @@ function freezeArray(array) {
 
 
 /**
- * Adds supportedLocalesOf to the object, and sets descriptors to match
- * the spec.
- */
-function addSupportedLocalesOf(service, object) {
-  Object.defineProperty(
-      object, 'supportedLocalesOf', {value: function(locales) {
-        var options = arguments.length >= 2 ? arguments[1] : undefined;
-        return supportedLocalesOf(service, locales, options);
-      },
-    enumerable: false,
-    writable: true,
-    configurable: true}
-  );
-}
-
-
-/**
  * It's sometimes desireable to leave user requested locale instead of ICU
  * supported one (zh-TW is equivalent to zh-Hant-TW, so we should keep shorter
  * one, if that was what user requested).

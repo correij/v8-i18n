@@ -47,6 +47,20 @@ expect_fail = {
   'data/test/suite/intl402/ch11/11.3/11.3.3_L15.js': 'FAIL',
   'data/test/suite/intl402/ch12/12.3/12.3.2_L15.js': 'FAIL',
   'data/test/suite/intl402/ch12/12.3/12.3.3_L15.js': 'FAIL',
+  # V8 preformance issue with defineProperty and arguments[]. See r143.
+  'data/test/suite/intl402/ch08/8.0/8.0_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch10/10.1/10.1_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch10/10.2/10.2.1.js': 'FAIL',
+  'data/test/suite/intl402/ch10/10.2/10.2.2_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch10/10.3/10.3_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch11/11.1/11.1_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch11/11.2/11.2.1.js': 'FAIL',
+  'data/test/suite/intl402/ch11/11.2/11.2.2_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch11/11.3/11.3_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch12/12.1/12.1_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch12/12.2/12.2.1.js': 'FAIL',
+  'data/test/suite/intl402/ch12/12.2/12.2.2_L15.js': 'FAIL',
+  'data/test/suite/intl402/ch12/12.3/12.3_L15.js': 'FAIL',
 }
 
 # Deliberate incompatibilities

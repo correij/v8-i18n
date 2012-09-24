@@ -110,45 +110,25 @@ function initializeCollator(collator, locales, options) {
 
 
 /**
- * Implements collator constructor.
+ * Constructs v8Intl.Collator object given optional locales and options
+ * parameters.
+ *
+ * @constructor
  */
-function collatorConstructor() {
-  var locales = arguments[0];
-  var options = arguments[1];
-
+v8Intl.Collator = function(locales, options) {
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.Collator(locales, options);
   }
 
   return initializeCollator(toObject(this), locales, options);
-}
-
-
-/**
- * Constructs v8Intl.Collator object given optional locales and options
- * parameters.
- *
- * @constructor
- */
-Object.defineProperty(v8Intl, 'Collator', {value: collatorConstructor,
-	                                   writable: true,
-	                                   enumerable: false,
-                                           configurable: true});
-
-
-/**
- * Prototype of each service shouldn't be writable, enumerable and configurable.
- */
-Object.defineProperty(v8Intl.Collator, 'prototype', {writable: false,
-                                                     enumerable: false,
-                                                     configurable: false});
+};
 
 
 /**
  * Collator resolvedOptions method.
  */
-function resolvedCollatorOptions() {
+v8Intl.Collator.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'collator') {
     throw new TypeError(['resolvedOptions method called on a non-object',
@@ -172,19 +152,14 @@ function resolvedCollatorOptions() {
 };
 
 
-Object.defineProperty(v8Intl.Collator.prototype, 'resolvedOptions',
-                      {value: resolvedCollatorOptions,
-                       writable: true,
-                       configurable: true});
-
-
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-addSupportedLocalesOf('collator', v8Intl.Collator);
+v8Intl.Collator.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('collator', locales, options);
+};
 
 
 /**
