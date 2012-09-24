@@ -297,46 +297,25 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
 
 /**
- * Implements Intl.DateTimeFormat constructor.
+ * Constructs v8Intl.DateTimeFormat object given optional locales and options
+ * parameters.
+ *
+ * @constructor
  */
-function datetimeConstructor() {
-  var locales = arguments[0];
-  var options = arguments[1];
-
+v8Intl.DateTimeFormat = function(locales, options) {
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.DateTimeFormat(locales, options);
   }
 
   return initializeDateTimeFormat(toObject(this), locales, options);
-}
-
-
-/**
- * Constructs v8Intl.DateTimeFormat object given optional locales and options
- * parameters.
- *
- * @constructor
- */
-Object.defineProperty(v8Intl, 'DateTimeFormat', {value: datetimeConstructor,
-	                                         writable: true,
-	                                         enumerable: false,
-                                                 configurable: true});
-
-
-/**
- * Prototype of each service shouldn't be writable, enumerable and configurable.
- */
-Object.defineProperty(v8Intl.DateTimeFormat, 'prototype',
-                      {writable: false,
-                       enumerable: false,
-                       configurable: false});
+};
 
 
 /**
  * DateTimeFormat resolvedOptions method.
  */
-function resolvedDateOptions() {
+v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'dateformat') {
     throw new TypeError(['resolvedOptions method called on a non-object or ',
@@ -377,19 +356,14 @@ function resolvedDateOptions() {
 };
 
 
-Object.defineProperty(v8Intl.DateTimeFormat.prototype, 'resolvedOptions',
-                      {value: resolvedDateOptions,
-                       writable: true,
-                       configurable: true});
-
-
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-addSupportedLocalesOf('dateformat', v8Intl.DateTimeFormat);
+v8Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('dateformat', locales, options);
+};
 
 
 /**

@@ -138,45 +138,25 @@ function initializeNumberFormat(numberFormat, locales, options) {
 
 
 /**
- * Implements Intl.NumberFormat constructor.
+ * Constructs v8Intl.NumberFormat object given optional locales and options
+ * parameters.
+ *
+ * @constructor
  */
-function numberConstructor() {
-  var locales = arguments[0];
-  var options = arguments[1];
-
+v8Intl.NumberFormat = function(locales, options) {
   if (!this || this === v8Intl) {
     // Constructor is called as a function.
     return new v8Intl.NumberFormat(locales, options);
   }
 
   return initializeNumberFormat(toObject(this), locales, options);
-}
-
-
-/**
- * Constructs v8Intl.NumberFormat object given optional locales and options
- * parameters.
- *
- * @constructor
- */
-Object.defineProperty(v8Intl, 'NumberFormat', {value: numberConstructor,
-	                                       writable: true,
-	                                       enumerable: false,
-                                               configurable: true});
-
-
-/**
- * Prototype of each service shouldn't be writable, enumerable and configurable.
- */
-Object.defineProperty(v8Intl.NumberFormat, 'prototype', {writable: false,
-                                                         enumerable: false,
-                                                         configurable: false});
+};
 
 
 /**
  * NumberFormat resolvedOptions method.
  */
-function resolvedNumberOptions() {
+v8Intl.NumberFormat.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'numberformat') {
     throw new TypeError(['resolvedOptions method called on a non-object',
@@ -217,19 +197,14 @@ function resolvedNumberOptions() {
 };
 
 
-Object.defineProperty(v8Intl.NumberFormat.prototype, 'resolvedOptions',
-                      {value: resolvedNumberOptions,
-                       writable: true,
-                       configurable: true});
-
-
 /**
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
- * Optional options parameter is hidden in order to satisfy the spec and tests.
  */
-addSupportedLocalesOf('numberformat', v8Intl.NumberFormat);
+v8Intl.NumberFormat.supportedLocalesOf = function(locales, options) {
+  return supportedLocalesOf('numberformat', locales, options);
+};
 
 
 /**
