@@ -46,7 +46,7 @@ format(number)
  * it returns undefined if the string can't be parsed.
  * Due to limitation of the underlying library we don't support currency parsing at this time.
  */
-parse(string)
+v8Parse(string)
 }}}
 
 == !NumberFormat with default locale and settings ==
