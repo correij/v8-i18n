@@ -51,7 +51,7 @@ format(dateValue)
  * Returns Date object that represents dateString, or
  * undefined in case of failure.
  */
-parse(dateString) 
+v8Parse(dateString) 
 }}}
 
 == !DateTimeFormat with default locale and settings ==
