@@ -53,14 +53,13 @@ def main(argv):
   intl = os.path.join(script_dir, 'data', 'test', 'harness', 'testIntl.js')
   builtin = os.path.join(script_dir,
                          'data', 'test', 'harness', 'testBuiltInObject.js')
-  adapter = os.path.join(script_dir, '..', 'adapter.js')
 
   failed = []
   passed = []
   expect_fail = []
   for test in tests:
     print 'Testing: ', test
-    status = subprocess.call([argv[1], adapter, harness, intl, builtin, test])
+    status = subprocess.call([argv[1], harness, intl, builtin, test])
     if status == 0:
       passed.append(test)
       print 'PASS'
