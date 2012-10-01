@@ -1,6 +1,9 @@
 = Introduction =
 Sorting strings is a complex, locale sensitive operation.
 
+== Intl vs. v8Intl ==
+You can use both Intl and v8Intl global objects for now, but our plan is to remove support for v8Intl in the future.
+
 == Settings ==
 Collator constructor accepts optional locale array and optional settings object.<br>
 Settings object and valid values for all the keys:
@@ -34,14 +37,14 @@ sensitivity: 'variant' // For usage:'sort', it's locale dependent for usage:'sea
 == Collator with default locale and settings ==
 {{{
 var array = ['d', 'a', 'b', 'c'];
-var coll = v8Intl.Collator();
+var coll = Intl.Collator();
 array.sort(coll.compare);
 }}}
 
 == Collator with user locale and default settings ==
 {{{
 var array = ['d', 'a', 'b', 'c'];
-var coll = v8Intl.Collator(['sr-rs', 'de-u-co-phonebk']);
+var coll = Intl.Collator(['sr-rs', 'de-u-co-phonebk']);
 array.sort(coll.compare);
 }}}
 
@@ -50,7 +53,7 @@ array.sort(coll.compare);
 var array = ['d', 'a', 'b', 'c'];
 // Create collator sensitive to difference in base letters, a != b,
 // and to accents, a != á.
-var coll = v8Intl.Collator(['sr-rs', 'de-u-co-phonebk'], {sensitivity:'accent'});
+var coll = Intl.Collator(['sr-rs', 'de-u-co-phonebk'], {sensitivity:'accent'});
 array.sort(coll.compare);
 }}}
 
@@ -59,7 +62,7 @@ array.sort(coll.compare);
 var array = ['d', 'a', 'b', 'c'];
 // Create collator sensitive to difference in base letters, a != b,
 // and to accents, a != á.
-var coll = v8Intl.Collator([], {sensitivity:'accent'});
+var coll = Intl.Collator([], {sensitivity:'accent'});
 array.sort(coll.compare);
 }}}
 
@@ -67,6 +70,6 @@ array.sort(coll.compare);
 {{{
 var array = ['d', 'a', 'b', 'c'];
 // Turn on numeric sort so '1' sorts before '12'.
-var coll = v8Intl.Collator(['sr-u-kn-true']);
+var coll = Intl.Collator(['sr-u-kn-true']);
 array.sort(coll.compare);
 }}}
