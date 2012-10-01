@@ -1,6 +1,9 @@
 = Introduction =
 Formatting numbers is a complex, locale sensitive operation.
 
+== Intl vs. v8Intl ==
+You can use both Intl and v8Intl global objects for now, but our plan is to remove support for v8Intl in the future.
+
 == Settings ==
 !NumberFormat constructor accepts optional locale array and optional settings object.<br>
 Settings object and valid values for all the keys:
@@ -51,36 +54,36 @@ v8Parse(string)
 
 == !NumberFormat with default locale and settings ==
 {{{
-var nf = v8Intl.NumberFormat();
+var nf = Intl.NumberFormat();
 nf.format(12345.67);  // Returns a string.
 }}}
 
 == !NumberFormat with user locale and default settings ==
 {{{
-var nf = v8Intl.NumberFormat(['sr', 'de', 'fr']);
+var nf = Intl.NumberFormat(['sr', 'de', 'fr']);
 nf.format(12345.67);
 }}}
 
 == !NumberFormat with user locale and settings ==
 {{{
-var nf = v8Intl.NumberFormat(['sr', 'de', 'fr'], {style:'currency', currency:'RSD', currencyDisplay:'code'});
+var nf = Intl.NumberFormat(['sr', 'de', 'fr'], {style:'currency', currency:'RSD', currencyDisplay:'code'});
 nf.format(12345.67);
 }}}
 
 == !NumberFormat with default locale and user settings ==
 {{{
-var nf = v8Intl.NumberFormat([], {style:'currency', currency:'RSD', currencyDisplay:'code'});
+var nf = Intl.NumberFormat([], {style:'currency', currency:'RSD', currencyDisplay:'code'});
 nf.format(12345.67);
 }}}
 
 == !NumberFormat with user locale and Unicode extension ==
 {{{
-var nf = v8Intl.NumberFormat(['th-u-nu-thai']);
+var nf = Intl.NumberFormat(['th-u-nu-thai']);
 nf.format(12345.67);
 }}}
 
 == !NumberFormat used to parse ==
 {{{
-var nf = v8Intl.NumberFormat(['en']);
+var nf = Intl.NumberFormat(['en']);
 nf.parse('123,45.67');
 }}}
