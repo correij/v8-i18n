@@ -6,6 +6,9 @@ Break iterator segments text into words given the rules of current locale.
 For most Western languages breaks occur at white space or interpunction 
 characters, but some Eastern languages don't have those. In those cases segmenter uses dictionaries and rules to break text into parts.
 
+== Intl vs. v8Intl ==
+You can use both Intl and v8Intl global objects for now, but our plan is to remove support for v8Intl in the future.
+
 =Settings=
 v8BreakIterator constructor accepts optional locale array and optional settings object.
 Settings object and valid values for all the keys:
@@ -36,7 +39,7 @@ breakType()  // Returns the type of the break - 'none', 'number', 'letter', 'kan
 
 ==How to use==
 {{{
-var iterator = v8Intl.v8BreakIterator(['en']);
+var iterator = Intl.v8BreakIterator(['en']);
 
 var text = 'Jack and Jill, went over hill!';
 iterator.adoptText(text);
