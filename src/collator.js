@@ -110,15 +110,15 @@ function initializeCollator(collator, locales, options) {
 
 
 /**
- * Constructs v8Intl.Collator object given optional locales and options
+ * Constructs Intl.Collator object given optional locales and options
  * parameters.
  *
  * @constructor
  */
-v8Intl.Collator = function(locales, options) {
-  if (!this || this === v8Intl) {
+Intl.Collator = function(locales, options) {
+  if (!this || this === Intl) {
     // Constructor is called as a function.
-    return new v8Intl.Collator(locales, options);
+    return new Intl.Collator(locales, options);
   }
 
   return initializeCollator(toObject(this), locales, options);
@@ -128,7 +128,7 @@ v8Intl.Collator = function(locales, options) {
 /**
  * Collator resolvedOptions method.
  */
-v8Intl.Collator.prototype.resolvedOptions = function() {
+Intl.Collator.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'collator') {
     throw new TypeError(['resolvedOptions method called on a non-object',
@@ -157,7 +157,7 @@ v8Intl.Collator.prototype.resolvedOptions = function() {
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
  */
-v8Intl.Collator.supportedLocalesOf = function(locales, options) {
+Intl.Collator.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('collator', locales, options);
 };
 
@@ -178,4 +178,4 @@ function compare(collator, x, y) {
 };
 
 
-addBoundMethod(v8Intl.Collator, 'compare', compare, 2);
+addBoundMethod(Intl.Collator, 'compare', compare, 2);

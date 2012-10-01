@@ -297,15 +297,15 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
 
 /**
- * Constructs v8Intl.DateTimeFormat object given optional locales and options
+ * Constructs Intl.DateTimeFormat object given optional locales and options
  * parameters.
  *
  * @constructor
  */
-v8Intl.DateTimeFormat = function(locales, options) {
-  if (!this || this === v8Intl) {
+Intl.DateTimeFormat = function(locales, options) {
+  if (!this || this === Intl) {
     // Constructor is called as a function.
-    return new v8Intl.DateTimeFormat(locales, options);
+    return new Intl.DateTimeFormat(locales, options);
   }
 
   return initializeDateTimeFormat(toObject(this), locales, options);
@@ -315,7 +315,7 @@ v8Intl.DateTimeFormat = function(locales, options) {
 /**
  * DateTimeFormat resolvedOptions method.
  */
-v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
+Intl.DateTimeFormat.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'dateformat') {
     throw new TypeError(['resolvedOptions method called on a non-object or ',
@@ -361,7 +361,7 @@ v8Intl.DateTimeFormat.prototype.resolvedOptions = function() {
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
  */
-v8Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
+Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
   return supportedLocalesOf('dateformat', locales, options);
 };
 
@@ -402,5 +402,5 @@ function parseDate(formatter, value) {
 
 
 // 0 because date is optional argument.
-addBoundMethod(v8Intl.DateTimeFormat, 'format', formatDate, 0);
-addBoundMethod(v8Intl.DateTimeFormat, 'v8Parse', parseDate, 1);
+addBoundMethod(Intl.DateTimeFormat, 'format', formatDate, 0);
+addBoundMethod(Intl.DateTimeFormat, 'v8Parse', parseDate, 1);
