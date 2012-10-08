@@ -72,6 +72,7 @@
 	  '../src/date-format.js',
 	  '../src/break-iterator.js',
 	  '../src/utils.js',
+          '../src/overrides.js',
 	  '../src/footer.js'
         ],
       },

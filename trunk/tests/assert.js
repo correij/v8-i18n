@@ -113,6 +113,48 @@ function assertFalse(value) {
 
 
 /**
+ * Returns true if code throws specified exception.
+ */
+function assertThrows(code, type_opt, cause_opt) {
+  var threwException = true;
+  try {
+    if (typeof code == 'function') {
+      code();
+    } else {
+      eval(code);
+    }
+    threwException = false;
+  } catch (e) {
+    if (typeof type_opt == 'function') {
+      assertInstanceof(e, type_opt);
+    }
+    if (arguments.length >= 3) {
+      assertEquals(e.type, cause_opt);
+    }
+    // Success.
+    return;
+  }
+  throw new Error("Did not throw exception");
+}
+
+
+/**
+ * Throws an exception if code throws.
+ */
+function assertDoesNotThrow(code, name_opt) {
+  try {
+    if (typeof code == 'function') {
+      code();
+    } else {
+      eval(code);
+    }
+  } catch (e) {
+    fail("threw an exception: ", e.message || e, name_opt);
+  }
+}
+
+
+/**
  * Throws if obj is not of given type.
  */
 function assertInstanceof(obj, type) {
