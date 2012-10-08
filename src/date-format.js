@@ -170,13 +170,13 @@ function toDateTimeOptions(options, required, defaults) {
   options = Object.apply(this, [options]);
 
   var needsDefault = true;
-  if ((required === 'date' || required === 'all') &&
+  if ((required === 'date' || required === 'any') &&
       (options.weekday !== undefined || options.year !== undefined ||
        options.month !== undefined || options.day !== undefined)) {
     needsDefault = false;
   }
 
-  if ((required === 'time' || required === 'all') &&
+  if ((required === 'time' || required === 'any') &&
       (options.hour !== undefined || options.minute !== undefined ||
        options.second !== undefined)) {
     needsDefault = false;
@@ -233,7 +233,7 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
   var locale = resolveLocale('dateformat', locales, options);
 
-  options = toDateTimeOptions(options, 'all', 'date');
+  options = toDateTimeOptions(options, 'any', 'date');
 
   var getOption = getGetOption(options, 'dateformat');
 
