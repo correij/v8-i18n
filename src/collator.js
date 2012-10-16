@@ -58,11 +58,6 @@ function initializeCollator(collator, locales, options) {
   setOptions(
       options, extensionMap, COLLATOR_KEY_MAP, getOption, internalOptions);
 
-  // Set normalization to true if it wasn't specified by a user.
-  if (internalOptions.hasOwnProperty('normalization') === false) {
-    defineWEProperty(internalOptions, 'normalization', true);
-  }
-
   var collation = 'default';
   var extension = '';
   if (extensionMap.hasOwnProperty('co') && internalOptions.usage === 'sort') {
@@ -87,7 +82,6 @@ function initializeCollator(collator, locales, options) {
     collation: {value: internalOptions.collation, writable: true},
     ignorePunctuation: {writable: true},
     locale: {writable: true},
-    normalization: {writable: true},
     numeric: {writable: true},
     requestedLocale: {value: requestedLocale, writable: true},
     sensitivity: {writable: true},
@@ -145,7 +139,6 @@ Intl.Collator.prototype.resolvedOptions = function() {
     sensitivity: coll.resolved.sensitivity,
     ignorePunctuation: coll.resolved.ignorePunctuation,
     numeric: coll.resolved.numeric,
-    normalization: coll.resolved.normalization,
     caseFirst: coll.resolved.caseFirst,
     collation: coll.resolved.collation
   };
