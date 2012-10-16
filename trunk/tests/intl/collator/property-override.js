@@ -38,7 +38,7 @@ for (var prop in options) {
 
 var expectedProperties = [
   'caseFirst', 'sensitivity', 'ignorePunctuation',
-  'locale', 'numeric', 'normalization', 'usage', 'collation'
+  'locale', 'numeric', 'usage', 'collation'
 ];
 
 assertEquals(expectedProperties.length, properties.length);
