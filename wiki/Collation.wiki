@@ -12,7 +12,6 @@ usage: {'sort', 'search'}
 sensitivity: {'base', 'accent', 'case', 'variant'}
 ignorePunctuation: {true, false}
 numeric: {true, false}
-normalization: {true, false}
 caseFirst: {'upper', 'lower', 'false'}
 }}}
 
@@ -20,9 +19,10 @@ Other collation properties can be passed using Unicode extensions:
 {{{
 Key    Property            Type       Values
 kn     numeric             "boolean"  true/false
-kk     normalization       "boolean"  true/false
 kf     caseFirst           "string"   "upper", "lower", "false"
 }}}
+
+Normalization of input strings is on by default, and cannot be changed by the caller.
 
 == Default locale ==
 The safest approach is to specify target locale and check if it was available through resolvedOptions method.
