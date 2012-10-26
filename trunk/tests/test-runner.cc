@@ -22,6 +22,7 @@
 
 #include "include/extension.h"
 #include "unicode/locid.h"
+#include "unicode/timezone.h"
 #include "v8/include/v8.h"
 
 v8::Persistent<v8::Context> CreateContext();
@@ -30,6 +31,7 @@ void ReportException(v8::TryCatch* handler);
 v8::Handle<v8::String> ReadFile(const char* name);
 const char* ToCString(const v8::String::Utf8Value& value);
 v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args);
+v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args);
 v8::Handle<v8::Value> Print(const v8::Arguments& args);
 
 int main(int argc, char* argv[]) {
@@ -79,6 +81,8 @@ v8::Persistent<v8::Context> CreateContext() {
 
   global->Set(v8::String::New("getDefaultLocale"),
               v8::FunctionTemplate::New(GetDefaultLocale));
+  global->Set(v8::String::New("getDefaultTimeZone"),
+	      v8::FunctionTemplate::New(GetDefaultTimeZone));
   global->Set(v8::String::New("print"),
               v8::FunctionTemplate::New(Print));
 
@@ -199,6 +203,18 @@ v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args) {
   }
 
   return v8::String::New("und");
+}
+
+// Returns default time zone. For testing only.
+v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args) {
+  icu::UnicodeString time_zone_id;
+  icu::TimeZone* time_zone = icu::TimeZone::createDefault();
+  time_zone->getID(time_zone_id);
+  delete time_zone;
+
+  return v8::String::New(
+      reinterpret_cast<const uint16_t*>(time_zone_id.getBuffer()),
+      time_zone_id.length());
 }
 
 // Prints string, array or hasOwnProperty values of an object.

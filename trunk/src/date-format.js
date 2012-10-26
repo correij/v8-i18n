@@ -249,12 +249,6 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
   // section later on.
   // We need to pass calendar and number system to the method.
   var tz = options.timeZone;
-  if (tz !== undefined) {
-    tz = String(tz).toUpperCase();
-    if (tz !== "UTC") {
-      throw new RangeError("Invalid time zone specified: " + tz);
-    }
-  }
 
   // ICU prefers options to be passed using -u- extension key/values, so
   // we need to build that.
@@ -286,6 +280,9 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
 
   var formatter = NativeJSCreateDateTimeFormat(
     requestedLocale, {skeleton: ldmlString, timeZone: tz}, resolved);
+
+  // Check if we actually support the time zone.
+  checkTimeZone(tz, resolved.timeZone);
 
   Object.defineProperty(dateFormat, 'formatter', {value: formatter});
   Object.defineProperty(dateFormat, 'resolved', {value: resolved});
@@ -333,12 +330,16 @@ Intl.DateTimeFormat.prototype.resolvedOptions = function() {
 
   var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
                                      format.resolved.locale);
+  var tz = format.resolved.timeZone;
+  if (tz === 'GMT') {
+    tz = 'UTC';
+  }
 
   var result = {
     locale: locale,
     numberingSystem: format.resolved.numberingSystem,
     calendar: userCalendar,
-    timeZone: format.resolved.tz
+    timeZone: tz
   };
 
   addWECPropertyIfDefined(result, 'timeZoneName', fromPattern.timeZoneName);
@@ -404,3 +405,27 @@ function parseDate(formatter, value) {
 // 0 because date is optional argument.
 addBoundMethod(Intl.DateTimeFormat, 'format', formatDate, 0);
 addBoundMethod(Intl.DateTimeFormat, 'v8Parse', parseDate, 1);
+
+
+/**
+ * Throws if original and resolved time zones don't match.
+ */
+function checkTimeZone(original, resolved) {
+  if (original === undefined) {
+    return;
+  }
+
+  var upperTimeZone = original.toUpperCase();
+  if ((upperTimeZone === 'UTC' || upperTimeZone == 'GMT') &&
+      resolved === 'GMT') {
+    return;
+  }
+
+  // Drop : character - to cover GMT+0700 and GMT+07:00 case.
+  // Make comparison case insensitive.
+  var canonicalOriginal = original.replace(':', '').toLowerCase();
+  var canonicalResolved = resolved.replace(':', '').toLowerCase();
+  if (canonicalOriginal !== canonicalResolved) {
+    throw new RangeError('Unsupported time zone provided: ' + original);
+  }
+}
