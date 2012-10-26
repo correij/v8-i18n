@@ -57,6 +57,11 @@ format(dateValue)
 v8Parse(dateString) 
 }}}
 
+== Time zone handling ==
+Our implementation supports additional time zones, besides 'UTC' and undefined (local). One can use IANA time zone names, like 'America/Los_Angeles', 'Etc/GMT'...
+
+If unsupported zone was specified, DateTimeFormat constructor will throw RangeError exception.
+
 == !DateTimeFormat with default locale and settings ==
 {{{
 var dtf = Intl.DateTimeFormat();
