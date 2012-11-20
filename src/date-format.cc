@@ -138,6 +138,12 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
 
   // Create an empty object wrapper.
   v8::Local<v8::Object> local_object = date_format_template->NewInstance();
+  // But the handle shouldn't be empty.
+  // That can happen if there was a stack overflow when creating the object.
+  if (local_object.IsEmpty()) {
+    return local_object;
+  }
+
   v8::Persistent<v8::Object> wrapper =
       v8::Persistent<v8::Object>::New(local_object);
 
