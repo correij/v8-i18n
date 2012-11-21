@@ -49,7 +49,7 @@ icu::DecimalFormat* NumberFormat::UnpackNumberFormat(
   // Collator and DateTimeFormat.
   if (obj->HasOwnProperty(v8::String::New("numberFormat"))) {
     return static_cast<icu::DecimalFormat*>(
-        obj->GetPointerFromInternalField(0));
+        obj->GetAlignedPointerFromInternalField(0));
   }
 
   return NULL;
@@ -181,7 +181,7 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU number formatter.")));
   } else {
-    wrapper->SetPointerInInternalField(0, number_format);
+    wrapper->SetAlignedPointerInInternalField(0, number_format);
 
     v8::TryCatch try_catch;
     wrapper->Set(v8::String::New("numberFormat"), v8::String::New("valid"));

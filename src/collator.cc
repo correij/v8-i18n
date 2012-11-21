@@ -40,7 +40,8 @@ icu::Collator* Collator::UnpackCollator(v8::Handle<v8::Object> obj) {
   v8::HandleScope handle_scope;
 
   if (obj->HasOwnProperty(v8::String::New("collator"))) {
-    return static_cast<icu::Collator*>(obj->GetPointerFromInternalField(0));
+    return static_cast<icu::Collator*>(
+        obj->GetAlignedPointerFromInternalField(0));
   }
 
   return NULL;
@@ -137,7 +138,7 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU collator.")));
   } else {
-    wrapper->SetPointerInInternalField(0, collator);
+    wrapper->SetAlignedPointerInInternalField(0, collator);
 
     // Make it safer to unpack later on.
     v8::TryCatch try_catch;
