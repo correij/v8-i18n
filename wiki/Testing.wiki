@@ -22,8 +22,10 @@ symlinks and ar. Please replace all 'crsT' with 'crs' in gyp generator (removes 
 
 === Getting ICU ===
 
+Due to changes in icu.gyp one cannot just do:
   * svn checkout http://src.chromium.org/chrome/trunk/deps/third_party/icu46 icu
 
+Better way is to point to your Chromium/src/third_party/icu checkout, either by specifying -Dicu_path on command line, or by changing build/build_gyp.py file.
 
 === Getting V8 ===
 
