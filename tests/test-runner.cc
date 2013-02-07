@@ -19,12 +19,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "include/extension.h"
 #include "unicode/locid.h"
 #include "unicode/timezone.h"
 #include "v8/include/v8.h"
 
+int RunV8Code(int argc, int args, char** argv);
 v8::Persistent<v8::Context> CreateContext();
 bool ExecuteString(v8::Handle<v8::String> source, v8::Handle<v8::Value> name);
 void ReportException(v8::TryCatch* handler);
@@ -33,45 +35,78 @@ const char* ToCString(const v8::String::Utf8Value& value);
 v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args);
 v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args);
 v8::Handle<v8::Value> Print(const v8::Arguments& args);
+void Usage();
+
+const int kMinArgs = 2;
 
 int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    printf("Usage:\n\ttest-runner file1 file2 ... fileN\n");
+  // Parse flags.
+  int count = 0;
+  int args = 1;
+  if (argc < kMinArgs) {
+    Usage();
+    return 1;
+  } else if (!strcmp(argv[1], "-t") && argc > kMinArgs) {
+    args = kMinArgs + 1;
+    count = strtol(argv[2], NULL, 10);
+    if (count == 0) {
+      Usage();
+      return 1;
+    }
+  } else if (!strcmp(argv[1], "-t")) {
+    Usage();
     return 1;
   }
 
   int status = 0;
-  {
-    // Extra scope so HandleScope can clean up before v8::V8::Dispose.
-    // Otherwise we get SEGFAULT.
-    v8::HandleScope handle_scope;
-
-    v8::Persistent<v8::Context> context = CreateContext();
-    if (context.IsEmpty()) {
-      printf("Couldn't create test context.\n");
-      return 1;
+  if (count != 0) {
+    clock_t start = clock();
+    for (int i = 0; i < count; ++i) {
+      status = RunV8Code(argc, args, argv);
     }
-
-    context->Enter();
-
-    for (int i = 1; i < argc; ++i) {
-      v8::Handle<v8::String> source = ReadFile(argv[i]);
-      if (source.IsEmpty()) {
-        printf("Error loading file: %s\n", argv[i]);
-        status = 1;
-        break;
-      }
-      if (!ExecuteString(source, v8::String::New(argv[i]))) {
-        status = 1;
-        break;
-      }
-    }
-
-    context->Exit();
-    context.Dispose(context->GetIsolate());
+    clock_t end = clock();
+    float time_avg = (end - start) / static_cast<float>(CLOCKS_PER_SEC);
+    printf("Average test time: %0.2fs\n", time_avg);
+  } else {
+    status = RunV8Code(argc, args, argv);
   }
 
   v8::V8::Dispose();
+
+  return status;
+}
+
+// Initializes the V8 context, runs code from each file in sequence then
+// disposes of the context.
+// Returns 1 on failure, 0 on success.
+int RunV8Code(int argc, int args, char* argv[]) {
+  v8::HandleScope handle_scope;
+
+  v8::Persistent<v8::Context> context = CreateContext();
+  if (context.IsEmpty()) {
+    printf("Couldn't create test context.\n");
+    return 1;
+  }
+
+  context->Enter();
+
+  int status = 0;
+  for (int i = args; i < argc; ++i) {
+    v8::Handle<v8::String> source = ReadFile(argv[i]);
+    if (source.IsEmpty()) {
+      printf("Error loading file: %s\n", argv[i]);
+      status = 1;
+      break;
+    }
+    if (!ExecuteString(source, v8::String::New(argv[i]))) {
+      status = 1;
+      break;
+    }
+  }
+
+  context->Exit();
+  context.Dispose(context->GetIsolate());
+
   return status;
 }
 
@@ -250,4 +285,11 @@ v8::Handle<v8::Value> Print(const v8::Arguments& args) {
   }
 
   return v8::Undefined();
+}
+
+// Prints program usage.
+void Usage() {
+  printf("Usage:\n\ttest-runner [-t count] [file1 file2 ... fileN]\n");
+  printf("\t-t count - Do a perf run count times.\n");
+  printf("\tfile1...N - Load and execute listed files in that order.\n");
 }
