@@ -190,8 +190,8 @@ Intl.NumberFormat = function() {
 Intl.NumberFormat.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'numberformat') {
-    throw new TypeError(['resolvedOptions method called on a non-object',
-                         ' or on a object that is not NumberFormat.'].join(''));
+    throw new TypeError('resolvedOptions method called on a non-object' +
+        ' or on a object that is not Intl.NumberFormat.');
   }
 
   var format = this;

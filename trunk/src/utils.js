@@ -24,10 +24,10 @@ function addBoundMethod(obj, methodName, implementation, length) {
     get: function() {
       if (!this || typeof this !== 'object' ||
           this.__initializedIntlObject === undefined) {
-        throw new TypeError(['Method ', methodName, ' called on a non-object',
-                             ' or on a wrong type of object.'].join(''));
+        throw new TypeError('Method ' + methodName +
+            ' called on a non-object or on a wrong type of object.');
       }
-      var internalName = ['__bound', methodName, '__'].join('');
+      var internalName = '__bound' + methodName + '__';
       if (this[internalName] === undefined) {
         var that = this;
         var boundMethod;
@@ -335,7 +335,7 @@ function setOptions(inOptions, extensionMap, keyValues, getOption, outOptions) {
   var extension = '';
 
   function updateExtension(key, value) {
-    return ['-', key, '-', String(value)].join('');
+    return '-' + key + '-' + String(value);
   }
 
   function updateProperty(property, type, value) {

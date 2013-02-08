@@ -128,8 +128,8 @@ Intl.Collator = function() {
 Intl.Collator.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'collator') {
-    throw new TypeError(['resolvedOptions method called on a non-object',
-                         ' or on a object that is not Collator.'].join(''));
+    throw new TypeError('resolvedOptions method called on a non-object ' +
+        'or on a object that is not Intl.Collator.');
   }
 
   var coll = this;
