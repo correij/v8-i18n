@@ -34,7 +34,7 @@ var properties = [];
 // minimumSignificantDigits and maximumSignificantDigits - so we request them.
 var options = Intl.NumberFormat(
   undefined, {style: 'currency', currency: 'USD', currencyDisplay: 'name',
-              minimumSignificantDigits: 0, maximumSignificantDigits: 0}).
+              minimumSignificantDigits: 1, maximumSignificantDigits: 5}).
     resolvedOptions();
 for (var prop in options) {
   if (options.hasOwnProperty(prop)) {

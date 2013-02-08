@@ -64,7 +64,10 @@ function initializeBreakIterator(iterator, locales, options) {
  *
  * @constructor
  */
-Intl.v8BreakIterator = function(locales, options) {
+Intl.v8BreakIterator = function() {
+  var locales = arguments[0];
+  var options = arguments[1];
+
   if (!this || this === Intl) {
     // Constructor is called as a function.
     return new Intl.v8BreakIterator(locales, options);
@@ -99,9 +102,10 @@ Intl.v8BreakIterator.prototype.resolvedOptions = function() {
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
+ * Options are optional parameter.
  */
-Intl.v8BreakIterator.supportedLocalesOf = function(locales, options) {
-  return supportedLocalesOf('breakiterator', locales, options);
+Intl.v8BreakIterator.supportedLocalesOf = function(locales) {
+  return supportedLocalesOf('breakiterator', locales, arguments[1]);
 };
 
 

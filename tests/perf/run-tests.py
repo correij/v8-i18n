@@ -55,6 +55,7 @@ def main(argv):
     status = subprocess.call([argv[1], '-t', count, test])
     if status != 0:
       raise Exception('Test failed: ' + test);
+    print
 
 if __name__ == '__main__':
   main(sys.argv)

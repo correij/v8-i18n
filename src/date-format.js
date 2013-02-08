@@ -299,7 +299,10 @@ function initializeDateTimeFormat(dateFormat, locales, options) {
  *
  * @constructor
  */
-Intl.DateTimeFormat = function(locales, options) {
+Intl.DateTimeFormat = function() {
+  var locales = arguments[0];
+  var options = arguments[1];
+
   if (!this || this === Intl) {
     // Constructor is called as a function.
     return new Intl.DateTimeFormat(locales, options);
@@ -361,9 +364,10 @@ Intl.DateTimeFormat.prototype.resolvedOptions = function() {
  * Returns the subset of the given locale list for which this locale list
  * has a matching (possibly fallback) locale. Locales appear in the same
  * order in the returned list as in the input list.
+ * Options are optional parameter.
  */
-Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {
-  return supportedLocalesOf('dateformat', locales, options);
+Intl.DateTimeFormat.supportedLocalesOf = function(locales) {
+  return supportedLocalesOf('dateformat', locales, arguments[1]);
 };
 
 
