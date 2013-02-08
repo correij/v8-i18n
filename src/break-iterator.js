@@ -83,8 +83,8 @@ Intl.v8BreakIterator = function() {
 Intl.v8BreakIterator.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'breakiterator') {
-    throw new TypeError(['resolvedOptions method called on a non-object or',
-                         ' on a object that is not v8BreakIterator.'].join(''));
+    throw new TypeError('resolvedOptions method called on a non-object or ' +
+        'on a object that is not Intl.v8BreakIterator.');
   }
 
   var segmenter = this;

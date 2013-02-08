@@ -318,8 +318,8 @@ Intl.DateTimeFormat = function() {
 Intl.DateTimeFormat.prototype.resolvedOptions = function() {
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'dateformat') {
-    throw new TypeError(['resolvedOptions method called on a non-object or ',
-                         'on a object that is not DateTimeFormat.'].join(''));
+    throw new TypeError('resolvedOptions method called on a non-object or ' +
+        'on a object that is not Intl.DateTimeFormat.');
   }
 
   var format = this;
