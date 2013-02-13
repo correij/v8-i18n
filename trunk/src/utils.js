@@ -499,3 +499,11 @@ function addWECPropertyIfDefined(object, property, value) {
     defineWECProperty(object, property, value);
   }
 }
+
+
+/**
+ * Returns titlecased word, aMeRricA -> America.
+ */
+function toTitleCaseWord(word) {
+  return word.substr(0, 1).toUpperCase() + word.substr(1).toLowerCase();
+}

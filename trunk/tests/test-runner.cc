@@ -245,11 +245,24 @@ v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args) {
   icu::UnicodeString time_zone_id;
   icu::TimeZone* time_zone = icu::TimeZone::createDefault();
   time_zone->getID(time_zone_id);
+  // Make timezone id canonical.
+  UErrorCode status = U_ZERO_ERROR;
+  icu::UnicodeString canonical_time_zone_id;
+  icu::TimeZone::getCanonicalID(time_zone_id, canonical_time_zone_id, status);
+
   delete time_zone;
 
-  return v8::String::New(
-      reinterpret_cast<const uint16_t*>(time_zone_id.getBuffer()),
-      time_zone_id.length());
+  if (U_SUCCESS(status)) {
+    if (canonical_time_zone_id == UNICODE_STRING_SIMPLE("Etc/GMT")) {
+      return v8::String::New("UTC");
+    } else {
+      return v8::String::New(
+          reinterpret_cast<const uint16_t*>(canonical_time_zone_id.getBuffer()),
+          canonical_time_zone_id.length());
+    }
+  }
+
+  return v8::String::New("");
 }
 
 // Prints string, array or hasOwnProperty values of an object.
