@@ -37,11 +37,14 @@ args.append('--depth=' + v8_i18n_root)
 args.append('-I' + os.path.join(v8_i18n_root, 'build', 'common.gypi'))
 
 # Necessary for building standalone v8 project.
-args.append('-I' + os.path.join(v8_i18n_root, '..', 'v8', 'build', 'standalone.gypi'))
+args.append('-I' + os.path.join(v8_i18n_root, '..', 'chrome', 'src',
+                                'v8', 'build', 'standalone.gypi'))
 
-# Point to v8 and icu checkouts.
-args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', '..', 'icu'))
-args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', '..'))
+# Point to v8 and icu checkouts within Chrome (overrides all.gyp).
+args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', '..',
+                                         'chrome', 'src', 'third_party', 'icu'))
+args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', '..',
+                                        'chrome', 'src'))
 args.append('-Dclang=1')
 
 # ICU build fails if werror is on.

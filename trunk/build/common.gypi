@@ -22,8 +22,6 @@
     # V8 should not build target and host
     'want_separate_host_toolset': 0,
     # Allow override to 'shared_library' for DLL/.so builds
-    'library%': 'static_library',
-    # NB. these names match with what V8 expects
     'component%': 'static_library',
 
     'conditions': [
