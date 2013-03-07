@@ -4,7 +4,7 @@
   # ICU library
   # V8 library
 
-If you are running tests under Chromium you have all them available already.
+You should checkout Chrome and get all of the dependencies.
 
 === Getting GYP ===
 
@@ -20,17 +20,9 @@ symlinks and ar. Please replace all 'crsT' with 'crs' in gyp generator (removes 
 +    arflags_target = 'crs'
 }}}
 
-=== Getting ICU ===
+=== Getting Chrome ===
 
-Due to changes in icu.gyp one cannot just do:
-  * svn checkout http://src.chromium.org/chrome/trunk/deps/third_party/icu46 icu
-
-Better way is to point to your Chromium/src/third_party/icu checkout, either by specifying -Dicu_path on command line, or by changing build/build_gyp.py file.
-
-=== Getting V8 ===
-
-  * svn checkout http://v8.googlecode.com/svn/trunk/ v8
-
+Follow Chromium instructions at [http://dev.chromium.org/developers/how-tos/get-the-code] but name your checkout folder *chrome* for easier unit testing.
 
 === Generate make files ===
 
