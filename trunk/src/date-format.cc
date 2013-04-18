@@ -38,6 +38,8 @@ static void SetResolvedSettings(const icu::Locale&,
 
 icu::SimpleDateFormat* DateFormat::UnpackDateFormat(
     v8::Handle<v8::Object> obj) {
+  v8::HandleScope handle_scope;
+
   if (obj->HasOwnProperty(v8::String::New("dateFormat"))) {
     return static_cast<icu::SimpleDateFormat*>(
         obj->GetAlignedPointerFromInternalField(0));

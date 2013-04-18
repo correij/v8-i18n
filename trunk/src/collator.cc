@@ -37,6 +37,8 @@ static void SetBooleanSetting(
     UColAttribute, icu::Collator*, const char*, v8::Handle<v8::Object>);
 
 icu::Collator* Collator::UnpackCollator(v8::Handle<v8::Object> obj) {
+  v8::HandleScope handle_scope;
+
   if (obj->HasOwnProperty(v8::String::New("collator"))) {
     return static_cast<icu::Collator*>(
         obj->GetAlignedPointerFromInternalField(0));
