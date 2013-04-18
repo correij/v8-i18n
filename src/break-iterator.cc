@@ -37,6 +37,8 @@ static void SetResolvedSettings(const icu::Locale&,
 
 icu::BreakIterator* BreakIterator::UnpackBreakIterator(
     v8::Handle<v8::Object> obj) {
+  v8::HandleScope handle_scope;
+
   // v8::ObjectTemplate doesn't have HasInstance method so we can't check
   // if obj is an instance of BreakIterator class. We'll check for a property
   // that has to be in the object. The same applies to other services, like

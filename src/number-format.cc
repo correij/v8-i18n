@@ -41,6 +41,8 @@ static void SetResolvedSettings(const icu::Locale&,
 
 icu::DecimalFormat* NumberFormat::UnpackNumberFormat(
     v8::Handle<v8::Object> obj) {
+  v8::HandleScope handle_scope;
+
   // v8::ObjectTemplate doesn't have HasInstance method so we can't check
   // if obj is an instance of NumberFormat class. We'll check for a property
   // that has to be in the object. The same applies to other services, like
