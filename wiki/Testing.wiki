@@ -26,9 +26,9 @@ Follow Chromium instructions at [http://dev.chromium.org/developers/how-tos/get-
 
 === Generate make files ===
 
-  * python build/build_gyp.py
+  * build/build_gyp.py
 
-You may have to change paths to v8 and icu in the script to point to your checkout location.
+You can specify Chromium checkout folder with --chrome-dir. It defaults to ../chrome.
 
 === Building ===
 
