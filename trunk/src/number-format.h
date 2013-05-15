@@ -36,7 +36,7 @@ class NumberFormat {
   // Release memory we allocated for the NumberFormat once the JS object that
   // holds the pointer gets garbage collected.
   static void DeleteNumberFormat(v8::Isolate* isolate,
-                                 v8::Persistent<v8::Value> object,
+                                 v8::Persistent<v8::Object>* object,
                                  void* param);
 
   // Formats number and returns corresponding string.

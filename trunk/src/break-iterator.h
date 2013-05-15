@@ -32,13 +32,12 @@ class BreakIterator {
   // Helper methods for various bindings.
 
   // Unpacks iterator object from corresponding JavaScript object.
-  static icu::BreakIterator* UnpackBreakIterator(
-      v8::Handle<v8::Object> obj);
+  static icu::BreakIterator* UnpackBreakIterator(v8::Handle<v8::Object> obj);
 
   // Release memory we allocated for the BreakIterator once the JS object that
   // holds the pointer gets garbage collected.
   static void DeleteBreakIterator(v8::Isolate* isolate,
-                                  v8::Persistent<v8::Value> object,
+                                  v8::Persistent<v8::Object>* object,
 				  void* param);
 
   // Assigns new text to the iterator.

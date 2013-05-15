@@ -37,7 +37,7 @@ class Collator {
   // Release memory we allocated for the Collator once the JS object that
   // holds the pointer gets garbage collected.
   static void DeleteCollator(v8::Isolate* isolate,
-                             v8::Persistent<v8::Value> object,
+                             v8::Persistent<v8::Object>* object,
                              void* param);
 
   // Compare two strings and returns -1, 0 and 1 depending on

@@ -27,7 +27,7 @@
 #include "v8/include/v8.h"
 
 int RunV8Code(int argc, int args, char** argv);
-v8::Persistent<v8::Context> CreateContext();
+v8::Local<v8::Context> CreateContext(v8::Isolate* isolate);
 bool ExecuteString(v8::Handle<v8::String> source, v8::Handle<v8::Value> name);
 void ReportException(v8::TryCatch* handler);
 v8::Handle<v8::String> ReadFile(const char* name);
@@ -81,8 +81,9 @@ int main(int argc, char* argv[]) {
 // Returns 1 on failure, 0 on success.
 int RunV8Code(int argc, int args, char* argv[]) {
   v8::HandleScope handle_scope;
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
-  v8::Persistent<v8::Context> context = CreateContext();
+  v8::Local<v8::Context> context = CreateContext(isolate);
   if (context.IsEmpty()) {
     printf("Couldn't create test context.\n");
     return 1;
@@ -105,13 +106,12 @@ int RunV8Code(int argc, int args, char* argv[]) {
   }
 
   context->Exit();
-  context.Dispose(context->GetIsolate());
 
   return status;
 }
 
 // Creates global javascript context with our extension loaded.
-v8::Persistent<v8::Context> CreateContext() {
+v8::Local<v8::Context> CreateContext(v8::Isolate* isolate) {
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
 
   global->Set(v8::String::New("getDefaultLocale"),
@@ -126,7 +126,7 @@ v8::Persistent<v8::Context> CreateContext() {
   const char* extension_names[] = {extension->name()};
   v8::ExtensionConfiguration extensions(1, extension_names);
 
-  return v8::Context::New(&extensions, global);
+  return v8::Context::New(isolate, &extensions, global);
 }
 
 // Executes a string within the current v8 context.
