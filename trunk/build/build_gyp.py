@@ -14,13 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import os
 import sys
 
 script_dir = os.path.dirname(__file__)
 v8_i18n_root = os.path.normpath(os.path.join(script_dir, os.pardir))
+chrome_dir = ''
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+      description='Generates project files from gyp rules.')
+  parser.add_argument('--chrome-dir', default='../chrome',
+                      help='Specifies the Chromium checkout to use (default '
+                      'is ../chrome)')
+  cmdline = vars(parser.parse_args())
+  chrome_dir = cmdline['chrome_dir']
+
   os.chdir(v8_i18n_root)
   script_dir = os.path.dirname(__file__)
   v8_i18n_root = '.'
@@ -37,14 +47,13 @@ args.append('--depth=' + v8_i18n_root)
 args.append('-I' + os.path.join(v8_i18n_root, 'build', 'common.gypi'))
 
 # Necessary for building standalone v8 project.
-args.append('-I' + os.path.join(v8_i18n_root, '..', 'chromium', 'src',
+args.append('-I' + os.path.join(v8_i18n_root, chrome_dir, 'src',
                                 'v8', 'build', 'standalone.gypi'))
 
 # Point to v8 and icu checkouts within Chrome (overrides all.gyp).
-args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', '..',
-                                         'chromium', 'src', 'third_party', 'icu'))
-args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', '..',
-                                        'chromium', 'src'))
+args.append('-Dicu_path=' + os.path.join(v8_i18n_root, '..', chrome_dir,
+                                         'src', 'third_party', 'icu'))
+args.append('-Dv8_path=' + os.path.join(v8_i18n_root, '..', chrome_dir, 'src'))
 args.append('-Dclang=1')
 
 # ICU build fails if werror is on.
