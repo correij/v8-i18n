@@ -56,19 +56,18 @@ icu::DecimalFormat* NumberFormat::UnpackNumberFormat(
 }
 
 void NumberFormat::DeleteNumberFormat(v8::Isolate* isolate,
-                                      v8::Persistent<v8::Value> object,
+                                      v8::Persistent<v8::Object>* object,
                                       void* param) {
-  v8::Persistent<v8::Object> persistent_object =
-      v8::Persistent<v8::Object>::Cast(object);
-
   // First delete the hidden C++ object.
   // Unpacking should never return NULL here. That would only happen if
   // this method is used as the weak callback for persistent handles not
   // pointing to a date time formatter.
-  delete UnpackNumberFormat(persistent_object);
+  v8::HandleScope handle_scope(isolate);
+  v8::Local<v8::Object> handle = v8::Local<v8::Object>::New(isolate, *object);
+  delete UnpackNumberFormat(handle);
 
   // Then dispose of the persistent handle to JS object.
-  persistent_object.Dispose(isolate);
+  object->Dispose(isolate);
 }
 
 v8::Handle<v8::Value> NumberFormat::JSInternalFormat(
@@ -155,7 +154,7 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
   }
 
   v8::Isolate* isolate = args.GetIsolate();
-  v8::Persistent<v8::ObjectTemplate> number_format_template =
+  v8::Local<v8::ObjectTemplate> number_format_template =
       Utils::GetTemplate(isolate);
 
   // Create an empty object wrapper.
@@ -166,9 +165,6 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
     return local_object;
   }
 
-  v8::Persistent<v8::Object> wrapper =
-      v8::Persistent<v8::Object>::New(isolate, local_object);
-
   // Set number formatter as internal field of the resulting JS object.
   icu::DecimalFormat* number_format = InitializeNumberFormat(
       args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
@@ -177,18 +173,19 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU number formatter.")));
   } else {
-    wrapper->SetAlignedPointerInInternalField(0, number_format);
+    local_object->SetAlignedPointerInInternalField(0, number_format);
 
     v8::TryCatch try_catch;
-    wrapper->Set(v8::String::New("numberFormat"), v8::String::New("valid"));
+    local_object->Set(v8::String::New("numberFormat"), v8::String::New("valid"));
     if (try_catch.HasCaught()) {
       return v8::ThrowException(v8::Exception::Error(
           v8::String::New("Internal error, couldn't set property.")));
     }
   }
 
+  v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak(isolate, NULL, DeleteNumberFormat);
+  wrapper.MakeWeak<void>(isolate, NULL, &DeleteNumberFormat);
 
   return wrapper;
 }

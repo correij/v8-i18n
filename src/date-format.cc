@@ -49,19 +49,18 @@ icu::SimpleDateFormat* DateFormat::UnpackDateFormat(
 }
 
 void DateFormat::DeleteDateFormat(v8::Isolate* isolate,
-                                  v8::Persistent<v8::Value> object,
+                                  v8::Persistent<v8::Object>* object,
                                   void* param) {
-  v8::Persistent<v8::Object> persistent_object =
-      v8::Persistent<v8::Object>::Cast(object);
-
   // First delete the hidden C++ object.
   // Unpacking should never return NULL here. That would only happen if
   // this method is used as the weak callback for persistent handles not
   // pointing to a date time formatter.
-  delete UnpackDateFormat(persistent_object);
+  v8::HandleScope handle_scope(isolate);
+  v8::Local<v8::Object> handle = v8::Local<v8::Object>::New(isolate, *object);
+  delete UnpackDateFormat(handle);
 
   // Then dispose of the persistent handle to JS object.
-  persistent_object.Dispose(isolate);
+  object->Dispose(isolate);
 }
 
 v8::Handle<v8::Value> DateFormat::JSInternalFormat(
@@ -129,7 +128,7 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
   }
 
   v8::Isolate* isolate = args.GetIsolate();
-  v8::Persistent<v8::ObjectTemplate> date_format_template =
+  v8::Local<v8::ObjectTemplate> date_format_template =
       Utils::GetTemplate(isolate);
 
   // Create an empty object wrapper.
@@ -140,9 +139,6 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
     return local_object;
   }
 
-  v8::Persistent<v8::Object> wrapper =
-      v8::Persistent<v8::Object>::New(isolate, local_object);
-
   // Set date time formatter as internal field of the resulting JS object.
   icu::SimpleDateFormat* date_format = InitializeDateTimeFormat(
       args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
@@ -151,18 +147,19 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
     return v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU date time formatter.")));
   } else {
-    wrapper->SetAlignedPointerInInternalField(0, date_format);
+    local_object->SetAlignedPointerInInternalField(0, date_format);
 
     v8::TryCatch try_catch;
-    wrapper->Set(v8::String::New("dateFormat"), v8::String::New("valid"));
+    local_object->Set(v8::String::New("dateFormat"), v8::String::New("valid"));
     if (try_catch.HasCaught()) {
       return v8::ThrowException(v8::Exception::Error(
           v8::String::New("Internal error, couldn't set property.")));
     }
   }
 
+  v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak(isolate, NULL, DeleteDateFormat);
+  wrapper.MakeWeak<void>(isolate, NULL, &DeleteDateFormat);
 
   return wrapper;
 }

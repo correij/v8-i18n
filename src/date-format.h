@@ -32,12 +32,13 @@ class DateFormat {
   // Helper methods for various bindings.
 
   // Unpacks date format object from corresponding JavaScript object.
-  static icu::SimpleDateFormat* UnpackDateFormat(v8::Handle<v8::Object> obj);
+  static icu::SimpleDateFormat* UnpackDateFormat(
+      v8::Handle<v8::Object> obj);
 
   // Release memory we allocated for the DateFormat once the JS object that
   // holds the pointer gets garbage collected.
   static void DeleteDateFormat(v8::Isolate* isolate,
-                               v8::Persistent<v8::Value> object,
+                               v8::Persistent<v8::Object>* object,
                                void* param);
 
   // Formats date and returns corresponding string.
