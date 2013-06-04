@@ -25,11 +25,12 @@
 
 namespace v8_i18n {
 
-v8::Handle<v8::Value> JSCanonicalizeLanguageTag(const v8::Arguments& args) {
+void JSCanonicalizeLanguageTag(const v8::FunctionCallbackInfo<v8::Value>& args) {
   // Expect locale id which is a string.
   if (args.Length() != 1 || !args[0]->IsString()) {
-    return v8::ThrowException(v8::Exception::SyntaxError(
+    v8::ThrowException(v8::Exception::SyntaxError(
         v8::String::New("Locale identifier, as a string, is required.")));
+    return;
   }
 
   UErrorCode error = U_ZERO_ERROR;
@@ -42,13 +43,15 @@ v8::Handle<v8::Value> JSCanonicalizeLanguageTag(const v8::Arguments& args) {
 
   v8::String::AsciiValue locale_id(args[0]->ToString());
   if (*locale_id == NULL) {
-    return v8::String::New(kInvalidTag);
+    args.GetReturnValue().Set(v8::String::New(kInvalidTag));
+    return;
   }
 
   uloc_forLanguageTag(*locale_id, icu_result, ULOC_FULLNAME_CAPACITY,
                       &icu_length, &error);
   if (U_FAILURE(error) || icu_length == 0) {
-    return v8::String::New(kInvalidTag);
+    args.GetReturnValue().Set(v8::String::New(kInvalidTag));
+    return;
   }
 
   char result[ULOC_FULLNAME_CAPACITY];
@@ -57,10 +60,11 @@ v8::Handle<v8::Value> JSCanonicalizeLanguageTag(const v8::Arguments& args) {
   uloc_toLanguageTag(icu_result, result, ULOC_FULLNAME_CAPACITY, TRUE, &error);
 
   if (U_FAILURE(error)) {
-    return v8::String::New(kInvalidTag);
+    args.GetReturnValue().Set(v8::String::New(kInvalidTag));
+    return;
   }
 
-  return v8::String::New(result);
+  args.GetReturnValue().Set(v8::String::New(result));
 }
 
 v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args) {

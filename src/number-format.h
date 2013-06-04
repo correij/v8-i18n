@@ -26,7 +26,8 @@ namespace v8_i18n {
 
 class NumberFormat {
  public:
-  static v8::Handle<v8::Value> JSCreateNumberFormat(const v8::Arguments& args);
+  static void JSCreateNumberFormat(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Helper methods for various bindings.
 

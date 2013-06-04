@@ -96,22 +96,22 @@ icu::UnicodeString* ResetAdoptedText(
   return text;
 }
 
-v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorAdoptText(
-    const v8::Arguments& args) {
+void BreakIterator::JSInternalBreakIteratorAdoptText(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsString()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New(
             "Internal error. Iterator and text have to be specified.")));
+    return;
   }
 
   icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
-    return ThrowUnexpectedObjectError();
+    ThrowUnexpectedObjectError();
+    return;
   }
 
   break_iterator->setText(*ResetAdoptedText(args[0]->ToObject(), args[1]));
-
-  return v8::Undefined();
 }
 
 v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorFirst(
@@ -171,14 +171,13 @@ v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorBreakType(
   }
 }
 
-v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
-    const v8::Arguments& args) {
-  if (args.Length() != 3 ||
-      !args[0]->IsString() ||
-      !args[1]->IsObject() ||
+void BreakIterator::JSCreateBreakIterator(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  if (args.Length() != 3 || !args[0]->IsString() || !args[1]->IsObject() ||
       !args[2]->IsObject()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("Internal error, wrong parameters.")));
+    return;
   }
 
   v8::Isolate* isolate = args.GetIsolate();
@@ -190,7 +189,8 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
   // But the handle shouldn't be empty.
   // That can happen if there was a stack overflow when creating the object.
   if (local_object.IsEmpty()) {
-    return local_object;
+    args.GetReturnValue().Set(local_object);
+    return;
   }
 
   // Set break iterator as internal field of the resulting JS object.
@@ -198,8 +198,9 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
       args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!break_iterator) {
-    return v8::ThrowException(v8::Exception::Error(v8::String::New(
+    v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU break iterator.")));
+    return;
   } else {
     local_object->SetAlignedPointerInInternalField(0, break_iterator);
     // Make sure that the pointer to adopted text is NULL.
@@ -208,16 +209,17 @@ v8::Handle<v8::Value> BreakIterator::JSCreateBreakIterator(
     v8::TryCatch try_catch;
     local_object->Set(v8::String::New("breakIterator"), v8::String::New("valid"));
     if (try_catch.HasCaught()) {
-      return v8::ThrowException(v8::Exception::Error(
+      v8::ThrowException(v8::Exception::Error(
           v8::String::New("Internal error, couldn't set property.")));
+      return;
     }
   }
 
   v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
   wrapper.MakeWeak<void>(isolate, NULL, &DeleteBreakIterator);
-
-  return wrapper;
+  args.GetReturnValue().Set(wrapper);
+  wrapper.ClearAndLeak();
 }
 
 static icu::BreakIterator* InitializeBreakIterator(

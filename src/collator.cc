@@ -76,17 +76,19 @@ static v8::Handle<v8::Value> ThrowExceptionForICUError(const char* message) {
 }
 
 // static
-v8::Handle<v8::Value> Collator::JSInternalCompare(
-    const v8::Arguments& args) {
+void Collator::JSInternalCompare(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 3 || !args[0]->IsObject() ||
       !args[1]->IsString() || !args[2]->IsString()) {
-    return v8::ThrowException(v8::Exception::SyntaxError(
+    v8::ThrowException(v8::Exception::SyntaxError(
         v8::String::New("Collator and two string arguments are required.")));
+    return;
   }
 
   icu::Collator* collator = UnpackCollator(args[0]->ToObject());
   if (!collator) {
-    return ThrowUnexpectedObjectError();
+    ThrowUnexpectedObjectError();
+    return;
   }
 
   v8::String::Value string_value1(args[1]);
@@ -98,21 +100,21 @@ v8::Handle<v8::Value> Collator::JSInternalCompare(
       string1, string_value1.length(), string2, string_value2.length(), status);
 
   if (U_FAILURE(status)) {
-    return ThrowExceptionForICUError(
+    ThrowExceptionForICUError(
         "Internal error. Unexpected failure in Collator.compare.");
+    return;
   }
 
-  return v8::Int32::New(result);
+  args.GetReturnValue().Set(result);
 }
 
-v8::Handle<v8::Value> Collator::JSCreateCollator(
-    const v8::Arguments& args) {
-  if (args.Length() != 3 ||
-      !args[0]->IsString() ||
-      !args[1]->IsObject() ||
+void Collator::JSCreateCollator(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  if (args.Length() != 3 || !args[0]->IsString() || !args[1]->IsObject() ||
       !args[2]->IsObject()) {
-    return v8::ThrowException(v8::Exception::SyntaxError(
+    v8::ThrowException(v8::Exception::SyntaxError(
         v8::String::New("Internal error, wrong parameters.")));
+    return;
   }
 
   v8::Isolate* isolate = args.GetIsolate();
@@ -124,7 +126,8 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
   // But the handle shouldn't be empty.
   // That can happen if there was a stack overflow when creating the object.
   if (local_object.IsEmpty()) {
-    return local_object;
+    args.GetReturnValue().Set(local_object);
+    return;
   }
 
   // Set collator as internal field of the resulting JS object.
@@ -132,8 +135,9 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
       args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!collator) {
-    return v8::ThrowException(v8::Exception::Error(v8::String::New(
+    v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU collator.")));
+    return;
   } else {
     local_object->SetAlignedPointerInInternalField(0, collator);
 
@@ -141,16 +145,17 @@ v8::Handle<v8::Value> Collator::JSCreateCollator(
     v8::TryCatch try_catch;
     local_object->Set(v8::String::New("collator"), v8::String::New("valid"));
     if (try_catch.HasCaught()) {
-      return v8::ThrowException(v8::Exception::Error(
+      v8::ThrowException(v8::Exception::Error(
           v8::String::New("Internal error, couldn't set property.")));
+      return;
     }
   }
 
   v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
   wrapper.MakeWeak<void>(isolate, NULL, &DeleteCollator);
-
-  return wrapper;
+  args.GetReturnValue().Set(wrapper);
+  wrapper.ClearAndLeak();
 }
 
 static icu::Collator* InitializeCollator(v8::Handle<v8::String> locale,

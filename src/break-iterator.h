@@ -27,7 +27,8 @@ namespace v8_i18n {
 
 class BreakIterator {
  public:
-  static v8::Handle<v8::Value> JSCreateBreakIterator(const v8::Arguments& args);
+  static void JSCreateBreakIterator(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Helper methods for various bindings.
 
@@ -41,8 +42,8 @@ class BreakIterator {
 				  void* param);
 
   // Assigns new text to the iterator.
-  static v8::Handle<v8::Value> JSInternalBreakIteratorAdoptText(
-      const v8::Arguments& args);
+  static void JSInternalBreakIteratorAdoptText(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Moves iterator to the beginning of the string and returns new position.
   static v8::Handle<v8::Value> JSInternalBreakIteratorFirst(
