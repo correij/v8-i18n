@@ -26,8 +26,8 @@ namespace v8_i18n {
 
 class DateFormat {
  public:
-  static v8::Handle<v8::Value> JSCreateDateTimeFormat(
-      const v8::Arguments& args);
+  static void JSCreateDateTimeFormat(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Helper methods for various bindings.
 

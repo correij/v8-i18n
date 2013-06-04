@@ -22,7 +22,7 @@ namespace v8_i18n {
 
 // Canonicalizes the BCP47 language tag using BCP47 rules.
 // Returns 'invalid-tag' in case input was not well formed.
-v8::Handle<v8::Value> JSCanonicalizeLanguageTag(const v8::Arguments& args);
+void JSCanonicalizeLanguageTag(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 // Returns a list of available locales for collator, date or number formatter.
 v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args);

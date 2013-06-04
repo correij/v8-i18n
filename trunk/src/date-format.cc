@@ -117,14 +117,15 @@ v8::Handle<v8::Value> DateFormat::JSInternalParse(
   return v8::Date::New(static_cast<double>(date));
 }
 
-v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
-    const v8::Arguments& args) {
+void DateFormat::JSCreateDateTimeFormat(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 3 ||
       !args[0]->IsString() ||
       !args[1]->IsObject() ||
       !args[2]->IsObject()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("Internal error, wrong parameters.")));
+    return;
   }
 
   v8::Isolate* isolate = args.GetIsolate();
@@ -136,7 +137,8 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
   // But the handle shouldn't be empty.
   // That can happen if there was a stack overflow when creating the object.
   if (local_object.IsEmpty()) {
-    return local_object;
+    args.GetReturnValue().Set(local_object);
+    return;
   }
 
   // Set date time formatter as internal field of the resulting JS object.
@@ -144,24 +146,26 @@ v8::Handle<v8::Value> DateFormat::JSCreateDateTimeFormat(
       args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!date_format) {
-    return v8::ThrowException(v8::Exception::Error(v8::String::New(
+    v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU date time formatter.")));
+    return;
   } else {
     local_object->SetAlignedPointerInInternalField(0, date_format);
 
     v8::TryCatch try_catch;
     local_object->Set(v8::String::New("dateFormat"), v8::String::New("valid"));
     if (try_catch.HasCaught()) {
-      return v8::ThrowException(v8::Exception::Error(
+      v8::ThrowException(v8::Exception::Error(
           v8::String::New("Internal error, couldn't set property.")));
+      return;
     }
   }
 
   v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
   wrapper.MakeWeak<void>(isolate, NULL, &DeleteDateFormat);
-
-  return wrapper;
+  args.GetReturnValue().Set(wrapper);
+  wrapper.ClearAndLeak();
 }
 
 static icu::SimpleDateFormat* InitializeDateTimeFormat(

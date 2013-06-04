@@ -143,14 +143,15 @@ v8::Handle<v8::Value> NumberFormat::JSInternalParse(
   return v8::Undefined();
 }
 
-v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
-    const v8::Arguments& args) {
+void NumberFormat::JSCreateNumberFormat(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 3 ||
       !args[0]->IsString() ||
       !args[1]->IsObject() ||
       !args[2]->IsObject()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("Internal error, wrong parameters.")));
+    return;
   }
 
   v8::Isolate* isolate = args.GetIsolate();
@@ -162,7 +163,8 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
   // But the handle shouldn't be empty.
   // That can happen if there was a stack overflow when creating the object.
   if (local_object.IsEmpty()) {
-    return local_object;
+    args.GetReturnValue().Set(local_object);
+    return;
   }
 
   // Set number formatter as internal field of the resulting JS object.
@@ -170,24 +172,26 @@ v8::Handle<v8::Value> NumberFormat::JSCreateNumberFormat(
       args[0]->ToString(), args[1]->ToObject(), args[2]->ToObject());
 
   if (!number_format) {
-    return v8::ThrowException(v8::Exception::Error(v8::String::New(
+    v8::ThrowException(v8::Exception::Error(v8::String::New(
         "Internal error. Couldn't create ICU number formatter.")));
+    return;
   } else {
     local_object->SetAlignedPointerInInternalField(0, number_format);
 
     v8::TryCatch try_catch;
     local_object->Set(v8::String::New("numberFormat"), v8::String::New("valid"));
     if (try_catch.HasCaught()) {
-      return v8::ThrowException(v8::Exception::Error(
+      v8::ThrowException(v8::Exception::Error(
           v8::String::New("Internal error, couldn't set property.")));
+      return;
     }
   }
 
   v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
   wrapper.MakeWeak<void>(isolate, NULL, &DeleteNumberFormat);
-
-  return wrapper;
+  args.GetReturnValue().Set(wrapper);
+  wrapper.ClearAndLeak();
 }
 
 static icu::DecimalFormat* InitializeNumberFormat(
