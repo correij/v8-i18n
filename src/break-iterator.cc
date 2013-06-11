@@ -217,7 +217,7 @@ void BreakIterator::JSCreateBreakIterator(
 
   v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak<void>(isolate, NULL, &DeleteBreakIterator);
+  wrapper.MakeWeak<void>(NULL, &DeleteBreakIterator);
   args.GetReturnValue().Set(wrapper);
   wrapper.ClearAndLeak();
 }

@@ -153,7 +153,7 @@ void Collator::JSCreateCollator(
 
   v8::Persistent<v8::Object> wrapper(isolate, local_object);
   // Make object handle weak so we can delete iterator once GC kicks in.
-  wrapper.MakeWeak<void>(isolate, NULL, &DeleteCollator);
+  wrapper.MakeWeak<void>(NULL, &DeleteCollator);
   args.GetReturnValue().Set(wrapper);
   wrapper.ClearAndLeak();
 }
