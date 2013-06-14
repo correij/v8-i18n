@@ -41,10 +41,10 @@ class NumberFormat {
                                  void* param);
 
   // Formats number and returns corresponding string.
-  static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
+  static void JSInternalFormat(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Parses a string and returns a number.
-  static v8::Handle<v8::Value> JSInternalParse(const v8::Arguments& args);
+  static void JSInternalParse(const v8::FunctionCallbackInfo<v8::Value>& args);
 
  private:
   NumberFormat();

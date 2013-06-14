@@ -70,40 +70,44 @@ void NumberFormat::DeleteNumberFormat(v8::Isolate* isolate,
   object->Dispose(isolate);
 }
 
-v8::Handle<v8::Value> NumberFormat::JSInternalFormat(
-    const v8::Arguments& args) {
+void NumberFormat::JSInternalFormat(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsNumber()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("Formatter and numeric value have to be specified.")));
+    return;
   }
 
   icu::DecimalFormat* number_format = UnpackNumberFormat(args[0]->ToObject());
   if (!number_format) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("NumberFormat method called on an object "
                         "that is not a NumberFormat.")));
+    return;
   }
 
   // ICU will handle actual NaN value properly and return NaN string.
   icu::UnicodeString result;
   number_format->format(args[1]->NumberValue(), result);
 
-  return v8::String::New(
-      reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length());
+  args.GetReturnValue().Set(v8::String::New(
+      reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length()));
 }
 
-v8::Handle<v8::Value> NumberFormat::JSInternalParse(
-    const v8::Arguments& args) {
+void NumberFormat::JSInternalParse(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsString()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("Formatter and string have to be specified.")));
+    return;
   }
 
   icu::DecimalFormat* number_format = UnpackNumberFormat(args[0]->ToObject());
   if (!number_format) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("NumberFormat method called on an object "
                         "that is not a NumberFormat.")));
+    return;
   }
 
   // ICU will handle actual NaN value properly and return NaN string.
@@ -122,25 +126,22 @@ v8::Handle<v8::Value> NumberFormat::JSInternalParse(
   // code and the value).
   number_format->parse(string_number, result, status);
   if (U_FAILURE(status)) {
-    return v8::Undefined();
+    return;
   }
 
   switch (result.getType()) {
   case icu::Formattable::kDouble:
-    return v8::Number::New(result.getDouble());
-    break;
+    args.GetReturnValue().Set(result.getDouble());
+    return;
   case icu::Formattable::kLong:
-    return v8::Number::New(result.getLong());
-    break;
+    args.GetReturnValue().Set(v8::Number::New(result.getLong()));
+    return;
   case icu::Formattable::kInt64:
-    return v8::Number::New(result.getInt64());
-    break;
+    args.GetReturnValue().Set(v8::Number::New(result.getInt64()));
+    return;
   default:
-    return v8::Undefined();
+    return;
   }
-
-  // To make compiler happy.
-  return v8::Undefined();
 }
 
 void NumberFormat::JSCreateNumberFormat(

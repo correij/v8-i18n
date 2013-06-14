@@ -42,11 +42,11 @@ class DateFormat {
                                void* param);
 
   // Formats date and returns corresponding string.
-  static v8::Handle<v8::Value> JSInternalFormat(const v8::Arguments& args);
+  static void JSInternalFormat(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Parses date and returns corresponding Date object or undefined if parse
   // failed.
-  static v8::Handle<v8::Value> JSInternalParse(const v8::Arguments& args);
+  static void JSInternalParse(const v8::FunctionCallbackInfo<v8::Value>& args);
 
  private:
   DateFormat();

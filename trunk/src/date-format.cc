@@ -63,38 +63,41 @@ void DateFormat::DeleteDateFormat(v8::Isolate* isolate,
   object->Dispose(isolate);
 }
 
-v8::Handle<v8::Value> DateFormat::JSInternalFormat(
-    const v8::Arguments& args) {
+void DateFormat::JSInternalFormat(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   double millis = 0.0;
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsDate()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New(
             "Internal error. Formatter and date value have to be specified.")));
+    return;
   } else {
     millis = v8::Date::Cast(*args[1])->NumberValue();
   }
 
   icu::SimpleDateFormat* date_format = UnpackDateFormat(args[0]->ToObject());
   if (!date_format) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("DateTimeFormat method called on an object "
                         "that is not a DateTimeFormat.")));
+    return;
   }
 
   icu::UnicodeString result;
   date_format->format(millis, result);
 
-  return v8::String::New(
-      reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length());
+  args.GetReturnValue().Set(v8::String::New(
+      reinterpret_cast<const uint16_t*>(result.getBuffer()), result.length()));
 }
 
-v8::Handle<v8::Value> DateFormat::JSInternalParse(
-    const v8::Arguments& args) {
+void DateFormat::JSInternalParse(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::UnicodeString string_date;
   if (args.Length() != 2 || !args[0]->IsObject() || !args[1]->IsString()) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New(
             "Internal error. Formatter and string have to be specified.")));
+    return;
   } else {
     if (!Utils::V8StringToUnicodeString(args[1], &string_date)) {
       string_date = "";
@@ -103,18 +106,19 @@ v8::Handle<v8::Value> DateFormat::JSInternalParse(
 
   icu::SimpleDateFormat* date_format = UnpackDateFormat(args[0]->ToObject());
   if (!date_format) {
-    return v8::ThrowException(v8::Exception::Error(
+    v8::ThrowException(v8::Exception::Error(
         v8::String::New("DateTimeFormat method called on an object "
                         "that is not a DateTimeFormat.")));
+    return;
   }
 
   UErrorCode status = U_ZERO_ERROR;
   UDate date = date_format->parse(string_date, status);
   if (U_FAILURE(status)) {
-    return v8::Undefined();
+    return;
   }
 
-  return v8::Date::New(static_cast<double>(date));
+  args.GetReturnValue().Set(v8::Date::New(static_cast<double>(date)));
 }
 
 void DateFormat::JSCreateDateTimeFormat(
