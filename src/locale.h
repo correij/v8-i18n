@@ -25,17 +25,17 @@ namespace v8_i18n {
 void JSCanonicalizeLanguageTag(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 // Returns a list of available locales for collator, date or number formatter.
-v8::Handle<v8::Value> JSAvailableLocalesOf(const v8::Arguments& args);
+void JSAvailableLocalesOf(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 // Returns default ICU locale.
-v8::Handle<v8::Value> JSGetDefaultICULocale(const v8::Arguments& args);
+void JSGetDefaultICULocale(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 // Returns an array of objects, that have maximized and base names of inputs.
 // Unicode extensions are dropped from both.
 // Input: ['zh-TW-u-nu-thai', 'sr']
 // Output: [{maximized: 'zh-Hant-TW', base: 'zh-TW'},
 //          {maximized: 'sr-Cyrl-RS', base: 'sr'}]
-v8::Handle<v8::Value> JSGetLanguageTagVariants(const v8::Arguments& args);
+void JSGetLanguageTagVariants(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 }  // namespace v8_i18n
 

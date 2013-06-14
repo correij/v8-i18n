@@ -46,21 +46,21 @@ class BreakIterator {
       const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Moves iterator to the beginning of the string and returns new position.
-  static v8::Handle<v8::Value> JSInternalBreakIteratorFirst(
-      const v8::Arguments& args);
+  static void JSInternalBreakIteratorFirst(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Moves iterator to the next position and returns it.
-  static v8::Handle<v8::Value> JSInternalBreakIteratorNext(
-      const v8::Arguments& args);
+  static void JSInternalBreakIteratorNext(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Returns current iterator's current position.
-  static v8::Handle<v8::Value> JSInternalBreakIteratorCurrent(
-      const v8::Arguments& args);
+  static void JSInternalBreakIteratorCurrent(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
   // Returns type of the item from current position.
   // This call is only valid for word break iterators. Others just return 0.
-  static v8::Handle<v8::Value> JSInternalBreakIteratorBreakType(
-      const v8::Arguments& args);
+  static void JSInternalBreakIteratorBreakType(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
 
  private:
   BreakIterator() {}

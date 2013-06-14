@@ -32,9 +32,9 @@ bool ExecuteString(v8::Handle<v8::String> source, v8::Handle<v8::Value> name);
 void ReportException(v8::TryCatch* handler);
 v8::Handle<v8::String> ReadFile(const char* name);
 const char* ToCString(const v8::String::Utf8Value& value);
-v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args);
-v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args);
-v8::Handle<v8::Value> Print(const v8::Arguments& args);
+void GetDefaultLocale(const v8::FunctionCallbackInfo<v8::Value>& args);
+void GetDefaultTimeZone(const v8::FunctionCallbackInfo<v8::Value>& args);
+void Print(const v8::FunctionCallbackInfo<v8::Value>& args);
 void Usage();
 
 const int kMinArgs = 2;
@@ -225,7 +225,7 @@ const char* ToCString(const v8::String::Utf8Value& value) {
 }
 
 // Returns default ICU locale. For testing only.
-v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args) {
+void GetDefaultLocale(const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::Locale default_locale;
 
   // Set the locale
@@ -234,14 +234,15 @@ v8::Handle<v8::Value> GetDefaultLocale(const v8::Arguments& args) {
   uloc_toLanguageTag(
       default_locale.getName(), result, ULOC_FULLNAME_CAPACITY, FALSE, &status);
   if (U_SUCCESS(status)) {
-    return v8::String::New(result);
+    args.GetReturnValue().Set(v8::String::New(result));
+    return;
   }
 
-  return v8::String::New("und");
+  args.GetReturnValue().Set(v8::String::New("und"));
 }
 
 // Returns default time zone. For testing only.
-v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args) {
+void GetDefaultTimeZone(const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::UnicodeString time_zone_id;
   icu::TimeZone* time_zone = icu::TimeZone::createDefault();
   time_zone->getID(time_zone_id);
@@ -254,23 +255,26 @@ v8::Handle<v8::Value> GetDefaultTimeZone(const v8::Arguments& args) {
 
   if (U_SUCCESS(status)) {
     if (canonical_time_zone_id == UNICODE_STRING_SIMPLE("Etc/GMT")) {
-      return v8::String::New("UTC");
+      args.GetReturnValue().Set(v8::String::New("UTC"));
+      return;
     } else {
-      return v8::String::New(
+      args.GetReturnValue().Set(v8::String::New(
           reinterpret_cast<const uint16_t*>(canonical_time_zone_id.getBuffer()),
-          canonical_time_zone_id.length());
+          canonical_time_zone_id.length()));
+      return;
     }
   }
 
-  return v8::String::New("");
+  args.GetReturnValue().SetEmptyString();
 }
 
 // Prints string, array or hasOwnProperty values of an object.
 // All other values get coerced into a string.
-v8::Handle<v8::Value> Print(const v8::Arguments& args) {
+void Print(const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (args.Length() != 2 || !args[0]->IsString()) {
-    return v8::ThrowException(v8::Exception::SyntaxError(
+    v8::ThrowException(v8::Exception::SyntaxError(
         v8::String::New("Test runner: title and print value are required.")));
+    return;
   }
 
   v8::String::Utf8Value title(args[0]->ToString());
@@ -296,8 +300,6 @@ v8::Handle<v8::Value> Print(const v8::Arguments& args) {
     v8::String::Utf8Value value(args[1]->ToString());
     printf("\t%s\n", *value);
   }
-
-  return v8::Undefined();
 }
 
 // Prints program usage.

@@ -114,41 +114,45 @@ void BreakIterator::JSInternalBreakIteratorAdoptText(
   break_iterator->setText(*ResetAdoptedText(args[0]->ToObject(), args[1]));
 }
 
-v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorFirst(
-    const v8::Arguments& args) {
+void BreakIterator::JSInternalBreakIteratorFirst(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
-    return ThrowUnexpectedObjectError();
+    ThrowUnexpectedObjectError();
+    return;
   }
 
-  return v8::Int32::New(break_iterator->first());
+  args.GetReturnValue().Set(static_cast<int32_t>(break_iterator->first()));
 }
 
-v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorNext(
-    const v8::Arguments& args) {
+void BreakIterator::JSInternalBreakIteratorNext(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
-    return ThrowUnexpectedObjectError();
+    ThrowUnexpectedObjectError();
+    return;
   }
 
-  return v8::Int32::New(break_iterator->next());
+  args.GetReturnValue().Set(static_cast<int32_t>(break_iterator->next()));
 }
 
-v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorCurrent(
-    const v8::Arguments& args) {
+void BreakIterator::JSInternalBreakIteratorCurrent(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
-    return ThrowUnexpectedObjectError();
+    ThrowUnexpectedObjectError();
+    return;
   }
 
-  return v8::Int32::New(break_iterator->current());
+  args.GetReturnValue().Set(static_cast<int32_t>(break_iterator->current()));
 }
 
-v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorBreakType(
-    const v8::Arguments& args) {
+void BreakIterator::JSInternalBreakIteratorBreakType(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
   icu::BreakIterator* break_iterator = UnpackBreakIterator(args[0]->ToObject());
   if (!break_iterator) {
-    return ThrowUnexpectedObjectError();
+    ThrowUnexpectedObjectError();
+    return;
   }
 
   // TODO(cira): Remove cast once ICU fixes base BreakIterator class.
@@ -156,19 +160,21 @@ v8::Handle<v8::Value> BreakIterator::JSInternalBreakIteratorBreakType(
       static_cast<icu::RuleBasedBreakIterator*>(break_iterator);
   int32_t status = rule_based_iterator->getRuleStatus();
   // Keep return values in sync with JavaScript BreakType enum.
+  v8::Handle<v8::String> result;
   if (status >= UBRK_WORD_NONE && status < UBRK_WORD_NONE_LIMIT) {
-    return v8::String::New("none");
+    result = v8::String::New("none");
   } else if (status >= UBRK_WORD_NUMBER && status < UBRK_WORD_NUMBER_LIMIT) {
-    return v8::String::New("number");
+    result = v8::String::New("number");
   } else if (status >= UBRK_WORD_LETTER && status < UBRK_WORD_LETTER_LIMIT) {
-    return v8::String::New("letter");
+    result = v8::String::New("letter");
   } else if (status >= UBRK_WORD_KANA && status < UBRK_WORD_KANA_LIMIT) {
-    return v8::String::New("kana");
+    result = v8::String::New("kana");
   } else if (status >= UBRK_WORD_IDEO && status < UBRK_WORD_IDEO_LIMIT) {
-    return v8::String::New("ideo");
+    result = v8::String::New("ideo");
   } else {
-    return v8::String::New("unknown");
+    result = v8::String::New("unknown");
   }
+  args.GetReturnValue().Set(result);
 }
 
 void BreakIterator::JSCreateBreakIterator(
