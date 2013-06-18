@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #ifndef V8_I18N_SRC_COLLATOR_H
-#define V8_I18N_SRC_COLLATOR_H_
+#define V8_I18N_SRC_COLLATOR_H
 
 #include "unicode/uversion.h"
 #include "v8/include/v8.h"
