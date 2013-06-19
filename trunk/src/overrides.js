@@ -73,6 +73,7 @@ Object.defineProperty(String.prototype, 'localeCompare', {
   configurable: true,
   enumerable: false
 });
+%FunctionRemovePrototype(String.prototype.localeCompare);
 
 
 /**
@@ -94,6 +95,7 @@ Object.defineProperty(Number.prototype, 'toLocaleString', {
   configurable: true,
   enumerable: false
 });
+%FunctionRemovePrototype(Number.prototype.toLocaleString);
 
 
 /**
@@ -133,6 +135,7 @@ Object.defineProperty(Date.prototype, 'toLocaleString', {
   configurable: true,
   enumerable: false
 });
+%FunctionRemovePrototype(Date.prototype.toLocaleString);
 
 
 /**
@@ -151,6 +154,7 @@ Object.defineProperty(Date.prototype, 'toLocaleDateString', {
   configurable: true,
   enumerable: false
 });
+%FunctionRemovePrototype(Date.prototype.toLocaleDateString);
 
 
 /**
@@ -169,3 +173,4 @@ Object.defineProperty(Date.prototype, 'toLocaleTimeString', {
   configurable: true,
   enumerable: false
 });
+%FunctionRemovePrototype(Date.prototype.toLocaleTimeString);

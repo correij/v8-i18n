@@ -51,6 +51,7 @@ function addBoundMethod(obj, methodName, implementation, length) {
 	    }
           }
         }
+        %FunctionRemovePrototype(boundMethod);
         this[internalName] = boundMethod;
       }
       return this[internalName];

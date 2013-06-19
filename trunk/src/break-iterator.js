@@ -96,6 +96,7 @@ Intl.v8BreakIterator.prototype.resolvedOptions = function() {
     type: segmenter.resolved.type
   };
 };
+%FunctionRemovePrototype(Intl.v8BreakIterator.prototype.resolvedOptions);
 
 
 /**
@@ -107,6 +108,7 @@ Intl.v8BreakIterator.prototype.resolvedOptions = function() {
 Intl.v8BreakIterator.supportedLocalesOf = function(locales) {
   return supportedLocalesOf('breakiterator', locales, arguments[1]);
 };
+%FunctionRemovePrototype(Intl.v8BreakIterator.supportedLocalesOf);
 
 
 /**

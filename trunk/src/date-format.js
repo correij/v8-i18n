@@ -355,6 +355,7 @@ Intl.DateTimeFormat.prototype.resolvedOptions = function() {
 
   return result;
 };
+%FunctionRemovePrototype(Intl.DateTimeFormat.prototype.resolvedOptions);
 
 
 /**
@@ -366,6 +367,7 @@ Intl.DateTimeFormat.prototype.resolvedOptions = function() {
 Intl.DateTimeFormat.supportedLocalesOf = function(locales) {
   return supportedLocalesOf('dateformat', locales, arguments[1]);
 };
+%FunctionRemovePrototype(Intl.DateTimeFormat.supportedLocalesOf);
 
 
 /**
