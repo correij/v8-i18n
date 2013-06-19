@@ -317,6 +317,10 @@ Intl.DateTimeFormat = function() {
  * DateTimeFormat resolvedOptions method.
  */
 Intl.DateTimeFormat.prototype.resolvedOptions = function() {
+  if (%_IsConstructCall()) {
+    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+  }
+
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'dateformat') {
     throw new TypeError('resolvedOptions method called on a non-object or ' +
@@ -365,6 +369,10 @@ Intl.DateTimeFormat.prototype.resolvedOptions = function() {
  * Options are optional parameter.
  */
 Intl.DateTimeFormat.supportedLocalesOf = function(locales) {
+  if (%_IsConstructCall()) {
+    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+  }
+
   return supportedLocalesOf('dateformat', locales, arguments[1]);
 };
 %FunctionRemovePrototype(Intl.DateTimeFormat.supportedLocalesOf);

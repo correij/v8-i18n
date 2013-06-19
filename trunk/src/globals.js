@@ -58,18 +58,18 @@ var SERVICE_RE =
     new RegExp('^(collator|numberformat|dateformat|breakiterator)$');
 
 /**
- * Validates a language tag against bcp47 spec. 
- * Actual value is assigned on first run. 
+ * Validates a language tag against bcp47 spec.
+ * Actual value is assigned on first run.
  */
 var LANGUAGE_TAG_RE = undefined;
 
 /**
- * Hepls find duplicate variants in the language tag. 
+ * Helps find duplicate variants in the language tag.
  */
 var LANGUAGE_VARIANT_RE = undefined;
 
 /**
- * Hepls find duplicate singletons in the language tag. 
+ * Helps find duplicate singletons in the language tag.
  */
 var LANGUAGE_SINGLETON_RE = undefined;
 
@@ -133,3 +133,10 @@ var ALLOWED_CO_VALUES = [
   'big5han', 'dict', 'direct', 'ducet', 'gb2312', 'phonebk', 'phonetic',
   'pinyin', 'reformed', 'searchjl', 'stroke', 'trad', 'unihan', 'zhuyin'
 ];
+
+/**
+ * Error message for when function object is created with new and it's not
+ * a constructor.
+ */
+var ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR =
+  'Function object that\'s not a constructor was created with new';
