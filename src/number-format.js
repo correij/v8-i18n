@@ -188,6 +188,10 @@ Intl.NumberFormat = function() {
  * NumberFormat resolvedOptions method.
  */
 Intl.NumberFormat.prototype.resolvedOptions = function() {
+  if (%_IsConstructCall()) {
+    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+  }
+
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'numberformat') {
     throw new TypeError('resolvedOptions method called on a non-object' +
@@ -236,6 +240,10 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {
  * Options are optional parameter.
  */
 Intl.NumberFormat.supportedLocalesOf = function(locales) {
+  if (%_IsConstructCall()) {
+    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+  }
+
   return supportedLocalesOf('numberformat', locales, arguments[1]);
 };
 %FunctionRemovePrototype(Intl.NumberFormat.supportedLocalesOf);

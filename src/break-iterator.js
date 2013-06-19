@@ -81,6 +81,10 @@ Intl.v8BreakIterator = function() {
  * BreakIterator resolvedOptions method.
  */
 Intl.v8BreakIterator.prototype.resolvedOptions = function() {
+  if (%_IsConstructCall()) {
+    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+  }
+
   if (!this || typeof this !== 'object' ||
       this.__initializedIntlObject !== 'breakiterator') {
     throw new TypeError('resolvedOptions method called on a non-object or ' +
@@ -106,6 +110,10 @@ Intl.v8BreakIterator.prototype.resolvedOptions = function() {
  * Options are optional parameter.
  */
 Intl.v8BreakIterator.supportedLocalesOf = function(locales) {
+  if (%_IsConstructCall()) {
+    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+  }
+
   return supportedLocalesOf('breakiterator', locales, arguments[1]);
 };
 %FunctionRemovePrototype(Intl.v8BreakIterator.supportedLocalesOf);
