@@ -226,6 +226,7 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {
 
   return result;
 };
+%FunctionRemovePrototype(Intl.NumberFormat.prototype.resolvedOptions);
 
 
 /**
@@ -237,6 +238,7 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {
 Intl.NumberFormat.supportedLocalesOf = function(locales) {
   return supportedLocalesOf('numberformat', locales, arguments[1]);
 };
+%FunctionRemovePrototype(Intl.NumberFormat.supportedLocalesOf);
 
 
 /**

@@ -146,6 +146,7 @@ Intl.Collator.prototype.resolvedOptions = function() {
     collation: coll.resolved.collation
   };
 };
+%FunctionRemovePrototype(Intl.Collator.prototype.resolvedOptions);
 
 
 /**
@@ -157,6 +158,7 @@ Intl.Collator.prototype.resolvedOptions = function() {
 Intl.Collator.supportedLocalesOf = function(locales) {
   return supportedLocalesOf('collator', locales, arguments[1]);
 };
+%FunctionRemovePrototype(Intl.Collator.supportedLocalesOf);
 
 
 /**
