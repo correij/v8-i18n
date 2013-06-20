@@ -18,24 +18,13 @@
 
 /**
  * Verifies that the input is a well-formed ISO 4217 currency code.
+ * Don't uppercase to test. It could convert invalid code into a valid one.
+ * For example \u00DFP (Eszett+P) becomes SSP.
  */
 function isWellFormedCurrencyCode(currency) {
-  if (typeof currency !== "string") {
-    return false;
-  }
-
-  var code = String(currency);
-  if (code.length !== 3) {
-    return false;
-  }
-
-  // Don't uppercase to test. It could convert invalid code into a valid one.
-  // For example \u00DFP (Eszett+P) becomes SSP.
-  if (code.match(/[^A-Za-z]/) !== null) {
-    return false;
-  }
-
-  return true;
+  return typeof currency == "string" &&
+      currency.length == 3 &&
+      currency.match(/[^A-Za-z]/) == null;
 }
 
 
@@ -81,7 +70,7 @@ function initializeNumberFormat(numberFormat, locales, options) {
     'style', 'string', ['decimal', 'percent', 'currency'], 'decimal'));
 
   var currency = getOption('currency', 'string');
-  if (currency && !isWellFormedCurrencyCode(currency)) {
+  if (currency !== undefined && !isWellFormedCurrencyCode(currency)) {
     throw new RangeError('Invalid currency code: ' + currency);
   }
 
