@@ -95,13 +95,13 @@ function initializeNumberFormat(numberFormat, locales, options) {
   var mxfd = getNumberOption(options, 'maximumFractionDigits', mnfd, 20, 3);
   defineWEProperty(internalOptions, 'maximumFractionDigits', mxfd);
 
-  if (options['minimumSignificantDigits'] !== undefined ||
-      options['maximumSignificantDigits'] !== undefined) {
-    var mnsd = getNumberOption(options, 'minimumSignificantDigits', 1, 21, 0);
+  var mnsd = options['minimumSignificantDigits'];
+  var mxsd = options['maximumSignificantDigits'];
+  if (mnsd !== undefined || mxsd !== undefined) {
+    mnsd = getNumberOption(options, 'minimumSignificantDigits', 1, 21, 0);
     defineWEProperty(internalOptions, 'minimumSignificantDigits', mnsd);
 
-    var mxsd =
-        getNumberOption(options, 'maximumSignificantDigits', mnsd, 21, 21);
+    mxsd = getNumberOption(options, 'maximumSignificantDigits', mnsd, 21, 21);
     defineWEProperty(internalOptions, 'maximumSignificantDigits', mxsd);
   }
 

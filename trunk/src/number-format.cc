@@ -308,15 +308,20 @@ static icu::DecimalFormat* CreateICUNumberFormat(
     number_format->setMaximumFractionDigits(digits);
   }
 
+  bool significant_digits_used = false;
   if (Utils::ExtractIntegerSetting(
           options, "minimumSignificantDigits", &digits)) {
     number_format->setMinimumSignificantDigits(digits);
+    significant_digits_used = true;
   }
 
   if (Utils::ExtractIntegerSetting(
           options, "maximumSignificantDigits", &digits)) {
     number_format->setMaximumSignificantDigits(digits);
+    significant_digits_used = true;
   }
+
+  number_format->setSignificantDigitsUsed(significant_digits_used);
 
   bool grouping;
   if (Utils::ExtractBooleanSetting(options, "useGrouping", &grouping)) {
