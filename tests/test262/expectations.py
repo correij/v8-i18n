@@ -37,6 +37,11 @@ expect_fail = {
   # Will use V8 internals once we switch.
   'data/test/suite/intl402/ch09/9.2/9.2.1_2.js': 'FAIL',
   'data/test/suite/intl402/ch09/9.2/9.2.6_2.js': 'FAIL',
+  # Should use methods from v8/src/regexp.js to maintain clean global state.
+  # We could remove regex clean in the footer.js after this.
+  'data/test/suite/intl402/ch10/10.1/10.1.1_a.js': 'FAIL',
+  'data/test/suite/intl402/ch11/11.1/11.1.1_a.js': 'FAIL',
+  'data/test/suite/intl402/ch12/12.1/12.1.1_a.js': 'FAIL',
   # timeZone is allowed to be != undefined by default. Should check test.
   'data/test/suite/intl402/ch12/12.3/12.3.3.js': 'FAIL',
 }
