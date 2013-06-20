@@ -135,6 +135,18 @@ var ALLOWED_CO_VALUES = [
 ];
 
 /**
+ * Object attributes (configurable, writable, enumerable).
+ * To combine attributes, OR them.
+ * Values/names are copied from v8/include/v8.h:PropertyAttribute
+ */
+var ATTRIBUTES = {
+  'NONE': 0,
+  'READ_ONLY': 1,
+  'DONT_ENUM': 2,
+  'DONT_DELETE': 4
+};
+
+/**
  * Error message for when function object is created with new and it's not
  * a constructor.
  */

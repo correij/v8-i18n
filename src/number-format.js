@@ -171,65 +171,69 @@ function initializeNumberFormat(numberFormat, locales, options) {
  *
  * @constructor
  */
-Intl.NumberFormat = function() {
-  var locales = arguments[0];
-  var options = arguments[1];
+%SetProperty(Intl, 'NumberFormat', function() {
+    var locales = arguments[0];
+    var options = arguments[1];
 
-  if (!this || this === Intl) {
-    // Constructor is called as a function.
-    return new Intl.NumberFormat(locales, options);
-  }
+    if (!this || this === Intl) {
+      // Constructor is called as a function.
+      return new Intl.NumberFormat(locales, options);
+    }
 
-  return initializeNumberFormat(toObject(this), locales, options);
-};
+    return initializeNumberFormat(toObject(this), locales, options);
+  },
+  ATTRIBUTES.DONT_ENUM
+);
 
 
 /**
  * NumberFormat resolvedOptions method.
  */
-Intl.NumberFormat.prototype.resolvedOptions = function() {
-  if (%_IsConstructCall()) {
-    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
-  }
+%SetProperty(Intl.NumberFormat.prototype, 'resolvedOptions', function() {
+    if (%_IsConstructCall()) {
+      throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+    }
 
-  if (!this || typeof this !== 'object' ||
-      this.__initializedIntlObject !== 'numberformat') {
-    throw new TypeError('resolvedOptions method called on a non-object' +
-        ' or on a object that is not Intl.NumberFormat.');
-  }
+    if (!this || typeof this !== 'object' ||
+        this.__initializedIntlObject !== 'numberformat') {
+      throw new TypeError('resolvedOptions method called on a non-object' +
+          ' or on a object that is not Intl.NumberFormat.');
+    }
 
-  var format = this;
-  var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
-                                     format.resolved.locale);
+    var format = this;
+    var locale = getOptimalLanguageTag(format.resolved.requestedLocale,
+                                       format.resolved.locale);
 
-  var result = {
-    locale: locale,
-    numberingSystem: format.resolved.numberingSystem,
-    style: format.resolved.style,
-    useGrouping: format.resolved.useGrouping,
-    minimumIntegerDigits: format.resolved.minimumIntegerDigits,
-    minimumFractionDigits: format.resolved.minimumFractionDigits,
-    maximumFractionDigits: format.resolved.maximumFractionDigits,
-  };
+    var result = {
+      locale: locale,
+      numberingSystem: format.resolved.numberingSystem,
+      style: format.resolved.style,
+      useGrouping: format.resolved.useGrouping,
+      minimumIntegerDigits: format.resolved.minimumIntegerDigits,
+      minimumFractionDigits: format.resolved.minimumFractionDigits,
+      maximumFractionDigits: format.resolved.maximumFractionDigits,
+    };
 
-  if (result.style === 'currency') {
-    defineWECProperty(result, 'currency', format.resolved.currency);
-    defineWECProperty(result, 'currencyDisplay',
-                      format.resolved.currencyDisplay);
-  }
+    if (result.style === 'currency') {
+      defineWECProperty(result, 'currency', format.resolved.currency);
+      defineWECProperty(result, 'currencyDisplay',
+                        format.resolved.currencyDisplay);
+    }
 
-  if (format.resolved.hasOwnProperty('minimumSignificantDigits')) {
-    defineWECProperty(result, 'minimumSignificantDigits',
-                      format.resolved.minimumSignificantDigits);
-  }
+    if (format.resolved.hasOwnProperty('minimumSignificantDigits')) {
+      defineWECProperty(result, 'minimumSignificantDigits',
+                        format.resolved.minimumSignificantDigits);
+    }
 
-  if (format.resolved.hasOwnProperty('maximumSignificantDigits')) {
-    defineWECProperty(result, 'maximumSignificantDigits',
-                      format.resolved.maximumSignificantDigits);
-  }
+    if (format.resolved.hasOwnProperty('maximumSignificantDigits')) {
+      defineWECProperty(result, 'maximumSignificantDigits',
+                        format.resolved.maximumSignificantDigits);
+    }
 
-  return result;
-};
+    return result;
+  },
+  ATTRIBUTES.DONT_ENUM
+);
 %FunctionRemovePrototype(Intl.NumberFormat.prototype.resolvedOptions);
 
 
@@ -239,13 +243,15 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {
  * order in the returned list as in the input list.
  * Options are optional parameter.
  */
-Intl.NumberFormat.supportedLocalesOf = function(locales) {
-  if (%_IsConstructCall()) {
-    throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
-  }
+%SetProperty(Intl.NumberFormat, 'supportedLocalesOf', function(locales) {
+    if (%_IsConstructCall()) {
+      throw new TypeError(ORDINARY_FUNCTION_CALLED_AS_CONSTRUCTOR);
+    }
 
-  return supportedLocalesOf('numberformat', locales, arguments[1]);
-};
+    return supportedLocalesOf('numberformat', locales, arguments[1]);
+  },
+  ATTRIBUTES.DONT_ENUM
+);
 %FunctionRemovePrototype(Intl.NumberFormat.supportedLocalesOf);
 
 
